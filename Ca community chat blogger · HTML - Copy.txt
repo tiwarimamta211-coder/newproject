@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CA Community Chat | Finance & GST Helpdesk</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; padding: 16px; }
+  .wrap { max-width: 960px; margin: 0 auto; display: flex; gap: 20px; align-items: flex-start; }
+
+  /* SIDEBAR */
+  .sidebar { flex: 0 0 230px; background: #0c1f3f; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; min-height: 580px; }
+  .sidebar-header { padding: 20px 18px; border-bottom: 1px solid #162d52; }
+  .logo { font-size: 15px; font-weight: 800; color: #60a5fa; display: flex; align-items: center; gap: 8px; }
+  .logo-icon { font-size: 20px; }
+  .logo-sub { font-size: 10px; color: #3b6ea5; font-weight: 600; margin-top: 2px; letter-spacing: 0.5px; }
+
+  .channels { padding: 16px; border-bottom: 1px solid #162d52; }
+  .sec-title { font-size: 10px; font-weight: 800; color: #3b6ea5; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+  .channel-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; font-size: 12px; color: #93c5fd; cursor: pointer; margin-bottom: 2px; transition: background 0.15s; }
+  .channel-item:hover { background: #162d52; }
+  .channel-item.active { background: #1e3a5f; color: #fff; font-weight: 700; }
+  .ch-icon { font-size: 13px; }
+
+  .user-list { padding: 16px; flex: 1; }
+  .user-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; color: #93c5fd; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .dot.green  { background: #10b981; }
+  .dot.yellow { background: #f59e0b; }
+  .dot.gray   { background: #475569; }
+  .user-role { font-size: 10px; color: #3b6ea5; margin-left: 2px; }
+
+  .sidebar-footer { padding: 14px 16px; background: rgba(16,185,129,0.07); border-top: 1px solid #162d52; font-size: 11px; color: #10b981; display: flex; align-items: center; gap: 6px; }
+
+  /* CHAT MAIN */
+  .chat-main { flex: 1; background: #fff; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; min-height: 580px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+
+  .chat-header { padding: 14px 22px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #0c1f3f; }
+  .chat-header-left h3 { font-size: 14px; font-weight: 700; color: #fff; }
+  .chat-header-left p  { font-size: 11px; color: #3b6ea5; margin-top: 2px; }
+  .header-badge { background: #1e3a5f; color: #60a5fa; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+
+  /* PINNED NOTICE */
+  .pinned { background: #fffbeb; border-bottom: 1px solid #fde68a; padding: 9px 20px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #92400e; }
+  .pinned strong { color: #b45309; }
+
+  /* MESSAGES */
+  #chat-window { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; max-height: 380px; scrollbar-width: thin; scrollbar-color: #e2e8f0 transparent; }
+
+  .message { display: flex; gap: 10px; align-items: flex-start; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0; margin-top: 2px; }
+  .msg-body { flex: 1; }
+  .msg-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .msg-name { font-size: 13px; font-weight: 700; }
+  .msg-time { font-size: 10px; color: #94a3b8; }
+  .msg-role-badge { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge-ca   { background: #eff6ff; color: #1d4ed8; }
+  .badge-gst  { background: #f0fdf4; color: #15803d; }
+  .badge-user { background: #f8fafc; color: #64748b; }
+  .msg-text { font-size: 13px; color: #334155; line-height: 1.6; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0 12px 12px 12px; padding: 10px 14px; display: inline-block; max-width: 100%; }
+  .msg-text.sent-bubble { background: #0c1f3f; color: #f1f5f9; border-color: #1e3a5f; border-radius: 12px 12px 0 12px; }
+  .message.self { flex-direction: row-reverse; }
+  .message.self .msg-meta { flex-direction: row-reverse; }
+  .message.self .msg-body { align-items: flex-end; display: flex; flex-direction: column; }
+  .moderated { font-style: italic; opacity: 0.6; }
+
+  .system-msg { align-self: center; font-size: 11px; color: #94a3b8; background: #f1f5f9; padding: 5px 14px; border-radius: 20px; border: 1px solid #e2e8f0; }
+  .system-msg.warn { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
+  .system-msg.success { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+
+  /* QUICK TOPICS */
+  .quick-topics { padding: 10px 20px; border-top: 1px solid #f1f5f9; display: flex; gap: 8px; flex-wrap: wrap; background: #fafafa; }
+  .topic-chip { background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 20px; cursor: pointer; border: 1px solid #bfdbfe; transition: background 0.15s; white-space: nowrap; }
+  .topic-chip:hover { background: #dbeafe; }
+
+  /* INPUT */
+  .input-area { padding: 14px 18px; border-top: 1px solid #e2e8f0; background: #fff; }
+  .input-name-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .input-name-row input { flex: 1; padding: 7px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; font-family: inherit; outline: none; color: #334155; }
+  .input-name-row select { padding: 7px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; font-family: inherit; outline: none; color: #334155; }
+  .input-wrapper { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; align-items: center; padding: 6px 6px 6px 14px; transition: border 0.2s; }
+  .input-wrapper:focus-within { border-color: #0c1f3f; }
+  .input-wrapper input { flex: 1; background: transparent; border: none; outline: none; color: #334155; font-size: 13px; font-family: inherit; padding: 6px 0; }
+  .input-wrapper input::placeholder { color: #94a3b8; }
+  .send-btn { background: #0c1f3f; color: #fff; border: none; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s; }
+  .send-btn:hover { background: #1e3a5f; }
+
+  @media (max-width: 620px) {
+    .wrap { flex-direction: column; }
+    .sidebar { flex: 0 0 auto; min-height: auto; }
+    #chat-window { max-height: 280px; }
+    .quick-topics { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo"><span class="logo-icon">⚖️</span> CA Community</div>
+      <div class="logo-sub">GST · TAX · FINANCE HELPDESK</div>
+    </div>
+
+    <div class="channels">
+      <div class="sec-title">Channels</div>
+      <div class="channel-item active"><span class="ch-icon">💬</span> gst-helpdesk</div>
+      <div class="channel-item"><span class="ch-icon">📊</span> itr-filing</div>
+      <div class="channel-item"><span class="ch-icon">🏢</span> company-law</div>
+      <div class="channel-item"><span class="ch-icon">📑</span> audit-discuss</div>
+      <div class="channel-item"><span class="ch-icon">💡</span> tax-planning</div>
+    </div>
+
+    <div class="user-list">
+      <div class="sec-title">Online — 4</div>
+      <div class="user-item"><div class="dot green"></div> CA Sharma <span class="user-role">(Moderator)</span></div>
+      <div class="user-item"><div class="dot green"></div> GST_Expert_Raj</div>
+      <div class="user-item"><div class="dot yellow"></div> Priya_Accounts</div>
+      <div class="user-item"><div class="dot green"></div> You</div>
+    </div>
+
+    <div class="sidebar-footer">✅ Verified CA Community</div>
+  </aside>
+
+  <!-- CHAT MAIN -->
+  <main class="chat-main">
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <h3># gst-helpdesk</h3>
+        <p>GST queries, ITC issues, filing help</p>
+      </div>
+      <div class="header-badge">🔒 Moderated</div>
+    </div>
+
+    <div class="pinned">
+      📌 <span><strong>Pinned:</strong> GST Filing Deadline — GSTR-3B due on 20th of every month. File on time to avoid interest.</span>
+    </div>
+
+    <div id="chat-window">
+      <div class="system-msg">Welcome to CA Community Chat. Ask your GST, Tax & Finance queries here.</div>
+
+      <div class="message">
+        <div class="avatar" style="background:#eff6ff;color:#1d4ed8">CS</div>
+        <div class="msg-body">
+          <div class="msg-meta">
+            <span class="msg-name" style="color:#1d4ed8">CA Sharma</span>
+            <span class="msg-role-badge badge-ca">CA · Mod</span>
+            <span class="msg-time">10:15 AM</span>
+          </div>
+          <div class="msg-text">Good morning everyone! 👋 Today's topic: ITC reversal rules under Rule 42 & 43. Feel free to post your queries.</div>
+        </div>
+      </div>
+
+      <div class="message">
+        <div class="avatar" style="background:#f0fdf4;color:#15803d">GR</div>
+        <div class="msg-body">
+          <div class="msg-meta">
+            <span class="msg-name" style="color:#15803d">GST_Expert_Raj</span>
+            <span class="msg-role-badge badge-gst">GST Expert</span>
+            <span class="msg-time">10:18 AM</span>
+          </div>
+          <div class="msg-text">Can someone clarify — is RCM applicable on import of services from an unregistered foreign vendor under IGST Act?</div>
+        </div>
+      </div>
+
+      <div class="message">
+        <div class="avatar" style="background:#eff6ff;color:#1d4ed8">CS</div>
+        <div class="msg-body">
+          <div class="msg-meta">
+            <span class="msg-name" style="color:#1d4ed8">CA Sharma</span>
+            <span class="msg-role-badge badge-ca">CA · Mod</span>
+            <span class="msg-time">10:20 AM</span>
+          </div>
+          <div class="msg-text">Yes! Under Section 5(3) of IGST Act, RCM is applicable on import of services. The recipient in India must pay IGST under RCM and can claim ITC subject to conditions. ✅</div>
+        </div>
+      </div>
+
+      <div class="message">
+        <div class="avatar" style="background:#fdf4ff;color:#7e22ce">PA</div>
+        <div class="msg-body">
+          <div class="msg-meta">
+            <span class="msg-name" style="color:#7e22ce">Priya_Accounts</span>
+            <span class="msg-role-badge badge-user">Member</span>
+            <span class="msg-time">10:23 AM</span>
+          </div>
+          <div class="msg-text">What is the time limit to claim ITC in GSTR-3B for FY 2024-25 invoices?</div>
+        </div>
+      </div>
+
+      <div class="message">
+        <div class="avatar" style="background:#eff6ff;color:#1d4ed8">CS</div>
+        <div class="msg-body">
+          <div class="msg-meta">
+            <span class="msg-name" style="color:#1d4ed8">CA Sharma</span>
+            <span class="msg-role-badge badge-ca">CA · Mod</span>
+            <span class="msg-time">10:25 AM</span>
+          </div>
+          <div class="msg-text">ITC for FY 2024-25 can be claimed up to 30th November 2025 (i.e. due date of September return) or the date of filing annual return GSTR-9, whichever is earlier. 📅</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK TOPICS -->
+    <div class="quick-topics">
+      <span style="font-size:11px;color:#94a3b8;font-weight:600;align-self:center">Quick Ask:</span>
+      <div class="topic-chip" onclick="fillMsg('What is the GST rate on this service?')">GST Rate Query</div>
+      <div class="topic-chip" onclick="fillMsg('How to file GSTR-1 amendment?')">GSTR-1 Amendment</div>
+      <div class="topic-chip" onclick="fillMsg('ITC claim procedure for FY 2025-26?')">ITC Claim</div>
+      <div class="topic-chip" onclick="fillMsg('TDS under GST - when applicable?')">TDS under GST</div>
+      <div class="topic-chip" onclick="fillMsg('E-invoice threshold limit 2026?')">E-Invoice</div>
+    </div>
+
+    <!-- INPUT AREA -->
+    <div class="input-area">
+      <div class="input-name-row">
+        <input type="text" id="yourName" placeholder="Your Name" value="You">
+        <select id="yourRole">
+          <option value="Member">Member</option>
+          <option value="CA">CA</option>
+          <option value="GST Practitioner">GST Practitioner</option>
+          <option value="Accountant">Accountant</option>
+          <option value="Student">Student</option>
+        </select>
+      </div>
+      <div class="input-wrapper">
+        <input type="text" id="msgInput" placeholder="Ask your GST / Tax / Finance query..." onkeypress="handleKey(event)">
+        <button class="send-btn" onclick="sendMessage()" title="Send">&#9993;</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  var bannedWords = ['spam', 'scam', 'abuse', 'attack', 'fake'];
+
+  var roleColors = {
+    'CA':               { name: '#1d4ed8', badge: 'badge-ca',   avatar: '#eff6ff', acolor: '#1d4ed8', label: 'CA' },
+    'GST Practitioner': { name: '#15803d', badge: 'badge-gst',  avatar: '#f0fdf4', acolor: '#15803d', label: 'GST Prac.' },
+    'Accountant':       { name: '#7e22ce', badge: 'badge-user', avatar: '#fdf4ff', acolor: '#7e22ce', label: 'Accountant' },
+    'Student':          { name: '#b45309', badge: 'badge-user', avatar: '#fffbeb', acolor: '#b45309', label: 'Student' },
+    'Member':           { name: '#334155', badge: 'badge-user', avatar: '#f8fafc', acolor: '#64748b', label: 'Member' }
+  };
+
+  function fillMsg(text) {
+    document.getElementById('msgInput').value = text;
+    document.getElementById('msgInput').focus();
+  }
+
+  function handleKey(e) { if (e.key === 'Enter') sendMessage(); }
+
+  function sendMessage() {
+    var input   = document.getElementById('msgInput');
+    var nameEl  = document.getElementById('yourName');
+    var roleEl  = document.getElementById('yourRole');
+    var chatWin = document.getElementById('chat-window');
+
+    var rawText  = input.value.trim();
+    var userName = nameEl.value.trim() || 'You';
+    var userRole = roleEl.value;
+    if (!rawText) return;
+
+    // Moderation
+    var isModerated = false;
+    var filtered = rawText;
+    bannedWords.forEach(function(w) {
+      var re = new RegExp(w, 'gi');
+      if (re.test(filtered)) { filtered = filtered.replace(re, '****'); isModerated = true; }
+    });
+
+    var time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    var rc   = roleColors[userRole] || roleColors['Member'];
+    var initials = userName.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
+
+    // Build message
+    var msgDiv = document.createElement('div');
+    msgDiv.className = 'message self';
+    msgDiv.innerHTML =
+      '<div class="avatar" style="background:' + rc.avatar + ';color:' + rc.acolor + '">' + initials + '</div>' +
+      '<div class="msg-body">' +
+        '<div class="msg-meta">' +
+          '<span class="msg-name" style="color:' + rc.name + '">' + escHtml(userName) + '</span>' +
+          '<span class="msg-role-badge ' + rc.badge + '">' + rc.label + '</span>' +
+          '<span class="msg-time">' + time + '</span>' +
+        '</div>' +
+        '<div class="msg-text sent-bubble' + (isModerated ? ' moderated' : '') + '">' + escHtml(filtered) + '</div>' +
+      '</div>';
+    chatWin.appendChild(msgDiv);
+
+    if (isModerated) {
+      setTimeout(function() {
+        var sysDiv = document.createElement('div');
+        sysDiv.className = 'system-msg warn';
+        sysDiv.innerText = '⚠ Your message was filtered. Please follow community guidelines.';
+        chatWin.appendChild(sysDiv);
+        chatWin.scrollTop = chatWin.scrollHeight;
+      }, 600);
+    }
+
+    input.value = '';
+    chatWin.scrollTop = chatWin.scrollHeight;
+  }
+
+  function escHtml(t) {
+    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>

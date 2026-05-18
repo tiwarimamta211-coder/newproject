@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tally Export + GST Tool — CA Office Pro</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0d14; font-family: 'Consolas','Courier New',monospace; color: #e8eaf0; min-height: 100vh; }
+::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0d1525; } ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 3px; }
+input,select,button,textarea { font-family: inherit; box-sizing: border-box; }
+input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1); }
+.card { background: #0d1525; border: 1px solid #1e3a5f; border-radius: 14px; padding: 18px; }
+.inp { width:100%; background:#111827; border:1px solid #1e3a5f; border-radius:8px; color:#e8eaf0; padding:9px 12px; font-size:13px; outline:none; margin-bottom:10px; }
+.inp:focus { border-color:#2563eb; }
+.lbl { font-size:11px; color:#4a90d9; margin-bottom:4px; display:block; letter-spacing:1px; }
+.btn { border:none; border-radius:8px; cursor:pointer; font-family:inherit; font-weight:700; padding:10px 18px; font-size:13px; transition:opacity 0.2s; }
+.btn:hover { opacity:0.88; }
+.btn-blue  { background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; }
+.btn-green { background:linear-gradient(135deg,#059669,#047857); color:#fff; }
+.btn-orange{ background:linear-gradient(135deg,#d97706,#b45309); color:#fff; }
+.btn-red   { background:linear-gradient(135deg,#dc2626,#b91c1c); color:#fff; }
+.btn-tally { background:linear-gradient(135deg,#7c3aed,#2563eb); color:#fff; }
+.tag { display:inline-block; padding:2px 10px; border-radius:6px; font-size:10px; font-weight:700; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.fade { animation:fadeIn 0.3s ease; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.pulse { animation:pulse 1.5s infinite; }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+th { background:#0f1f3d; color:#4a90d9; padding:10px 12px; text-align:left; font-size:11px; letter-spacing:1px; border-bottom:1px solid #1e3a5f; }
+td { padding:9px 12px; border-bottom:1px solid #1a2744; color:#e8eaf0; }
+tr:hover td { background:#0f1f3d; }
+.modal-bg { position:fixed;inset:0;background:#000000cc;z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px; }
+.modal { background:#0d1525;border:1px solid #2563eb;border-radius:18px;padding:26px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto; }
+@media(max-width:600px){ .grid2{grid-template-columns:1fr!important} .hide-mobile{display:none!important} }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div style="background:#0d1525;border-bottom:1px solid #1e3a5f;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10;position:sticky;top:0;z-index:100;">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#2563eb);display:flex;align-items:center;justify-content:center;font-size:20px;">📊</div>
+    <div>
+      <div style="font-size:14px;font-weight:900;color:#fff;letter-spacing:1px;">TALLY + GST TOOL</div>
+      <div style="font-size:9px;color:#4a90d9;letter-spacing:2px;">CA OFFICE PRO MODULE</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;" id="tabBtns">
+    <button class="btn" id="tab-entry"   onclick="showTab('entry')"   style="padding:7px 14px;font-size:12px;background:#2563eb22;border:1px solid #2563eb;color:#60a5fa;">📝 Voucher Entry</button>
+    <button class="btn" id="tab-gst"     onclick="showTab('gst')"     style="padding:7px 14px;font-size:12px;background:transparent;border:1px solid #1e3a5f;color:#6b7280;">📋 GST Summary</button>
+    <button class="btn" id="tab-tally"   onclick="showTab('tally')"   style="padding:7px 14px;font-size:12px;background:transparent;border:1px solid #1e3a5f;color:#6b7280;">⬇️ Tally Export</button>
+    <button class="btn" id="tab-guide"   onclick="showTab('guide')"   style="padding:7px 14px;font-size:12px;background:transparent;border:1px solid #1e3a5f;color:#6b7280;">📖 Guide</button>
+  </div>
+</div>
+
+<div style="padding:20px 20px 60px;" id="mainContent">
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 1: VOUCHER ENTRY                                    -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="tab-entry-content" class="fade">
+
+  <!-- Stats bar -->
+  <div class="grid2" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;" id="statsBar">
+    <div class="card" style="padding:14px;text-align:center;">
+      <div style="font-size:20px;font-weight:900;color:#60a5fa;" id="statTotal">0</div>
+      <div style="font-size:10px;color:#6b7280;">कुल Vouchers</div>
+    </div>
+    <div class="card" style="padding:14px;text-align:center;">
+      <div style="font-size:20px;font-weight:900;color:#00e5a0;" id="statSales">₹0</div>
+      <div style="font-size:10px;color:#6b7280;">कुल Sales</div>
+    </div>
+    <div class="card" style="padding:14px;text-align:center;">
+      <div style="font-size:20px;font-weight:900;color:#ffb347;" id="statPurchase">₹0</div>
+      <div style="font-size:10px;color:#6b7280;">कुल Purchase</div>
+    </div>
+    <div class="card" style="padding:14px;text-align:center;">
+      <div style="font-size:20px;font-weight:900;color:#a78bfa;" id="statGST">₹0</div>
+      <div style="font-size:10px;color:#6b7280;">कुल GST</div>
+    </div>
+  </div>
+
+  <!-- Entry Form -->
+  <div class="card" style="margin-bottom:18px;">
+    <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:16px;letter-spacing:1px;">➕ नई Entry जोड़ें</div>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" class="grid2">
+      <div>
+        <label class="lbl">Voucher Type</label>
+        <select class="inp" id="vType" onchange="updateGSTCalc()">
+          <option value="Sales">Sales (बिक्री)</option>
+          <option value="Purchase">Purchase (खरीद)</option>
+          <option value="Credit Note">Credit Note</option>
+          <option value="Debit Note">Debit Note</option>
+        </select>
+      </div>
+      <div>
+        <label class="lbl">Date</label>
+        <input class="inp" type="date" id="vDate" />
+      </div>
+      <div>
+        <label class="lbl">Party का नाम</label>
+        <input class="inp" type="text" id="vParty" placeholder="जैसे: Mehta Traders" />
+      </div>
+      <div>
+        <label class="lbl">Party GSTIN</label>
+        <input class="inp" type="text" id="vGSTIN" placeholder="27AABCM5678B1Z3" maxlength="15" oninput="this.value=this.value.toUpperCase()" />
+      </div>
+      <div>
+        <label class="lbl">Invoice Number</label>
+        <input class="inp" type="text" id="vInvoice" placeholder="INV-001" />
+      </div>
+      <div>
+        <label class="lbl">Ledger / Item नाम</label>
+        <input class="inp" type="text" id="vLedger" placeholder="जैसे: Sales Account / Item Name" />
+      </div>
+      <div>
+        <label class="lbl">Taxable Amount (₹)</label>
+        <input class="inp" type="number" id="vAmount" placeholder="0" oninput="updateGSTCalc()" />
+      </div>
+      <div>
+        <label class="lbl">GST Rate</label>
+        <select class="inp" id="vGSTRate" onchange="updateGSTCalc()">
+          <option value="0">0% — Exempt</option>
+          <option value="5">5% GST</option>
+          <option value="12">12% GST</option>
+          <option value="18" selected>18% GST</option>
+          <option value="28">28% GST</option>
+        </select>
+      </div>
+      <div>
+        <label class="lbl">Transaction Type</label>
+        <select class="inp" id="vTxType" onchange="updateGSTCalc()">
+          <option value="intra">Intra-State (CGST+SGST)</option>
+          <option value="inter">Inter-State (IGST)</option>
+        </select>
+      </div>
+      <div>
+        <label class="lbl">HSN / SAC Code</label>
+        <input class="inp" type="text" id="vHSN" placeholder="जैसे: 9983" />
+      </div>
+    </div>
+
+    <!-- GST Preview Box -->
+    <div id="gstPreview" style="background:#0f1f3d;border:1px solid #2563eb33;border-radius:10px;padding:14px;margin:10px 0 14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:center;">
+      <div><div style="font-size:10px;color:#6b7280;">Taxable</div><div style="font-size:15px;font-weight:800;color:#fff;" id="previewTaxable">₹0</div></div>
+      <div><div style="font-size:10px;color:#6b7280;" id="previewGSTLabel">CGST</div><div style="font-size:15px;font-weight:800;color:#ffb347;" id="previewCGST">₹0</div></div>
+      <div><div style="font-size:10px;color:#6b7280;" id="previewGSTLabel2">SGST</div><div style="font-size:15px;font-weight:800;color:#a78bfa;" id="previewSGST">₹0</div></div>
+      <div><div style="font-size:10px;color:#6b7280;">Total</div><div style="font-size:15px;font-weight:800;color:#00e5a0;" id="previewTotal">₹0</div></div>
+    </div>
+
+    <div>
+      <label class="lbl">Narration (Optional)</label>
+      <input class="inp" type="text" id="vNarration" placeholder="Being goods sold / purchased..." />
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-blue" style="flex:1;" onclick="addVoucher()">💾 Entry Save करें</button>
+      <button class="btn" style="background:#1e3a5f;color:#6b7280;padding:10px 16px;" onclick="clearForm()">🗑️ Clear</button>
+    </div>
+  </div>
+
+  <!-- Voucher List -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+      <div style="font-size:13px;font-weight:800;color:#fff;">📋 Voucher List</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input class="inp" style="margin:0;width:180px;padding:7px 12px;" placeholder="🔍 खोजें..." oninput="filterVouchers(this.value)" />
+        <select class="inp" style="margin:0;width:130px;padding:7px 12px;" onchange="filterByType(this.value)">
+          <option value="">सभी</option>
+          <option value="Sales">Sales</option>
+          <option value="Purchase">Purchase</option>
+          <option value="Credit Note">Credit Note</option>
+          <option value="Debit Note">Debit Note</option>
+        </select>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Party</th>
+            <th>Invoice</th>
+            <th>Taxable</th>
+            <th>GST</th>
+            <th>Total</th>
+            <th>Rate</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="voucherTable">
+          <tr><td colspan="9" style="text-align:center;color:#6b7280;padding:30px;">कोई entry नहीं। ऊपर से जोड़ें।</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 2: GST SUMMARY                                      -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="tab-gst-content" style="display:none;" class="fade">
+  
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+    <div style="font-size:13px;font-weight:800;color:#fff;letter-spacing:1px;">📋 GST Summary — GSTR-3B Ready</div>
+    <div style="display:flex;gap:8px;">
+      <select class="inp" style="margin:0;width:160px;padding:7px 12px;" id="gstMonth" onchange="renderGSTSummary()">
+        <option value="">— महीना चुनें —</option>
+        <option value="2026-04">April 2026</option>
+        <option value="2026-03">March 2026</option>
+        <option value="2026-02">February 2026</option>
+        <option value="2026-01">January 2026</option>
+        <option value="2025-12">December 2025</option>
+        <option value="2025-11">November 2025</option>
+      </select>
+      <button class="btn btn-green" onclick="downloadGSTSummary()">⬇️ Download CSV</button>
+    </div>
+  </div>
+
+  <!-- GSTR-3B Boxes -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;" id="gstr3bBoxes">
+    <div class="card" style="border:1px solid #00e5a033;">
+      <div style="font-size:10px;color:#6b7280;letter-spacing:1px;">3.1(a) OUTWARD TAXABLE SUPPLIES</div>
+      <div style="font-size:22px;font-weight:900;color:#00e5a0;margin:8px 0;" id="g31a">₹0</div>
+      <div style="font-size:10px;color:#6b7280;">Sales + Debit Notes</div>
+    </div>
+    <div class="card" style="border:1px solid #60a5fa33;">
+      <div style="font-size:10px;color:#6b7280;letter-spacing:1px;">4(A) INPUT TAX CREDIT</div>
+      <div style="font-size:22px;font-weight:900;color:#60a5fa;margin:8px 0;" id="g4a">₹0</div>
+      <div style="font-size:10px;color:#6b7280;">Purchase पर GST</div>
+    </div>
+    <div class="card" style="border:1px solid #ffb34733;">
+      <div style="font-size:10px;color:#6b7280;letter-spacing:1px;">GST PAYABLE (NET)</div>
+      <div style="font-size:22px;font-weight:900;color:#ffb347;margin:8px 0;" id="gNet">₹0</div>
+      <div style="font-size:10px;color:#6b7280;">Output - Input</div>
+    </div>
+    <div class="card" style="border:1px solid #a78bfa33;">
+      <div style="font-size:10px;color:#6b7280;letter-spacing:1px;">CGST PAYABLE</div>
+      <div style="font-size:22px;font-weight:900;color:#a78bfa;margin:8px 0;" id="gCGST">₹0</div>
+    </div>
+    <div class="card" style="border:1px solid #a78bfa33;">
+      <div style="font-size:10px;color:#6b7280;letter-spacing:1px;">SGST PAYABLE</div>
+      <div style="font-size:22px;font-weight:900;color:#a78bfa;margin:8px 0;" id="gSGST">₹0</div>
+    </div>
+    <div class="card" style="border:1px solid #4dc3ff33;">
+      <div style="font-size:10px;color:#6b7280;letter-spacing:1px;">IGST PAYABLE</div>
+      <div style="font-size:22px;font-weight:900;color:#4dc3ff;margin:8px 0;" id="gIGST">₹0</div>
+    </div>
+  </div>
+
+  <!-- HSN Summary -->
+  <div class="card" style="margin-bottom:16px;">
+    <div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:12px;">HSN/SAC Summary (Table 12)</div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr><th>HSN/SAC</th><th>Description</th><th>Taxable Value</th><th>GST Rate</th><th>CGST</th><th>SGST</th><th>IGST</th></tr>
+        </thead>
+        <tbody id="hsnTable">
+          <tr><td colspan="7" style="text-align:center;color:#6b7280;padding:20px;">Data नहीं है। Voucher entry करें।</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- B2B Summary for GSTR-1 -->
+  <div class="card">
+    <div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:12px;">B2B Invoices (GSTR-1 Table 4)</div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr><th>GSTIN</th><th>Party</th><th>Invoice</th><th>Date</th><th>Taxable</th><th>Tax</th><th>Total</th></tr>
+        </thead>
+        <tbody id="b2bTable">
+          <tr><td colspan="7" style="text-align:center;color:#6b7280;padding:20px;">Sales entries नहीं हैं।</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 3: TALLY EXPORT                                     -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="tab-tally-content" style="display:none;" class="fade">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;" class="grid2">
+    
+    <!-- Export Options -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:16px;">⚙️ Export Settings</div>
+      
+      <label class="lbl">Company Name (Tally में जो है)</label>
+      <input class="inp" type="text" id="tallyCompany" placeholder="जैसे: Mehta Traders Pvt Ltd" />
+      
+      <label class="lbl">Financial Year</label>
+      <select class="inp" id="tallyFY">
+        <option value="2025-2026">2025-2026</option>
+        <option value="2024-2025">2024-2025</option>
+      </select>
+
+      <label class="lbl">महीना Export करें</label>
+      <select class="inp" id="tallyMonth">
+        <option value="">सभी entries</option>
+        <option value="2026-04">April 2026</option>
+        <option value="2026-03">March 2026</option>
+        <option value="2026-02">February 2026</option>
+        <option value="2026-01">January 2026</option>
+        <option value="2025-12">December 2025</option>
+      </select>
+
+      <label class="lbl">Export Format</label>
+      <select class="inp" id="exportFormat">
+        <option value="xml">XML (Tally Import) — recommended</option>
+        <option value="csv">CSV (Excel view)</option>
+        <option value="json">JSON (Developer)</option>
+      </select>
+
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
+        <button class="btn btn-tally" onclick="exportTally()" style="width:100%;">⬇️ Tally XML Download करें</button>
+        <button class="btn btn-green" onclick="exportCSV()" style="width:100%;">📊 CSV Download करें</button>
+      </div>
+    </div>
+
+    <!-- Export Preview -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:16px;">👁️ Export Preview</div>
+      <div id="exportStats" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;padding:8px;background:#111827;border-radius:8px;">
+          <span style="color:#6b7280;font-size:12px;">कुल Vouchers</span>
+          <span style="color:#fff;font-weight:700;" id="expTotal">0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px;background:#111827;border-radius:8px;">
+          <span style="color:#6b7280;font-size:12px;">Sales Entries</span>
+          <span style="color:#00e5a0;font-weight:700;" id="expSales">0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px;background:#111827;border-radius:8px;">
+          <span style="color:#6b7280;font-size:12px;">Purchase Entries</span>
+          <span style="color:#ffb347;font-weight:700;" id="expPurchase">0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px;background:#111827;border-radius:8px;">
+          <span style="color:#6b7280;font-size:12px;">Total GST Amount</span>
+          <span style="color:#a78bfa;font-weight:700;" id="expGST">₹0</span>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:12px;background:#0f1f3d;border-radius:8px;border:1px solid #1e3a5f;">
+        <div style="font-size:10px;color:#4a90d9;margin-bottom:6px;letter-spacing:1px;">XML PREVIEW</div>
+        <pre id="xmlPreview" style="font-size:10px;color:#6b7280;overflow:auto;max-height:160px;white-space:pre-wrap;">&lt;ENVELOPE&gt;
+  &lt;!-- entries यहाँ दिखेंगी --&gt;
+&lt;/ENVELOPE&gt;</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tally Import Steps -->
+  <div class="card" style="border:1px solid #7c3aed44;">
+    <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:16px;">📥 Tally में Import कैसे करें — Step by Step</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+      {[
+        ["1","⬇️ XML Download करें","ऊपर 'Tally XML Download' button दबाएं। File computer में save होगी।","#2563eb"],
+        ["2","🖥️ Tally Prime खोलें","Gateway of Tally खोलें। Company select करें।","#7c3aed"],
+        ["3","📥 Import करें","Gateway → Import Data → Vouchers → Browse करके XML file select करें","#059669"],
+        ["4","✅ Import करें","Import button दबाएं। सभी entries automatically Tally में जाएंगी।","#d97706"],
+        ["5","📋 GST Check करें","Reports → GST → GSTR-3B Preview → verify करें","#dc2626"],
+        ["6","🚀 File करें","GSTN portal पर one-click filing करें","#00e5a0"],
+      ].map(([n,t,d,c]) => `
+        <div style="background:#111827;border-radius:10px;padding:14px;border-left:3px solid ${c};">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+            <div style="width:24px;height:24px;border-radius:50%;background:${c}22;border:1px solid ${c};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:${c};">${n}</div>
+            <div style="font-weight:700;color:#fff;font-size:12px;">${t}</div>
+          </div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.6;">${d}</div>
+        </div>
+      `).join("")}
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 4: GUIDE                                            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="tab-guide-content" style="display:none;" class="fade">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">
+    
+    <div class="card" style="border:1px solid #2563eb44;">
+      <div style="font-size:14px;font-weight:800;color:#60a5fa;margin-bottom:12px;">📝 Step 1 — Entry कैसे करें</div>
+      <div style="font-size:12px;color:#9ca3af;line-height:2;">
+        1. <span style="color:#fff;">"Voucher Entry"</span> tab खोलें<br>
+        2. <span style="color:#fff;">Voucher Type</span> चुनें (Sales/Purchase)<br>
+        3. <span style="color:#fff;">Date, Party, Invoice</span> भरें<br>
+        4. <span style="color:#fff;">Amount और GST Rate</span> डालें<br>
+        5. CGST/SGST <span style="color:#00e5a0;">automatically calculate</span> होगा<br>
+        6. <span style="color:#fff;">"Entry Save करें"</span> दबाएं ✅
+      </div>
+    </div>
+
+    <div class="card" style="border:1px solid #059669 44;">
+      <div style="font-size:14px;font-weight:800;color:#34d399;margin-bottom:12px;">📋 Step 2 — GST Summary</div>
+      <div style="font-size:12px;color:#9ca3af;line-height:2;">
+        1. <span style="color:#fff;">"GST Summary"</span> tab खोलें<br>
+        2. <span style="color:#fff;">महीना select</span> करें<br>
+        3. <span style="color:#00e5a0;">GSTR-3B</span> values automatically आएंगी<br>
+        4. Output Tax - Input Tax = <span style="color:#ffb347;">Net Payable</span><br>
+        5. HSN Summary और B2B list देखें<br>
+        6. <span style="color:#fff;">CSV Download</span> करें ✅
+      </div>
+    </div>
+
+    <div class="card" style="border:1px solid #7c3aed44;">
+      <div style="font-size:14px;font-weight:800;color:#a78bfa;margin-bottom:12px;">⬇️ Step 3 — Tally Export</div>
+      <div style="font-size:12px;color:#9ca3af;line-height:2;">
+        1. <span style="color:#fff;">"Tally Export"</span> tab खोलें<br>
+        2. <span style="color:#fff;">Company name</span> वही डालें जो Tally में है<br>
+        3. <span style="color:#fff;">महीना</span> select करें<br>
+        4. <span style="color:#fff;">"Tally XML Download"</span> दबाएं<br>
+        5. Tally → Import → Vouchers → file select<br>
+        6. सभी entries <span style="color:#00e5a0;">एक click में import</span> ✅
+      </div>
+    </div>
+
+    <div class="card" style="border:1px solid #d9770644;">
+      <div style="font-size:14px;font-weight:800;color:#fbbf24;margin-bottom:12px;">⚠️ GST Rate Guide</div>
+      <div style="font-size:12px;color:#9ca3af;line-height:2;">
+        <span style="color:#6b7280;">0%</span> — Basic food, exports<br>
+        <span style="color:#4dc3ff;">5%</span> — Essential goods, transport<br>
+        <span style="color:#00e5a0;">12%</span> — Processed food, computers<br>
+        <span style="color:#ffb347;">18%</span> — Services, most goods<br>
+        <span style="color:#ff4d6d;">28%</span> — Luxury, automobiles, tobacco<br>
+        <span style="color:#a78bfa;">Intra-State</span> = CGST + SGST (आधा-आधा)<br>
+        <span style="color:#4dc3ff;">Inter-State</span> = IGST (पूरा)
+      </div>
+    </div>
+
+    <div class="card" style="border:1px solid #dc262644;">
+      <div style="font-size:14px;font-weight:800;color:#f87171;margin-bottom:12px;">📅 Due Dates याद रखें</div>
+      <div style="font-size:12px;color:#9ca3af;line-height:2;">
+        <span style="color:#ff4d6d;">GSTR-1</span> — 11 तारीख (अगले महीने)<br>
+        <span style="color:#ffb347;">GSTR-3B</span> — 20 तारीख (अगले महीने)<br>
+        <span style="color:#4dc3ff;">TDS</span> — 7 तारीख (अगले महीने)<br>
+        <span style="color:#00e5a0;">Advance Tax</span> — 15 Jun, Sep, Dec, Mar<br>
+        <span style="color:#a78bfa;">GSTR-9</span> — 31 December (Annual)<br>
+        <span style="color:#fbbf24;">Audit Report</span> — 30 September
+      </div>
+    </div>
+
+    <div class="card" style="border:1px solid #0891b244;">
+      <div style="font-size:14px;font-weight:800;color:#22d3ee;margin-bottom:12px;">💡 Tally Tips</div>
+      <div style="font-size:12px;color:#9ca3af;line-height:2;">
+        • XML import से <span style="color:#00e5a0;">typing mistake नहीं होती</span><br>
+        • एक बार entry करो — Tally + GST दोनों तैयार<br>
+        • GSTIN डालने से party automatically match होती है<br>
+        • HSN code डालना जरूरी है (Annual > 5Cr)<br>
+        • <span style="color:#ffb347;">Narration</span> हमेशा भरें — audit में काम आती है<br>
+        • Credit/Debit Note = original invoice से link करें
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end mainContent -->
+
+<!-- Toast -->
+<div id="toast" style="display:none;position:fixed;bottom:24px;right:24px;z-index:9999;background:#0f2040;border:1px solid #2563eb;border-radius:12px;padding:12px 22px;color:#60a5fa;font-size:13px;font-weight:700;box-shadow:0 8px 32px #00000099;"></div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const KEY = "tally_gst_vouchers";
+let vouchers = [];
+try { vouchers = JSON.parse(localStorage.getItem(KEY)) || []; } catch{}
+const save = () => { try{localStorage.setItem(KEY,JSON.stringify(vouchers));}catch{} };
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+const fmt = n => "₹"+Number(n).toLocaleString("en-IN",{maximumFractionDigits:2});
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+function toast(msg,dur=2800){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.style.display="block";
+  setTimeout(()=>t.style.display="none",dur);
+}
+function setVal(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
+
+// ─── TABS ────────────────────────────────────────────────────────────────────
+function showTab(name){
+  ["entry","gst","tally","guide"].forEach(t=>{
+    document.getElementById("tab-"+t+"-content").style.display = t===name?"block":"none";
+    const btn=document.getElementById("tab-"+t);
+    if(btn){
+      btn.style.background = t===name?"#2563eb22":"transparent";
+      btn.style.borderColor = t===name?"#2563eb":"#1e3a5f";
+      btn.style.color = t===name?"#60a5fa":"#6b7280";
+    }
+  });
+  if(name==="gst") renderGSTSummary();
+  if(name==="tally") renderExportPreview();
+}
+
+// ─── GST CALC ────────────────────────────────────────────────────────────────
+function updateGSTCalc(){
+  const amt = parseFloat(document.getElementById("vAmount").value)||0;
+  const rate = parseFloat(document.getElementById("vGSTRate").value)||0;
+  const txType = document.getElementById("vTxType").value;
+  const totalGST = amt * rate / 100;
+  const isInter = txType==="inter";
+  
+  setVal("previewTaxable", fmt(amt));
+  setVal("previewTotal", fmt(amt + totalGST));
+  
+  if(isInter){
+    document.getElementById("previewGSTLabel").textContent="IGST";
+    document.getElementById("previewGSTLabel2").textContent="";
+    setVal("previewCGST", fmt(totalGST));
+    setVal("previewSGST","—");
+  } else {
+    document.getElementById("previewGSTLabel").textContent="CGST";
+    document.getElementById("previewGSTLabel2").textContent="SGST";
+    setVal("previewCGST", fmt(totalGST/2));
+    setVal("previewSGST", fmt(totalGST/2));
+  }
+}
+
+// ─── ADD VOUCHER ─────────────────────────────────────────────────────────────
+function addVoucher(){
+  const vType    = document.getElementById("vType").value;
+  const vDate    = document.getElementById("vDate").value;
+  const vParty   = document.getElementById("vParty").value.trim();
+  const vGSTIN   = document.getElementById("vGSTIN").value.trim();
+  const vInvoice = document.getElementById("vInvoice").value.trim();
+  const vLedger  = document.getElementById("vLedger").value.trim();
+  const vAmount  = parseFloat(document.getElementById("vAmount").value)||0;
+  const vGSTRate = parseFloat(document.getElementById("vGSTRate").value)||0;
+  const vTxType  = document.getElementById("vTxType").value;
+  const vHSN     = document.getElementById("vHSN").value.trim();
+  const vNarration=document.getElementById("vNarration").value.trim();
+
+  if(!vDate){ toast("❌ Date जरूरी है"); return; }
+  if(!vParty){ toast("❌ Party का नाम जरूरी है"); return; }
+  if(vAmount<=0){ toast("❌ Amount 0 से ज्यादा होना चाहिए"); return; }
+
+  const gst = vAmount * vGSTRate/100;
+  const isInter = vTxType==="inter";
+  const v = {
+    id:uid(), type:vType, date:vDate, party:vParty, gstin:vGSTIN,
+    invoice:vInvoice||"—", ledger:vLedger, amount:vAmount,
+    gstRate:vGSTRate, txType:vTxType, hsn:vHSN,
+    cgst: isInter?0:gst/2, sgst:isInter?0:gst/2, igst:isInter?gst:0,
+    totalGST:gst, total:vAmount+gst, narration:vNarration,
+    createdAt:new Date().toISOString()
+  };
+  vouchers.unshift(v);
+  save();
+  renderVouchers(vouchers);
+  updateStats();
+  clearForm();
+  toast("✅ Entry save हुई! — "+vParty+" — "+fmt(v.total));
+}
+
+// ─── RENDER VOUCHERS ─────────────────────────────────────────────────────────
+function renderVouchers(list){
+  const tb = document.getElementById("voucherTable");
+  if(!list.length){
+    tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:#6b7280;padding:30px;">कोई entry नहीं। ऊपर से जोड़ें।</td></tr>';
+    return;
+  }
+  const typeColors = {"Sales":"#00e5a0","Purchase":"#ffb347","Credit Note":"#4dc3ff","Debit Note":"#ff4d6d"};
+  tb.innerHTML = list.map(v=>`
+    <tr>
+      <td style="white-space:nowrap;">${v.date}</td>
+      <td><span style="background:${typeColors[v.type]||"#aaa"}22;color:${typeColors[v.type]||"#aaa"};padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;">${v.type}</span></td>
+      <td>
+        <div style="font-weight:700;">${v.party}</div>
+        ${v.gstin?`<div style="font-size:10px;color:#4a90d9;">${v.gstin}</div>`:""}
+      </td>
+      <td style="color:#6b7280;">${v.invoice}</td>
+      <td style="font-weight:700;">${fmt(v.amount)}</td>
+      <td style="color:#a78bfa;">${fmt(v.totalGST)}<div style="font-size:9px;color:#6b7280;">${v.gstRate}%</div></td>
+      <td style="font-weight:700;color:#00e5a0;">${fmt(v.total)}</td>
+      <td><span style="font-size:10px;color:#6b7280;">${v.txType==="inter"?"IGST":"CGST+SGST"}</span></td>
+      <td><button onclick="deleteVoucher('${v.id}')" style="background:transparent;border:none;color:#ff4d6d44;cursor:pointer;font-size:16px;padding:0;" onmouseover="this.style.color='#ff4d6d'" onmouseout="this.style.color='#ff4d6d44'">✕</button></td>
+    </tr>
+  `).join("");
+}
+
+function deleteVoucher(id){
+  if(!confirm("यह entry delete करें?")) return;
+  vouchers = vouchers.filter(v=>v.id!==id);
+  save(); renderVouchers(vouchers); updateStats();
+  toast("🗑️ Entry delete हुई");
+}
+
+function filterVouchers(q){
+  const f = vouchers.filter(v=>
+    v.party.toLowerCase().includes(q.toLowerCase()) ||
+    v.invoice.toLowerCase().includes(q.toLowerCase()) ||
+    (v.gstin||"").toLowerCase().includes(q.toLowerCase())
+  );
+  renderVouchers(f);
+}
+
+function filterByType(t){
+  renderVouchers(t ? vouchers.filter(v=>v.type===t) : vouchers);
+}
+
+// ─── STATS ───────────────────────────────────────────────────────────────────
+function updateStats(){
+  const sales    = vouchers.filter(v=>v.type==="Sales"||v.type==="Debit Note");
+  const purchase = vouchers.filter(v=>v.type==="Purchase"||v.type==="Credit Note");
+  setVal("statTotal", vouchers.length);
+  setVal("statSales", fmt(sales.reduce((s,v)=>s+v.total,0)));
+  setVal("statPurchase", fmt(purchase.reduce((s,v)=>s+v.total,0)));
+  setVal("statGST", fmt(vouchers.reduce((s,v)=>s+v.totalGST,0)));
+}
+
+// ─── CLEAR FORM ──────────────────────────────────────────────────────────────
+function clearForm(){
+  ["vParty","vGSTIN","vInvoice","vLedger","vAmount","vHSN","vNarration"].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value="";
+  });
+  updateGSTCalc();
+}
+
+// ─── GST SUMMARY ─────────────────────────────────────────────────────────────
+function renderGSTSummary(){
+  const month = document.getElementById("gstMonth").value;
+  const filtered = month ? vouchers.filter(v=>v.date.startsWith(month)) : vouchers;
+
+  const outward = filtered.filter(v=>v.type==="Sales"||v.type==="Debit Note");
+  const inward  = filtered.filter(v=>v.type==="Purchase"||v.type==="Credit Note");
+
+  const outTax = outward.reduce((s,v)=>s+v.totalGST,0);
+  const inTax  = inward.reduce((s,v)=>s+v.totalGST,0);
+  const net    = Math.max(0, outTax-inTax);
+
+  const outCGST= outward.reduce((s,v)=>s+v.cgst,0);
+  const outSGST= outward.reduce((s,v)=>s+v.sgst,0);
+  const outIGST= outward.reduce((s,v)=>s+v.igst,0);
+  const inCGST = inward.reduce((s,v)=>s+v.cgst,0);
+  const inSGST = inward.reduce((s,v)=>s+v.sgst,0);
+  const inIGST = inward.reduce((s,v)=>s+v.igst,0);
+
+  setVal("g31a",  fmt(outward.reduce((s,v)=>s+v.amount,0)));
+  setVal("g4a",   fmt(inward.reduce((s,v)=>s+v.amount,0)));
+  setVal("gNet",  fmt(net));
+  setVal("gCGST", fmt(Math.max(0,outCGST-inCGST)));
+  setVal("gSGST", fmt(Math.max(0,outSGST-inSGST)));
+  setVal("gIGST", fmt(Math.max(0,outIGST-inIGST)));
+
+  // HSN Summary
+  const hsnMap = {};
+  filtered.forEach(v=>{
+    const k = v.hsn||"N/A";
+    if(!hsnMap[k]) hsnMap[k]={hsn:k,desc:v.ledger,taxable:0,rates:new Set(),cgst:0,sgst:0,igst:0};
+    hsnMap[k].taxable+=v.amount;
+    hsnMap[k].rates.add(v.gstRate+"%");
+    hsnMap[k].cgst+=v.cgst;
+    hsnMap[k].sgst+=v.sgst;
+    hsnMap[k].igst+=v.igst;
+  });
+  const hsnRows = Object.values(hsnMap);
+  const hsnTb = document.getElementById("hsnTable");
+  if(!hsnRows.length){
+    hsnTb.innerHTML='<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:20px;">Data नहीं है।</td></tr>';
+  } else {
+    hsnTb.innerHTML = hsnRows.map(h=>`
+      <tr>
+        <td style="font-weight:700;color:#60a5fa;">${h.hsn}</td>
+        <td>${h.desc||"—"}</td>
+        <td style="font-weight:700;">${fmt(h.taxable)}</td>
+        <td>${[...h.rates].join(", ")}</td>
+        <td style="color:#a78bfa;">${fmt(h.cgst)}</td>
+        <td style="color:#a78bfa;">${fmt(h.sgst)}</td>
+        <td style="color:#4dc3ff;">${fmt(h.igst)}</td>
+      </tr>
+    `).join("");
+  }
+
+  // B2B Table
+  const b2bTb = document.getElementById("b2bTable");
+  const salesList = filtered.filter(v=>(v.type==="Sales")&&v.gstin);
+  if(!salesList.length){
+    b2bTb.innerHTML='<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:20px;">Sales entries नहीं हैं।</td></tr>';
+  } else {
+    b2bTb.innerHTML = salesList.map(v=>`
+      <tr>
+        <td style="color:#4a90d9;font-size:11px;">${v.gstin}</td>
+        <td style="font-weight:700;">${v.party}</td>
+        <td>${v.invoice}</td>
+        <td>${v.date}</td>
+        <td>${fmt(v.amount)}</td>
+        <td style="color:#a78bfa;">${fmt(v.totalGST)}</td>
+        <td style="font-weight:700;color:#00e5a0;">${fmt(v.total)}</td>
+      </tr>
+    `).join("");
+  }
+}
+
+function downloadGSTSummary(){
+  if(!vouchers.length){ toast("❌ कोई entry नहीं है"); return; }
+  const rows = [["Date","Type","Party","GSTIN","Invoice","Taxable","GST Rate","CGST","SGST","IGST","Total","HSN","Narration"]];
+  vouchers.forEach(v=>rows.push([v.date,v.type,v.party,v.gstin,v.invoice,v.amount,v.gstRate+"%",v.cgst,v.sgst,v.igst,v.total,v.hsn,v.narration]));
+  const csv = rows.map(r=>r.join(",")).join("\n");
+  const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href=url; a.download="GST_Summary.csv"; a.click();
+  toast("✅ GST Summary CSV download हुई!");
+}
+
+// ─── TALLY XML EXPORT ────────────────────────────────────────────────────────
+function renderExportPreview(){
+  const month = document.getElementById("tallyMonth").value;
+  const list = month ? vouchers.filter(v=>v.date.startsWith(month)) : vouchers;
+  setVal("expTotal", list.length);
+  setVal("expSales", list.filter(v=>v.type==="Sales").length);
+  setVal("expPurchase", list.filter(v=>v.type==="Purchase").length);
+  setVal("expGST", fmt(list.reduce((s,v)=>s+v.totalGST,0)));
+  
+  const preview = list.slice(0,2).map(v=>`  <VOUCHER>
+    <DATE>${v.date.replace(/-/g,"")}</DATE>
+    <VOUCHERTYPENAME>${v.type}</VOUCHERTYPENAME>
+    <PARTYLEDGERNAME>${v.party}</PARTYLEDGERNAME>
+    <AMOUNT>${v.total.toFixed(2)}</AMOUNT>
+  </VOUCHER>`).join("\n");
+  const pre = document.getElementById("xmlPreview");
+  if(pre) pre.textContent = `<ENVELOPE>\n  <HEADER><TALLYREQUEST>Import Data</TALLYREQUEST></HEADER>\n  <BODY>\n${preview||"    <!-- entries यहाँ होंगी -->"}\n  </BODY>\n</ENVELOPE>`;
+}
+
+function exportTally(){
+  const company = document.getElementById("tallyCompany").value.trim() || "My Company";
+  const fy      = document.getElementById("tallyFY").value;
+  const month   = document.getElementById("tallyMonth").value;
+  const list    = month ? vouchers.filter(v=>v.date.startsWith(month)) : vouchers;
+  
+  if(!list.length){ toast("❌ Export के लिए कोई entry नहीं है"); return; }
+
+  const tallyDate = d => d.replace(/-/g,"");
+  const sign = v => (v.type==="Purchase"||v.type==="Credit Note") ? 1 : -1;
+
+  const voucherXML = list.map(v=>{
+    const isGST = v.gstRate > 0;
+    const isPurchase = v.type==="Purchase"||v.type==="Credit Note";
+    const mainLedger = isPurchase ? "Purchase Account" : "Sales Account";
+    const partyLedger = v.party;
+    const s = isPurchase ? 1 : -1;
+
+    return `    <VOUCHER REMOTEID="${v.id}" VCHTYPE="${v.type}" ACTION="Create">
+      <DATE>${tallyDate(v.date)}</DATE>
+      <VOUCHERTYPENAME>${v.type}</VOUCHERTYPENAME>
+      <VOUCHERNUMBER>${v.invoice!=="—"?v.invoice:v.id}</VOUCHERNUMBER>
+      <NARRATION>${v.narration||"Being "+v.type.toLowerCase()+" of goods"}</NARRATION>
+      <PARTYLEDGERNAME>${partyLedger}</PARTYLEDGERNAME>
+      <ALLLEDGERENTRIES.LIST>
+        <LEDGERNAME>${partyLedger}</LEDGERNAME>
+        <ISDEEMEDPOSITIVE>${isPurchase?"No":"Yes"}</ISDEEMEDPOSITIVE>
+        <AMOUNT>${(s * v.total * -1).toFixed(2)}</AMOUNT>
+        <GSTREGISTRATIONTYPE>Regular</GSTREGISTRATIONTYPE>
+        <GSTTIN>${v.gstin||""}</GSTTIN>
+      </ALLLEDGERENTRIES.LIST>
+      <ALLLEDGERENTRIES.LIST>
+        <LEDGERNAME>${mainLedger}</LEDGERNAME>
+        <ISDEEMEDPOSITIVE>${isPurchase?"Yes":"No"}</ISDEEMEDPOSITIVE>
+        <AMOUNT>${(s * v.amount).toFixed(2)}</AMOUNT>
+        <HSNNAME>${v.hsn||""}</HSNNAME>
+        <GSTOVRDNTAXRATE>${v.gstRate}</GSTOVRDNTAXRATE>
+      </ALLLEDGERENTRIES.LIST>
+      ${v.cgst>0?`<ALLLEDGERENTRIES.LIST>
+        <LEDGERNAME>${isPurchase?"Input CGST":"Output CGST"}</LEDGERNAME>
+        <ISDEEMEDPOSITIVE>${isPurchase?"Yes":"No"}</ISDEEMEDPOSITIVE>
+        <AMOUNT>${(s * v.cgst).toFixed(2)}</AMOUNT>
+      </ALLLEDGERENTRIES.LIST>
+      <ALLLEDGERENTRIES.LIST>
+        <LEDGERNAME>${isPurchase?"Input SGST":"Output SGST"}</LEDGERNAME>
+        <ISDEEMEDPOSITIVE>${isPurchase?"Yes":"No"}</ISDEEMEDPOSITIVE>
+        <AMOUNT>${(s * v.sgst).toFixed(2)}</AMOUNT>
+      </ALLLEDGERENTRIES.LIST>`:""}
+      ${v.igst>0?`<ALLLEDGERENTRIES.LIST>
+        <LEDGERNAME>${isPurchase?"Input IGST":"Output IGST"}</LEDGERNAME>
+        <ISDEEMEDPOSITIVE>${isPurchase?"Yes":"No"}</ISDEEMEDPOSITIVE>
+        <AMOUNT>${(s * v.igst).toFixed(2)}</AMOUNT>
+      </ALLLEDGERENTRIES.LIST>`:""}
+    </VOUCHER>`;
+  }).join("\n");
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<ENVELOPE>
+  <HEADER>
+    <TALLYREQUEST>Import Data</TALLYREQUEST>
+  </HEADER>
+  <BODY>
+    <IMPORTDATA>
+      <REQUESTDESC>
+        <REPORTNAME>Vouchers</REPORTNAME>
+        <STATICVARIABLES>
+          <SVCURRENTCOMPANY>${company}</SVCURRENTCOMPANY>
+        </STATICVARIABLES>
+      </REQUESTDESC>
+      <REQUESTDATA>
+${voucherXML}
+      </REQUESTDATA>
+    </IMPORTDATA>
+  </BODY>
+</ENVELOPE>`;
+
+  const blob = new Blob([xml],{type:"application/xml;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Tally_Import_${month||"All"}_${company.replace(/\s/g,"_")}.xml`;
+  a.click();
+  toast(`✅ ${list.length} entries का XML download हुआ! अब Tally में import करें।`);
+}
+
+function exportCSV(){
+  const month = document.getElementById("tallyMonth").value;
+  const list  = month ? vouchers.filter(v=>v.date.startsWith(month)) : vouchers;
+  if(!list.length){ toast("❌ कोई entry नहीं है"); return; }
+  const rows  = [["Date","Type","Party","GSTIN","Invoice#","Ledger","Taxable","Rate","CGST","SGST","IGST","Total","HSN","Narration"]];
+  list.forEach(v=>rows.push([v.date,v.type,`"${v.party}"`,v.gstin,v.invoice,`"${v.ledger}"`,v.amount,v.gstRate+"%",v.cgst.toFixed(2),v.sgst.toFixed(2),v.igst.toFixed(2),v.total.toFixed(2),v.hsn,`"${v.narration}"`]));
+  const csv = rows.map(r=>r.join(",")).join("\n");
+  const blob = new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href=url; a.download=`Vouchers_${month||"All"}.csv`; a.click();
+  toast("✅ CSV download हुई!");
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+document.getElementById("vDate").value = new Date().toISOString().slice(0,10);
+updateGSTCalc();
+renderVouchers(vouchers);
+updateStats();
+
+// Guide tab — render static HTML
+document.getElementById("tab-guide-content").innerHTML = `
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">
+  ${[
+    ["📝 Step 1 — Entry कैसे करें","#60a5fa","1. 'Voucher Entry' tab खोलें<br>2. Type चुनें (Sales/Purchase)<br>3. Date, Party, Invoice भरें<br>4. Amount और GST Rate डालें<br>5. CGST/SGST automatically calculate होगा<br>6. 'Entry Save करें' दबाएं ✅"],
+    ["📋 Step 2 — GST Summary","#34d399","1. 'GST Summary' tab खोलें<br>2. महीना select करें<br>3. GSTR-3B values automatically आएंगी<br>4. Output Tax - Input Tax = Net Payable<br>5. HSN Summary और B2B list देखें<br>6. CSV Download करें ✅"],
+    ["⬇️ Step 3 — Tally Export","#a78bfa","1. 'Tally Export' tab खोलें<br>2. Company name वही डालें जो Tally में है<br>3. महीना select करें<br>4. 'Tally XML Download' दबाएं<br>5. Tally → Import → Vouchers → file select<br>6. सभी entries एक click में import ✅"],
+    ["⚠️ GST Rate Guide","#fbbf24","0% — Basic food, exports<br>5% — Essential goods, transport<br>12% — Processed food, computers<br>18% — Services, most goods<br>28% — Luxury, automobiles, tobacco<br>Intra-State = CGST + SGST (आधा-आधा)<br>Inter-State = IGST (पूरा)"],
+    ["📅 Due Dates","#f87171","GSTR-1 — 11 तारीख (अगले महीने)<br>GSTR-3B — 20 तारीख (अगले महीने)<br>TDS — 7 तारीख (अगले महीने)<br>Advance Tax — 15 Jun, Sep, Dec, Mar<br>GSTR-9 — 31 December (Annual)<br>Audit Report — 30 September"],
+    ["💡 Tally Tips","#22d3ee","• XML import से typing mistake नहीं होती<br>• एक बार entry करो — Tally + GST दोनों तैयार<br>• GSTIN डालने से party automatically match होती है<br>• HSN code जरूरी है (Annual > 5Cr)<br>• Narration हमेशा भरें — audit में काम आती है<br>• Credit/Debit Note = original invoice से link करें"],
+  ].map(([title,color,body])=>`
+    <div class="card" style="border:1px solid ${color}44;">
+      <div style="font-size:14px;font-weight:800;color:${color};margin-bottom:12px;">${title}</div>
+      <div style="font-size:12px;color:#9ca3af;line-height:2.2;">${body}</div>
+    </div>
+  `).join("")}
+</div>`;
+</script>
+</body>
+</html>

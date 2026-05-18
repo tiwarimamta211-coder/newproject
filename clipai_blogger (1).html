@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClipAI | Video Trimmer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0d12;color:#e2e8f0;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 55% 35% at 15% 25%,rgba(0,210,240,0.05) 0%,transparent 60%),radial-gradient(ellipse 45% 30% at 85% 75%,rgba(130,80,255,0.05) 0%,transparent 60%);pointer-events:none;z-index:0}
+.app{display:flex;height:100vh;position:relative;z-index:1}
+.sidebar{width:210px;flex-shrink:0;background:#0d1117;border-right:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;padding:24px 14px}
+.logo{display:flex;align-items:center;gap:10px;font-size:1.2rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:32px;padding:0 6px}
+.logo-icon{width:30px;height:30px;background:linear-gradient(135deg,#00d2f0,#8250ff);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:#000;flex-shrink:0}
+.logo span{color:#00d2f0}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;font-size:0.82rem;font-weight:600;color:#5a6a7a;cursor:pointer;transition:all 0.2s;text-decoration:none;border:1px solid transparent;background:none;width:100%;font-family:inherit}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2}
+.nav-item.active{background:rgba(0,210,240,0.08);color:#00d2f0;border-color:rgba(0,210,240,0.15)}
+.nav-item:hover:not(.active){background:rgba(255,255,255,0.04);color:#cbd5e1}
+.sidebar-footer{margin-top:auto}
+.upgrade-card{background:linear-gradient(135deg,rgba(130,80,255,0.15),rgba(0,210,240,0.08));border:1px solid rgba(130,80,255,0.25);border-radius:13px;padding:15px;text-align:center}
+.upgrade-card h5{font-size:0.83rem;font-weight:800;margin-bottom:5px}
+.upgrade-card p{font-size:0.71rem;color:#5a6a7a;margin-bottom:11px;line-height:1.5}
+.btn-upgrade{width:100%;padding:8px;border:none;border-radius:7px;background:linear-gradient(135deg,#8250ff,#00d2f0);color:#000;font-family:inherit;font-weight:700;font-size:0.77rem;cursor:pointer;transition:opacity 0.2s}
+.btn-upgrade:hover{opacity:0.85}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+header{padding:14px 28px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:center;background:#0d1117}
+.search-hint{font-size:0.82rem;color:#4a5568;display:flex;align-items:center;gap:7px}
+.search-hint svg{width:14px;height:14px;stroke:#4a5568;fill:none;stroke-width:2}
+.user-pill{display:flex;align-items:center;gap:9px;padding:5px 11px 5px 5px;background:#141c24;border:1px solid rgba(255,255,255,0.06);border-radius:30px}
+.avatar{width:26px;height:26px;background:linear-gradient(135deg,#00d2f0,#8250ff);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:700;color:#000}
+.user-name{font-size:0.8rem;font-weight:600}
+.workspace{flex:1;overflow-y:auto;padding:24px 28px;display:flex;flex-direction:column;gap:18px}
+.workspace::-webkit-scrollbar{width:3px}
+.workspace::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+.page-title{display:flex;align-items:center;justify-content:space-between}
+.page-title h1{font-size:1.3rem;font-weight:800;letter-spacing:-0.5px}
+.page-title h1 span{color:#00d2f0}
+.badge{font-size:0.68rem;font-family:monospace;padding:3px 9px;border-radius:20px;background:rgba(0,210,240,0.1);border:1px solid rgba(0,210,240,0.2);color:#00d2f0;letter-spacing:0.5px}
+.trimmer-card{background:#0d1117;border:1px solid rgba(255,255,255,0.06);border-radius:18px;overflow:hidden;position:relative}
+.upload-zone{padding:56px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:background 0.2s;position:relative}
+.upload-zone::before{content:'';position:absolute;inset:14px;border:2px dashed rgba(0,210,240,0.12);border-radius:12px;transition:border-color 0.2s}
+.upload-zone:hover::before{border-color:rgba(0,210,240,0.35)}
+.upload-zone:hover{background:rgba(0,210,240,0.02)}
+.upload-icon{width:60px;height:60px;background:rgba(0,210,240,0.06);border:1px solid rgba(0,210,240,0.14);border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.upload-icon svg{width:26px;height:26px;stroke:#00d2f0;fill:none;stroke-width:2}
+.upload-zone h3{font-size:1rem;font-weight:800;margin-bottom:7px}
+.upload-zone p{font-size:0.79rem;color:#5a6a7a;margin-bottom:22px;line-height:1.6}
+.btn-choose{padding:10px 22px;background:linear-gradient(135deg,#00d2f0,rgba(0,210,240,0.7));color:#000;border:none;border-radius:9px;font-family:inherit;font-weight:700;font-size:0.82rem;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all 0.2s}
+.btn-choose:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,210,240,0.22)}
+#fileInput{display:none}
+.editor-area{display:none}
+.video-wrap{background:#000;position:relative;aspect-ratio:16/9;width:100%;overflow:hidden}
+video{width:100%;height:100%;display:block}
+.video-overlay{position:absolute;bottom:0;left:0;right:0;padding:16px;background:linear-gradient(transparent,rgba(0,0,0,0.8));display:flex;align-items:center;gap:12px;opacity:0;transition:opacity 0.25s}
+.video-wrap:hover .video-overlay{opacity:1}
+.play-btn{width:34px;height:34px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background 0.2s}
+.play-btn:hover{background:rgba(255,255,255,0.25)}
+.vid-progress{flex:1;height:3px;background:rgba(255,255,255,0.18);border-radius:3px;cursor:pointer;position:relative}
+.vid-progress-fill{height:100%;background:#00d2f0;border-radius:3px;width:0%;transition:width 0.1s}
+.vid-time{font-size:0.7rem;color:rgba(255,255,255,0.65);font-family:monospace;white-space:nowrap}
+.trim-panel{padding:20px}
+.trim-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.trim-label{font-size:0.7rem;font-weight:700;color:#4a5568;text-transform:uppercase;letter-spacing:0.8px;display:flex;align-items:center;gap:6px}
+.trim-label svg{width:13px;height:13px;stroke:#00d2f0;fill:none;stroke-width:2}
+.trim-chips{display:flex;gap:10px}
+.ts-chip{display:flex;align-items:center;gap:7px;padding:5px 10px;background:#141c24;border-radius:7px;font-family:monospace;font-size:0.79rem;font-weight:500}
+.ts-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-s{background:#00d2f0}
+.dot-e{background:#ff3d6b}
+.waveform-wrap{position:relative;height:68px;background:#141c24;border-radius:10px;overflow:hidden;margin-bottom:7px}
+.wave-bars{position:absolute;inset:0;display:flex;align-items:center;gap:2px;padding:0 4px;pointer-events:none}
+.w-bar{flex:1;border-radius:2px;background:rgba(255,255,255,0.06)}
+.w-bar.on{background:rgba(0,210,240,0.22)}
+.trim-hl{position:absolute;top:0;bottom:0;background:rgba(0,210,240,0.07);border-left:2px solid #00d2f0;border-right:2px solid #ff3d6b;pointer-events:none}
+.range-wrap{position:relative;height:34px;margin-top:3px}
+.range-wrap input[type=range]{position:absolute;width:100%;top:50%;transform:translateY(-50%);appearance:none;background:none;outline:none;pointer-events:none;height:34px}
+.range-wrap input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:34px;border-radius:5px;cursor:ew-resize;pointer-events:auto;box-shadow:0 2px 10px rgba(0,0,0,0.5)}
+#startRange::-webkit-slider-thumb{background:#00d2f0}
+#endRange::-webkit-slider-thumb{background:#ff3d6b}
+.track-bg{position:absolute;top:50%;transform:translateY(-50%);width:100%;height:3px;background:rgba(255,255,255,0.07);border-radius:3px;pointer-events:none}
+.track-fill{position:absolute;top:50%;transform:translateY(-50%);height:3px;background:linear-gradient(90deg,#00d2f0,#ff3d6b);border-radius:3px;pointer-events:none}
+.dur-info{display:flex;align-items:center;gap:5px;margin-top:9px;font-size:0.76rem;color:#4a5568;font-family:monospace}
+.dur-info span{color:#00d2f0;font-weight:600}
+.action-row{display:flex;gap:10px;padding:16px 20px;border-top:1px solid rgba(255,255,255,0.06);align-items:center}
+.btn-reset{padding:10px 18px;background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:9px;color:#5a6a7a;font-family:inherit;font-weight:600;font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all 0.2s}
+.btn-reset:hover{border-color:rgba(255,255,255,0.18);color:#e2e8f0}
+.btn-reset svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+.btn-export{flex:1;padding:11px 18px;background:linear-gradient(135deg,#141c24,#1e2a38);border:1px solid rgba(255,255,255,0.08);border-radius:9px;color:#e2e8f0;font-family:inherit;font-weight:700;font-size:0.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:all 0.2s;position:relative;overflow:hidden}
+.btn-export::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,210,240,0.08),rgba(130,80,255,0.08));opacity:0;transition:opacity 0.2s}
+.btn-export:hover::before{opacity:1}
+.btn-export:hover{border-color:rgba(0,210,240,0.28);transform:translateY(-1px)}
+.btn-export:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.exp-icon{width:22px;height:22px;background:linear-gradient(135deg,#00d2f0,#8250ff);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.exp-icon svg{width:11px;height:11px;stroke:#000;fill:none;stroke-width:2}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.stat-card{background:#0d1117;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card:nth-child(1)::before{background:linear-gradient(90deg,#00d2f0,transparent)}
+.stat-card:nth-child(2)::before{background:linear-gradient(90deg,#8250ff,transparent)}
+.stat-card:nth-child(3)::before{background:linear-gradient(90deg,#10b981,transparent)}
+.stat-label{font-size:0.69rem;color:#4a5568;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}
+.stat-value{font-size:1.05rem;font-weight:800;letter-spacing:-0.3px}
+.stat-card:nth-child(1) .stat-value{color:#00d2f0}
+.stat-card:nth-child(2) .stat-value{color:#8250ff}
+.stat-card:nth-child(3) .stat-value{color:#10b981}
+.stat-bar{height:3px;background:rgba(255,255,255,0.05);border-radius:3px;margin-top:10px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:3px}
+.stat-card:nth-child(1) .stat-bar-fill{background:#00d2f0;width:24%}
+.stat-card:nth-child(3) .stat-bar-fill{background:#10b981;width:24%}
+.modal-backdrop{display:none;position:absolute;inset:0;background:rgba(8,12,16,0.88);z-index:50;align-items:center;justify-content:center;border-radius:18px}
+.modal-backdrop.show{display:flex}
+.modal-box{background:#0d1117;border:1px solid rgba(0,210,240,0.18);border-radius:20px;padding:36px;text-align:center;max-width:320px;width:90%}
+.spinner{width:56px;height:56px;border-radius:50%;border:3px solid rgba(0,210,240,0.1);border-top-color:#00d2f0;animation:spin 0.8s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.success-icon{display:none;width:56px;height:56px;border-radius:50%;background:rgba(16,185,129,0.1);border:2px solid #10b981;align-items:center;justify-content:center;margin:0 auto 20px;color:#10b981;font-size:1.5rem}
+.modal-title{font-size:1rem;font-weight:800;margin-bottom:7px}
+.modal-desc{font-size:0.79rem;color:#5a6a7a;line-height:1.6}
+.modal-progress{width:100%;height:3px;background:rgba(255,255,255,0.05);border-radius:3px;margin-top:20px;overflow:hidden}
+.modal-bar{height:100%;background:linear-gradient(90deg,#00d2f0,#8250ff);border-radius:3px;width:0%;transition:width 0.3s ease}
+@media(max-width:780px){.sidebar{display:none}.stats-row{grid-template-columns:1fr}.workspace{padding:16px}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+    </div>
+    Clip<span>AI</span>
+  </div>
+  <nav class="nav">
+    <button class="nav-item active">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+      Video Trimmer
+    </button>
+    <button class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      AI Captions
+    </button>
+    <button class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      My Projects
+    </button>
+    <button class="nav-item">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Settings
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="upgrade-card">
+      <h5>&#9889; Go Pro</h5>
+      <p>4K export, AI scenes &amp; unlimited storage</p>
+      <button class="btn-upgrade">Upgrade Now</button>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header>
+    <div class="search-hint">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Search tools...
+    </div>
+    <div class="user-pill">
+      <div class="avatar">A</div>
+      <span class="user-name">Alex Rivera</span>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <div class="page-title">
+      <h1>Video <span>Trimmer</span></h1>
+      <div class="badge">AI OPTIMIZED</div>
+    </div>
+
+    <div class="trimmer-card">
+      <div id="uploadPlaceholder" class="upload-zone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        </div>
+        <h3>Drop your video here</h3>
+        <p>MP4, WebM, MOV supported<br>Max 50 MB on Free plan</p>
+        <button class="btn-choose" onclick="event.stopPropagation();document.getElementById('fileInput').click()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Choose File
+        </button>
+        <input type="file" id="fileInput" accept="video/*" onchange="loadVideo(event)">
+      </div>
+
+      <div id="editorArea" class="editor-area">
+        <div class="video-wrap">
+          <video id="videoPlayer" onclick="togglePlay()"></video>
+          <div class="video-overlay">
+            <div class="play-btn" onclick="togglePlay()">
+              <svg id="playIcon" width="14" height="14" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="white"/></svg>
+            </div>
+            <div class="vid-progress" onclick="seekVideo(event)">
+              <div class="vid-progress-fill" id="vpFill"></div>
+            </div>
+            <div class="vid-time" id="vidTime">0:00 / 0:00</div>
+          </div>
+        </div>
+
+        <div class="trim-panel">
+          <div class="trim-header">
+            <div class="trim-label">
+              <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+              Trim Selection
+            </div>
+            <div class="trim-chips">
+              <div class="ts-chip"><div class="ts-dot dot-s"></div><span id="startTimeDisplay">0:00</span></div>
+              <div class="ts-chip"><div class="ts-dot dot-e"></div><span id="endTimeDisplay">0:00</span></div>
+            </div>
+          </div>
+          <div class="waveform-wrap">
+            <div class="wave-bars" id="waveBars"></div>
+            <div class="trim-hl" id="trimHL"></div>
+          </div>
+          <div class="range-wrap">
+            <div class="track-bg"></div>
+            <div class="track-fill" id="trackFill"></div>
+            <input type="range" id="startRange" min="0" value="0" step="0.01" oninput="updateTrimmer()">
+            <input type="range" id="endRange" min="0" value="100" step="0.01" oninput="updateTrimmer()">
+          </div>
+          <div class="dur-info">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4a5568" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Selection: <span id="durDisplay">0:00</span>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button class="btn-reset" onclick="resetEditor()">
+            <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.97"/></svg>
+            Reset
+          </button>
+          <button class="btn-export" id="exportBtn" onclick="processVideo()">
+            <div class="exp-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            Trim &amp; Export (AI Optimized)
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal inside card (no position:fixed needed) -->
+      <div class="modal-backdrop" id="modalBackdrop">
+        <div class="modal-box">
+          <div class="spinner" id="spinner"></div>
+          <div class="success-icon" id="successIcon">&#10003;</div>
+          <div class="modal-title" id="modalTitle">AI Processing...</div>
+          <div class="modal-desc" id="modalDesc">Optimizing your clip with neural frame analysis</div>
+          <div class="modal-progress"><div class="modal-bar" id="modalBar"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Monthly Quota</div>
+        <div class="stat-value">12 / 50</div>
+        <div class="stat-bar"><div class="stat-bar-fill"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">AI Processing</div>
+        <div class="stat-value">High Priority</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Storage Used</div>
+        <div class="stat-value">1.2 / 5 GB</div>
+        <div class="stat-bar"><div class="stat-bar-fill"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+var vid=document.getElementById('videoPlayer');
+var sR=document.getElementById('startRange');
+var eR=document.getElementById('endRange');
+var tF=document.getElementById('trackFill');
+var tH=document.getElementById('trimHL');
+var sD=document.getElementById('startTimeDisplay');
+var eD=document.getElementById('endTimeDisplay');
+var dD=document.getElementById('durDisplay');
+var vpF=document.getElementById('vpFill');
+var vT=document.getElementById('vidTime');
+
+function fmt(s){var m=Math.floor(s/60),sc=Math.floor(s%60);return m+':'+(sc<10?'0':'')+sc}
+
+function buildWave(){
+  var c=document.getElementById('waveBars');c.innerHTML='';
+  for(var i=0;i<80;i++){var b=document.createElement('div');b.className='w-bar';b.style.height=(15+Math.random()*70)+'%';c.appendChild(b)}
+}
+
+function updateWave(){
+  var bars=document.querySelectorAll('.w-bar');
+  var sp=parseFloat(sR.value)/vid.duration;
+  var ep=parseFloat(eR.value)/vid.duration;
+  for(var i=0;i<bars.length;i++){var p=i/bars.length;bars[i].classList.toggle('on',p>=sp&&p<=ep)}
+}
+
+function loadVideo(e){
+  var f=e.target.files[0];if(!f)return;
+  vid.src=URL.createObjectURL(f);
+  vid.onloadedmetadata=function(){
+    document.getElementById('uploadPlaceholder').style.display='none';
+    document.getElementById('editorArea').style.display='block';
+    sR.max=vid.duration;eR.max=vid.duration;eR.value=vid.duration;
+    buildWave();updateTrimmer();
+  };
+}
+
+function updateTrimmer(){
+  var s=parseFloat(sR.value),e=parseFloat(eR.value),d=vid.duration||1;
+  if(s>=e-0.2){if(event&&event.target===sR)sR.value=e-0.2;else eR.value=s+0.2;s=parseFloat(sR.value);e=parseFloat(eR.value)}
+  var sp=(s/d)*100,ep=(e/d)*100;
+  tF.style.left=sp+'%';tF.style.width=(ep-sp)+'%';
+  tH.style.left=sp+'%';tH.style.width=(ep-sp)+'%';
+  sD.textContent=fmt(s);eD.textContent=fmt(e);dD.textContent=fmt(e-s);
+  vid.currentTime=s;updateWave();
+}
+
+function togglePlay(){
+  var icon=document.getElementById('playIcon');
+  if(vid.paused){vid.play();icon.innerHTML='<rect x="6" y="4" width="4" height="16" fill="white"/><rect x="14" y="4" width="4" height="16" fill="white"/>';}
+  else{vid.pause();icon.innerHTML='<polygon points="5 3 19 12 5 21 5 3" fill="white"/>';}
+}
+
+vid.ontimeupdate=function(){
+  if(!vid.duration)return;
+  vpF.style.width=(vid.currentTime/vid.duration*100)+'%';
+  vT.textContent=fmt(vid.currentTime)+' / '+fmt(vid.duration);
+  if(vid.currentTime>=parseFloat(eR.value)){vid.pause();document.getElementById('playIcon').innerHTML='<polygon points="5 3 19 12 5 21 5 3" fill="white"/>';}
+};
+
+function seekVideo(e){var r=e.currentTarget.getBoundingClientRect();vid.currentTime=((e.clientX-r.left)/r.width)*vid.duration}
+function resetEditor(){sR.value=0;eR.value=vid.duration;updateTrimmer()}
+
+function processVideo(){
+  var bd=document.getElementById('modalBackdrop');
+  var sp=document.getElementById('spinner');
+  var si=document.getElementById('successIcon');
+  var bar=document.getElementById('modalBar');
+  var ti=document.getElementById('modalTitle');
+  var de=document.getElementById('modalDesc');
+  var btn=document.getElementById('exportBtn');
+  sp.style.display='block';si.style.display='none';
+  bar.style.width='0%';ti.textContent='AI Processing...';
+  de.textContent='Optimizing your clip with neural frame analysis';
+  bd.classList.add('show');btn.disabled=true;
+  var steps=[[20,'Analyzing frames...'],[45,'Applying AI optimization...'],[70,'Encoding output...'],[90,'Finalizing export...'],[100,'Complete!']];
+  var i=0;
+  function run(){
+    if(i<steps.length){bar.style.width=steps[i][0]+'%';de.textContent=steps[i][1];i++;setTimeout(run,420);}
+    else{setTimeout(function(){
+      sp.style.display='none';si.style.display='flex';
+      ti.textContent='Export Complete!';
+      de.textContent='Clip ('+sD.textContent+' \u2192 '+eD.textContent+') saved to your projects.';
+      setTimeout(function(){bd.classList.remove('show');btn.disabled=false;},2600);
+    },200);}
+  }
+  run();
+}
+buildWave();
+</script>
+</body>
+</html>

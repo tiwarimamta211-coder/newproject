@@ -1,0 +1,758 @@
+<style>
+#hp-root{all:initial;display:block;font-family:system-ui,sans-serif;}
+#hp-root *{box-sizing:border-box;margin:0;padding:0;}
+#hp-root{--bg:#09090b;--sur:#111113;--card:#18181b;--bor:#27272a;--bor2:#3f3f46;--ac:#22d3ee;--ac2:#a78bfa;--gr:#4ade80;--re:#f87171;--ye:#fbbf24;--tx:#fafafa;--mu:#71717a;--mu2:#a1a1aa;background:var(--bg);color:var(--tx);border-radius:16px;overflow:hidden;}
+#hp-root .hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--sur);border-bottom:1px solid var(--bor);}
+#hp-root .logo{font-size:18px;font-weight:800;background:linear-gradient(135deg,var(--ac),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+#hp-root .chips{display:flex;gap:6px;align-items:center;}
+#hp-root .chip{padding:4px 10px;border-radius:99px;font-size:10px;font-weight:700;background:var(--card);border:1px solid var(--bor);color:var(--mu2);}
+#hp-root .chip.g{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:var(--gr);}
+#hp-root .chip.r{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3);color:var(--re);}
+#hp-root .chip.y{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:var(--ye);}
+#hp-root .tst{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;font-size:10px;font-weight:700;background:var(--card);border:1px solid var(--bor);}
+#hp-root .sd{width:6px;height:6px;border-radius:50%;background:var(--re);flex-shrink:0;}
+#hp-root .sd.on{background:var(--gr);}
+#hp-root .nav{display:flex;flex-wrap:wrap;gap:3px;padding:8px 10px;background:var(--sur);border-bottom:1px solid var(--bor);}
+#hp-root .nb{padding:5px 9px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--mu2);cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;transition:all .15s;white-space:nowrap;}
+#hp-root .nb:hover{background:var(--card);color:var(--tx);}
+#hp-root .nb.on{background:rgba(34,211,238,.1);border-color:rgba(34,211,238,.25);color:var(--ac);}
+#hp-root .nsep{font-size:9px;color:var(--mu);padding:5px 4px 0;width:100%;display:block;}
+#hp-root .pg{display:none;padding:14px;}
+#hp-root .pg.on{display:block;}
+#hp-root .sr{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+#hp-root .sc{background:var(--card);border:1px solid var(--bor);border-radius:10px;padding:12px;}
+#hp-root .sl{font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;}
+#hp-root .sv{font-size:18px;font-weight:800;font-family:monospace;}
+#hp-root .sv.c{color:var(--ac);}#hp-root .sv.r{color:var(--re);}#hp-root .sv.g{color:var(--gr);}#hp-root .sv.y{color:var(--ye);}
+#hp-root .card{background:var(--card);border:1px solid var(--bor);border-radius:10px;padding:14px;margin-bottom:12px;}
+#hp-root .ct{font-size:10px;font-weight:700;color:var(--mu2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
+#hp-root .mc{display:flex;align-items:flex-end;gap:4px;height:60px;}
+#hp-root .bc{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;}
+#hp-root .bf{width:100%;border-radius:2px 2px 0 0;min-height:2px;}
+#hp-root .bf.i{background:var(--ac);opacity:.7;}#hp-root .bf.e{background:var(--re);opacity:.7;}
+#hp-root .bl{font-size:8px;color:var(--mu);}
+#hp-root .tl{display:flex;flex-direction:column;gap:5px;}
+#hp-root .tx-row{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:8px;background:var(--sur);border:1px solid var(--bor);}
+#hp-root .ti{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+#hp-root .ti.i{background:rgba(34,211,238,.1);}#hp-root .ti.e{background:rgba(248,113,113,.1);}
+#hp-root .tn{font-size:12px;font-weight:600;color:var(--tx);}
+#hp-root .tm{font-size:10px;color:var(--mu);}
+#hp-root .ta{margin-left:auto;font-size:12px;font-weight:700;font-family:monospace;}
+#hp-root .ta.i{color:var(--ac);}#hp-root .ta.e{color:var(--re);}
+#hp-root .tag2{font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;background:var(--sur);color:var(--mu2);border:1px solid var(--bor);}
+#hp-root .fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+#hp-root .fl{font-size:9px;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.6px;}
+#hp-root .fi,#hp-root .fs{background:var(--sur);border:1px solid var(--bor);border-radius:7px;padding:8px 10px;color:var(--tx);font-size:12px;outline:none;width:100%;font-family:inherit;transition:border-color .2s;}
+#hp-root .fi:focus,#hp-root .fs:focus{border-color:var(--ac);}
+#hp-root .fs option{background:var(--sur);}
+#hp-root .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+#hp-root .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+#hp-root .sp{grid-column:1/-1;}
+#hp-root .tt{display:flex;gap:5px;margin-bottom:10px;}
+#hp-root .tb{flex:1;padding:7px;border-radius:7px;border:1px solid var(--bor);background:var(--sur);color:var(--mu);cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;}
+#hp-root .tb.i.on{background:rgba(34,211,238,.12);border-color:var(--ac);color:var(--ac);}
+#hp-root .tb.e.on{background:rgba(248,113,113,.12);border-color:var(--re);color:var(--re);}
+#hp-root .btn{padding:8px 14px;border-radius:7px;border:none;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
+#hp-root .ba{background:var(--ac);color:#09090b;}
+#hp-root .bg2{background:transparent;border:1px solid var(--bor);color:var(--mu2);}
+#hp-root .bg2:hover{border-color:var(--ac);color:var(--ac);}
+#hp-root .bo{background:var(--ye);color:#09090b;}
+#hp-root .bw{width:100%;}
+#hp-root .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+#hp-root .div{height:1px;background:var(--bor);margin:10px 0;}
+#hp-root .pb{height:3px;background:var(--bor);border-radius:2px;overflow:hidden;margin:8px 0;}
+#hp-root .pf{height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:2px;transition:width .5s;width:0%;}
+#hp-root .dw{overflow-x:auto;border-radius:8px;border:1px solid var(--bor);}
+#hp-root .dt{width:100%;border-collapse:collapse;font-size:11px;}
+#hp-root .dt th{background:var(--sur);padding:7px 10px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--mu);border-bottom:1px solid var(--bor);}
+#hp-root .dt td{padding:7px 10px;border-bottom:1px solid var(--bor);font-family:monospace;font-size:10px;color:var(--tx);}
+#hp-root .dt tr:last-child td{border:none;}
+#hp-root .steps{display:flex;margin-bottom:14px;}
+#hp-root .step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}
+#hp-root .step::after{content:'';position:absolute;top:12px;left:50%;width:100%;height:1px;background:var(--bor);}
+#hp-root .step:last-child::after{display:none;}
+#hp-root .sn{width:24px;height:24px;border-radius:50%;background:var(--bor);color:var(--mu);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;position:relative;z-index:1;}
+#hp-root .step.d .sn{background:var(--gr);color:#09090b;}
+#hp-root .step.a .sn{background:var(--ac);color:#09090b;box-shadow:0 0 0 3px rgba(34,211,238,.2);}
+#hp-root .sl2{font-size:9px;color:var(--mu);margin-top:4px;font-weight:600;}
+#hp-root .eg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+#hp-root .eo{border:1px solid var(--bor);border-radius:8px;padding:10px;cursor:pointer;text-align:center;}
+#hp-root .eo:hover,#hp-root .eo.on{border-color:var(--ac);background:rgba(34,211,238,.06);}
+#hp-root .xb{background:#0a0a0f;border-radius:8px;padding:10px;font-family:monospace;font-size:10px;line-height:1.6;overflow:auto;max-height:180px;white-space:pre;color:#94a3b8;border:1px solid var(--bor);}
+#hp-root .xt{color:#7dd3fc;}#hp-root .xv{color:#86efac;}
+#hp-root .rh{background:var(--card);border:1px solid var(--bor);border-radius:12px;padding:18px;text-align:center;margin-bottom:12px;}
+#hp-root .ra{font-size:32px;font-weight:800;font-family:monospace;transition:color .3s;}
+#hp-root .rl{font-size:12px;font-weight:700;margin-top:4px;}
+#hp-root .gsg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+#hp-root .gsc{background:var(--card);border:1px solid var(--bor);border-radius:10px;padding:12px;}
+#hp-root .bkd{display:flex;flex-direction:column;gap:5px;}
+#hp-root .bkr{display:flex;justify-content:space-between;padding:6px 10px;border-radius:6px;background:var(--sur);font-size:11px;}
+#hp-root .lb{background:var(--sur);border-radius:8px;padding:10px;font-family:monospace;font-size:10px;line-height:1.8;max-height:260px;overflow-y:auto;color:var(--mu2);border:1px solid var(--bor);}
+#hp-root .ls2{color:#4ade80;}#hp-root .le2{color:#f87171;}#hp-root .li2{color:#60a5fa;}#hp-root .lw2{color:#fbbf24;}
+#hp-root .ib{background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.2);border-radius:7px;padding:9px 12px;font-size:11px;color:var(--ac);margin-bottom:10px;}
+#hp-root .ssg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+#hp-root .ssc{background:var(--sur);border:1px solid var(--bor);border-radius:10px;padding:12px;text-align:center;}
+#hp-root .hp-toast{position:fixed;bottom:20px;right:20px;padding:10px 14px;border-radius:8px;font-weight:600;font-size:12px;z-index:99999;opacity:0;transform:translateY(6px);transition:all .25s;pointer-events:none;font-family:system-ui,sans-serif;}
+#hp-root .hp-toast.show{opacity:1;transform:none;}
+#hp-root .hp-toast.s{background:#4ade80;color:#09090b;}
+#hp-root .hp-toast.e{background:#f87171;color:white;}
+#hp-root .hp-toast.i{background:#22d3ee;color:#09090b;}
+#hp-root .hp-toast.w{background:#fbbf24;color:#09090b;}
+@media(max-width:600px){
+  #hp-root .sr,#hp-root .g2,#hp-root .g3,#hp-root .gsg,#hp-root .ssg{grid-template-columns:1fr;}
+  #hp-root .gsg{grid-template-columns:1fr 1fr;}
+  #hp-root .eg{grid-template-columns:1fr 1fr;}
+}
+</style>
+
+<div id="hp-root">
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo">हिसाब Pro</div>
+  <div class="chips">
+    <div class="chip" id="hp-bal">₹0</div>
+    <div class="chip" id="hp-gst">GST: ₹0</div>
+    <div class="tst"><div class="sd" id="hp-sd"></div><span id="hp-sl" style="color:var(--mu2);">Tally: Off</span></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <span class="nsep">📊 Accounting</span>
+  <button class="nb on" onclick="hpPg('dash',this)">📊 Dashboard</button>
+  <button class="nb" onclick="hpPg('txns',this)">💳 Transactions</button>
+  <button class="nb" onclick="hpPg('add',this)">➕ Add Entry</button>
+  <button class="nb" onclick="hpPg('inv',this)">🧾 Invoice</button>
+  <button class="nb" onclick="hpPg('rpt',this)">📈 Reports</button>
+  <span class="nsep">🔗 TallyPrime</span>
+  <button class="nb" onclick="hpPg('timp',this)">📥 Import</button>
+  <button class="nb" onclick="hpPg('texp',this)">📤 Export</button>
+  <button class="nb" onclick="hpPg('tsyn',this)">🔄 Sync</button>
+  <span class="nsep">⚖️ Compliance</span>
+  <button class="nb" onclick="hpPg('gst',this)">⚠️ GST Penalty</button>
+  <button class="nb" onclick="hpPg('log',this)">📋 Log</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="pg on" id="hp-dash">
+  <div class="sr">
+    <div class="sc"><div class="sl">कुल आमदनी</div><div class="sv c" id="hp-di">₹0</div></div>
+    <div class="sc"><div class="sl">कुल खर्च</div><div class="sv r" id="hp-de">₹0</div></div>
+    <div class="sc"><div class="sl">Net Balance</div><div class="sv g" id="hp-db">₹0</div></div>
+    <div class="sc"><div class="sl">GST Risk</div><div class="sv y" id="hp-dg">₹0</div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Monthly Chart</div>
+    <div class="mc" id="hp-chart"></div>
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mu2);"><div style="width:8px;height:8px;border-radius:1px;background:var(--ac);opacity:.7;"></div>Income</div>
+      <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mu2);"><div style="width:8px;height:8px;border-radius:1px;background:var(--re);opacity:.7;"></div>Expense</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">Quick Actions</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+      <button class="btn ba" onclick="hpPg('add',null)">➕ Entry जोड़ें</button>
+      <button class="btn bg2" onclick="hpPg('inv',null)">🧾 Invoice</button>
+      <button class="btn bg2" onclick="hpPg('timp',null)">📥 Tally Import</button>
+      <button class="btn bg2" onclick="hpPg('gst',null)">⚠️ GST Check</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">हाल की Transactions</div>
+    <div class="tl" id="hp-dtxns"></div>
+  </div>
+</div>
+
+<!-- TRANSACTIONS -->
+<div class="pg" id="hp-txns">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div style="font-size:15px;font-weight:700;color:var(--tx);">सभी Transactions</div>
+    <button class="btn bg2" onclick="hpDlCSV()" style="font-size:11px;padding:6px 11px;">⬇️ CSV</button>
+  </div>
+  <div class="card" style="padding:0;">
+    <div class="dw"><table class="dt">
+      <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Cat</th><th>Amount</th></tr></thead>
+      <tbody id="hp-tbody"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ADD ENTRY -->
+<div class="pg" id="hp-add">
+  <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:12px;">➕ नई Entry जोड़ें</div>
+  <div class="card" style="max-width:480px;">
+    <div class="tt">
+      <button class="tb i on" id="hp-bi" onclick="hpSType('i')">✅ आमदनी (Income)</button>
+      <button class="tb e" id="hp-be" onclick="hpSType('e')">❌ खर्च (Expense)</button>
+    </div>
+    <div class="div"></div>
+    <div class="g2">
+      <div class="fg"><div class="fl">विवरण</div><input class="fi" id="hp-ad" placeholder="जैसे: Client Payment"/></div>
+      <div class="fg"><div class="fl">राशि ₹</div><input class="fi" id="hp-aa" type="number" placeholder="0"/></div>
+      <div class="fg"><div class="fl">Category</div>
+        <select class="fs" id="hp-ac"><option>Sales</option><option>Service</option><option>Salary</option><option>Rent</option><option>Utilities</option><option>Purchase</option><option>Marketing</option><option>Other</option></select>
+      </div>
+      <div class="fg"><div class="fl">Date</div><input class="fi" id="hp-adt" type="date"/></div>
+    </div>
+    <button class="btn ba bw" onclick="hpAddT()" style="padding:11px;margin-top:4px;">✓ Entry जोड़ें</button>
+  </div>
+</div>
+
+<!-- INVOICE -->
+<div class="pg" id="hp-inv">
+  <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:12px;">🧾 GST Invoice</div>
+  <div class="card">
+    <div class="g2">
+      <div class="fg"><div class="fl">आपका Business</div><input class="fi" id="hp-ivf" placeholder="Business Name"/></div>
+      <div class="fg"><div class="fl">Client</div><input class="fi" id="hp-ivt" placeholder="Client Name"/></div>
+      <div class="fg"><div class="fl">Invoice No.</div><input class="fi" id="hp-ivn" value="INV-001"/></div>
+      <div class="fg"><div class="fl">Date</div><input class="fi" id="hp-ivd" type="date"/></div>
+    </div>
+    <div style="font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">Items</div>
+    <div id="hp-ivitems"></div>
+    <button class="btn bg2 bw" onclick="hpAddItm()" style="margin-top:6px;border-style:dashed;font-size:11px;">+ Item जोड़ें</button>
+    <div class="div"></div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;font-size:12px;color:var(--mu2);">
+      <div style="display:flex;gap:24px;"><span>Subtotal</span><span id="hp-ivs" style="font-family:monospace;color:var(--tx);">₹0</span></div>
+      <div style="display:flex;gap:24px;"><span>GST 18%</span><span id="hp-ivg" style="font-family:monospace;color:var(--tx);">₹0</span></div>
+      <div style="display:flex;gap:24px;font-size:14px;font-weight:800;color:var(--ac);"><span>Total</span><span id="hp-ivtt" style="font-family:monospace;">₹0</span></div>
+    </div>
+    <div class="row">
+      <button class="btn ba" onclick="hpPrintInv()">🖨️ Print / PDF</button>
+      <button class="btn bg2" onclick="hpSavInv()">💾 Txn में Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORTS -->
+<div class="pg" id="hp-rpt">
+  <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:12px;">📈 Reports</div>
+  <div class="g2">
+    <div class="card"><div class="ct">💚 Income by Category</div><div id="hp-ri"></div></div>
+    <div class="card"><div class="ct">🔴 Expense by Category</div><div id="hp-re"></div></div>
+  </div>
+  <div class="card"><div class="ct">📅 Monthly Summary</div>
+    <div class="dw"><table class="dt"><thead><tr><th>Month</th><th>Income</th><th>Expense</th><th>Net</th></tr></thead><tbody id="hp-mb"></tbody></table></div>
+  </div>
+</div>
+
+<!-- TALLY IMPORT -->
+<div class="pg" id="hp-timp">
+  <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:12px;">📥 Tally से Import</div>
+  <div class="card" style="margin-bottom:12px;">
+    <div class="ct">TallyPrime Connection</div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Server IP</div><input class="fi" id="hp-tip" value="localhost"/></div>
+      <div class="fg"><div class="fl">Port</div><input class="fi" id="hp-tpt" value="9000"/></div>
+    </div>
+    <div class="row">
+      <button class="btn ba" onclick="hpTConn()" id="hp-tc">🔌 Connect</button>
+      <button class="btn bg2" onclick="hpTDis()" id="hp-td" disabled>Disconnect</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="steps">
+      <div class="step a" id="hp-ts1"><div class="sn">1</div><div class="sl2">Connect</div></div>
+      <div class="step" id="hp-ts2"><div class="sn">2</div><div class="sl2">Select</div></div>
+      <div class="step" id="hp-ts3"><div class="sn">3</div><div class="sl2">Fetch</div></div>
+      <div class="step" id="hp-ts4"><div class="sn">4</div><div class="sl2">Done</div></div>
+    </div>
+    <div class="ib">ℹ️ TallyPrime: Gateway → F12 → Advanced → Enable ODBC Server (Port: 9000)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--mu2);cursor:pointer;"><input type="checkbox" checked style="accent-color:var(--ac);"> 📒 Ledger</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--mu2);cursor:pointer;"><input type="checkbox" checked style="accent-color:var(--ac);"> 🧾 Vouchers</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--mu2);cursor:pointer;"><input type="checkbox" style="accent-color:var(--ac);"> 📦 Stock</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--mu2);cursor:pointer;"><input type="checkbox" checked style="accent-color:var(--ac);"> 💰 Sales</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--mu2);cursor:pointer;"><input type="checkbox" style="accent-color:var(--ac);"> 🛒 Purchase</label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--mu2);cursor:pointer;"><input type="checkbox" style="accent-color:var(--ac);"> 📊 Trial Bal</label>
+    </div>
+    <div class="g3">
+      <div class="fg"><div class="fl">From Date</div><input class="fi" id="hp-tif" type="date"/></div>
+      <div class="fg"><div class="fl">To Date</div><input class="fi" id="hp-tit" type="date"/></div>
+      <div class="fg"><div class="fl">Company</div><input class="fi" id="hp-tic" placeholder="Tally Company"/></div>
+    </div>
+    <div class="pb"><div class="pf" id="hp-tipg"></div></div>
+    <div class="row">
+      <button class="btn ba" onclick="hpTFetch()" id="hp-tf">📥 Fetch करें</button>
+      <button class="btn bg2" onclick="hpClrImp()">🗑️ Clear</button>
+    </div>
+  </div>
+  <div class="card" id="hp-tiprev" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-size:13px;font-weight:700;color:var(--tx);">✅ <span id="hp-tic2"></span></div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn ba" onclick="hpSavImp()" style="font-size:11px;padding:6px 10px;">💾 Save</button>
+        <button class="btn bg2" onclick="hpDlImpCSV()" style="font-size:11px;padding:6px 10px;">⬇️ CSV</button>
+      </div>
+    </div>
+    <div class="dw"><table class="dt"><thead><tr><th>Date</th><th>Type</th><th>Party</th><th>Amount</th><th>GST</th></tr></thead><tbody id="hp-tib"></tbody></table></div>
+  </div>
+</div>
+
+<!-- TALLY EXPORT -->
+<div class="pg" id="hp-texp">
+  <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:12px;">📤 Tally में Export</div>
+  <div class="card">
+    <div class="eg">
+      <div class="eo on" onclick="hpSelE(this,'v')"><div style="font-size:18px;margin-bottom:4px;">🧾</div><div style="font-size:10px;font-weight:700;color:var(--tx);">Vouchers</div></div>
+      <div class="eo" onclick="hpSelE(this,'l')"><div style="font-size:18px;margin-bottom:4px;">📒</div><div style="font-size:10px;font-weight:700;color:var(--tx);">Ledger</div></div>
+      <div class="eo" onclick="hpSelE(this,'s')"><div style="font-size:18px;margin-bottom:4px;">📦</div><div style="font-size:10px;font-weight:700;color:var(--tx);">Stock</div></div>
+    </div>
+    <div class="g3">
+      <div class="fg"><div class="fl">Voucher Type</div><select class="fs" id="hp-vet"><option>Sales</option><option>Purchase</option><option>Payment</option><option>Receipt</option><option>Journal</option></select></div>
+      <div class="fg"><div class="fl">Party</div><input class="fi" id="hp-vep" placeholder="Customer/Vendor"/></div>
+      <div class="fg"><div class="fl">Amount ₹</div><input class="fi" id="hp-vea" type="number" placeholder="0"/></div>
+      <div class="fg"><div class="fl">Narration</div><input class="fi" id="hp-ven" placeholder="Description"/></div>
+      <div class="fg"><div class="fl">Date</div><input class="fi" id="hp-ved" type="date"/></div>
+      <div class="fg"><div class="fl">GST %</div><select class="fs" id="hp-veg"><option value="0">0%</option><option value="5">5%</option><option value="12">12%</option><option value="18" selected>18%</option><option value="28">28%</option></select></div>
+    </div>
+    <div class="row">
+      <button class="btn bo" onclick="hpGXML()">⚡ XML Generate</button>
+      <button class="btn ba" onclick="hpPushT()">📤 Push to Tally</button>
+      <button class="btn bg2" onclick="hpLdLat()">📂 App से Load</button>
+    </div>
+  </div>
+  <div class="card" id="hp-xc" style="display:none;margin-top:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="font-size:12px;font-weight:700;color:var(--tx);">📄 TallyPrime XML</div>
+      <button class="btn bg2" onclick="hpDlXML()" style="font-size:11px;padding:5px 10px;">⬇️ Download</button>
+    </div>
+    <div class="xb" id="hp-xo"></div>
+  </div>
+</div>
+
+<!-- SYNC -->
+<div class="pg" id="hp-tsyn">
+  <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:12px;">🔄 Auto Sync</div>
+  <div class="card">
+    <div class="g3" style="margin-bottom:12px;">
+      <div class="fg"><div class="fl">Frequency</div><select class="fs"><option>5 min</option><option>15 min</option><option selected>30 min</option><option>1 hour</option></select></div>
+      <div class="fg"><div class="fl">Direction</div><select class="fs"><option>Tally→App</option><option>App→Tally</option><option selected>Both</option></select></div>
+      <div class="fg"><div class="fl">Conflict</div><select class="fs"><option selected>App priority</option><option>Tally priority</option></select></div>
+    </div>
+    <div class="ssg" style="margin-bottom:12px;">
+      <div class="ssc"><div style="font-size:22px;font-weight:800;color:var(--ac);font-family:monospace;" id="hp-syt">0</div><div style="font-size:10px;color:var(--mu);margin-top:3px;">Total</div></div>
+      <div class="ssc"><div style="font-size:22px;font-weight:800;color:var(--gr);font-family:monospace;" id="hp-sys">0</div><div style="font-size:10px;color:var(--mu);margin-top:3px;">Success</div></div>
+      <div class="ssc"><div style="font-size:22px;font-weight:800;color:var(--re);font-family:monospace;" id="hp-sye">0</div><div style="font-size:10px;color:var(--mu);margin-top:3px;">Errors</div></div>
+    </div>
+    <div style="font-size:10px;color:var(--mu);text-align:center;margin-bottom:10px;" id="hp-syl">Last sync: Never</div>
+    <div class="row">
+      <button class="btn ba" onclick="hpStSync()" id="hp-syst">▶️ Sync Now</button>
+      <button class="btn bg2" onclick="hpSpSync()" id="hp-sysp" disabled>⏹ Stop</button>
+    </div>
+  </div>
+</div>
+
+<!-- GST -->
+<div class="pg" id="hp-gst">
+  <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:12px;">⚠️ GST Penalty Checker</div>
+  <div class="rh">
+    <div style="font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;">Estimated Penalty Liability</div>
+    <div class="ra" id="hp-gtot">₹0</div>
+    <div class="rl" id="hp-gtag" style="color:var(--gr);">✅ No Risk Detected</div>
+    <div style="font-size:10px;color:var(--mu);margin-top:3px;" id="hp-gsub">Values भरें to calculate</div>
+  </div>
+  <div class="gsg">
+    <div class="gsc">
+      <div style="font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;margin-bottom:10px;">🟡 Late Filing</div>
+      <div class="fg"><div class="fl">Days Delayed (GSTR-3B/1)</div><input class="fi" id="hp-gd" type="number" value="0" oninput="hpCGST()"/></div>
+      <div class="fg"><div class="fl">Return Type</div><select class="fs" id="hp-grt" onchange="hpCGST()"><option value="nil">Nil Return (₹20/day)</option><option value="tax">Taxable (₹50/day)</option></select></div>
+      <div class="fg"><div class="fl">Unpaid Tax ₹</div><input class="fi" id="hp-gup" type="number" value="0" oninput="hpCGST()"/></div>
+    </div>
+    <div class="gsc">
+      <div style="font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;margin-bottom:10px;">🔴 Non-Compliance</div>
+      <div class="fg"><div class="fl">Wrong ITC ₹</div><input class="fi" id="hp-gitc" type="number" value="0" oninput="hpCGST()"/></div>
+      <div class="fg"><div class="fl">Missing Invoices ₹</div><input class="fi" id="hp-gmi" type="number" value="0" oninput="hpCGST()"/></div>
+      <div class="fg"><div class="fl">E-way Bill Violations ₹</div><input class="fi" id="hp-gew" type="number" value="0" oninput="hpCGST()"/></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">Penalty Breakdown</div>
+    <div class="bkd">
+      <div class="bkr"><span style="color:var(--mu2);">Late Filing Fee</span><span style="font-weight:700;font-family:monospace;color:var(--tx);" id="hp-gbl">₹0</span></div>
+      <div class="bkr"><span style="color:var(--mu2);">Interest 18% p.a.</span><span style="font-weight:700;font-family:monospace;color:var(--tx);" id="hp-gbi">₹0</span></div>
+      <div class="bkr"><span style="color:var(--mu2);">ITC Penalty (10%/₹10k min)</span><span style="font-weight:700;font-family:monospace;color:var(--tx);" id="hp-gbitc">₹0</span></div>
+      <div class="bkr"><span style="color:var(--mu2);">E-way Penalty</span><span style="font-weight:700;font-family:monospace;color:var(--tx);" id="hp-gbew">₹0</span></div>
+      <div class="bkr" style="border:1px solid var(--ac);background:rgba(34,211,238,.06);">
+        <span style="font-weight:700;color:var(--ac);">Total Liability</span>
+        <span style="font-weight:700;color:var(--ac);font-family:monospace;" id="hp-gbtot">₹0</span>
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn bo" onclick="hpCGST()">🔄 Recalculate</button>
+      <button class="btn bg2" onclick="hpRstGST()">🗑️ Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOG -->
+<div class="pg" id="hp-log">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div style="font-size:15px;font-weight:700;color:var(--tx);">📋 Activity Log</div>
+    <div style="display:flex;gap:6px;">
+      <button class="btn bg2" onclick="hpClrLog()" style="font-size:11px;padding:6px 10px;">🗑️ Clear</button>
+      <button class="btn bg2" onclick="hpDlLog()" style="font-size:11px;padding:6px 10px;">⬇️ Download</button>
+    </div>
+  </div>
+  <div class="lb" id="hp-lb">
+    <span class="li2">[INFO] हिसाब Pro — Blogger Edition loaded ✅</span><br>
+    <span class="li2">[INFO] Modules: Hisaab + TallyPrime + GST Checker</span><br>
+    <span class="li2">[INFO] Data: In-memory (session based)</span><br>
+  </div>
+</div>
+
+<div class="hp-toast" id="hp-toast"></div>
+</div>
+
+<script>
+(function(){
+var hp={
+  txns:[
+    {id:1,type:'i',d:'Client Payment — Rahul Traders',a:45000,c:'Sales',dt:'2024-03-15'},
+    {id:2,type:'e',d:'Office Rent',a:12000,c:'Rent',dt:'2024-03-10'},
+    {id:3,type:'i',d:'Consulting Fee — XYZ Corp',a:25000,c:'Service',dt:'2024-03-08'},
+    {id:4,type:'e',d:'Electricity Bill',a:3500,c:'Utilities',dt:'2024-03-05'},
+    {id:5,type:'i',d:'Product Sales — Delhi Stores',a:18000,c:'Sales',dt:'2024-02-28'},
+    {id:6,type:'e',d:'Staff Salary',a:30000,c:'Salary',dt:'2024-02-25'}
+  ],
+  logs:[],tConn:false,ivItms:[{d:'',q:1,r:0}],
+  sIv:null,sCnt:{t:0,s:0,e:0},
+  expT:'v',gXStr:'',impT:[],gRisk:0,curT:'i',
+  today:new Date().toISOString().split('T')[0],
+  mS:new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString().split('T')[0]
+};
+
+document.getElementById('hp-adt').value=hp.today;
+document.getElementById('hp-ivd').value=hp.today;
+document.getElementById('hp-tif').value=hp.mS;
+document.getElementById('hp-tit').value=hp.today;
+document.getElementById('hp-ved').value=hp.today;
+
+function fmt(n){return '₹'+Number(n).toLocaleString('en-IN',{maximumFractionDigits:0});}
+
+window.hpPg=function(name,el){
+  document.querySelectorAll('#hp-root .pg').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('#hp-root .nb').forEach(function(n){n.classList.remove('on');});
+  document.getElementById('hp-'+name).classList.add('on');
+  if(el) el.classList.add('on');
+  hpRAll();
+};
+
+function hpLog(tp,msg){
+  var t=new Date().toLocaleTimeString('en-IN');
+  var e='['+tp.toUpperCase()+'] '+t+' — '+msg;
+  hp.logs.push(e);
+  var el=document.getElementById('hp-lb');
+  var cls={info:'li2',success:'ls2',error:'le2',warn:'lw2'}[tp]||'li2';
+  el.innerHTML+='<span class="'+cls+'">'+e+'</span><br>';
+  el.scrollTop=el.scrollHeight;
+}
+
+function hpToast(msg,tp){
+  var t=document.getElementById('hp-toast');
+  t.textContent=msg;t.className='hp-toast '+(tp||'s')+' show';
+  setTimeout(function(){t.classList.remove('show');},2800);
+}
+
+function hpRAll(){hpRDash();hpRTxns();hpRRpt();hpRIvItms();}
+
+function hpRDash(){
+  var inc=hp.txns.filter(function(t){return t.type==='i';}).reduce(function(a,t){return a+t.a;},0);
+  var exp=hp.txns.filter(function(t){return t.type==='e';}).reduce(function(a,t){return a+t.a;},0);
+  var bal=inc-exp;
+  document.getElementById('hp-di').textContent=fmt(inc);
+  document.getElementById('hp-de').textContent=fmt(exp);
+  var be=document.getElementById('hp-db');
+  be.textContent=fmt(bal);be.className='sv '+(bal>=0?'g':'r');
+  document.getElementById('hp-dg').textContent=fmt(hp.gRisk);
+  document.getElementById('hp-bal').textContent=fmt(bal);
+  document.getElementById('hp-gst').textContent='GST: '+fmt(hp.gRisk);
+  var mos=['Oct','Nov','Dec','Jan','Feb','Mar'];
+  var now=new Date();
+  var data=mos.map(function(_,i){
+    var dt=new Date(now.getFullYear(),now.getMonth()-5+i,1);
+    var k=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
+    var mi=hp.txns.filter(function(t){return t.type==='i'&&t.dt.startsWith(k);}).reduce(function(a,t){return a+t.a;},0);
+    var me=hp.txns.filter(function(t){return t.type==='e'&&t.dt.startsWith(k);}).reduce(function(a,t){return a+t.a;},0);
+    return{m:mos[i],mi:mi,me:me};
+  });
+  var maxV=Math.max.apply(null,data.reduce(function(a,d){return a.concat([d.mi,d.me]);},[1]));
+  document.getElementById('hp-chart').innerHTML=data.map(function(d){
+    return '<div class="bc"><div style="display:flex;gap:2px;align-items:flex-end;height:54px;"><div class="bf i" style="height:'+Math.max(2,Math.round(d.mi/maxV*50))+'px;flex:1;"></div><div class="bf e" style="height:'+Math.max(2,Math.round(d.me/maxV*50))+'px;flex:1;"></div></div><div class="bl">'+d.m+'</div></div>';
+  }).join('');
+  var icons={Sales:'🛒',Service:'⚙️',Salary:'👤',Rent:'🏠',Utilities:'⚡',Purchase:'📦',Marketing:'📢',Other:'📁'};
+  var rec=hp.txns.slice(0,5);
+  document.getElementById('hp-dtxns').innerHTML=rec.length?rec.map(function(t){
+    return '<div class="tx-row"><div class="ti '+t.type+'">'+(icons[t.c]||'📁')+'</div><div style="flex:1;"><div class="tn">'+t.d+'</div><div class="tm">'+t.dt+' · <span class="tag2">'+t.c+'</span></div></div><div class="ta '+t.type+'">'+(t.type==='i'?'+':'-')+fmt(t.a)+'</div></div>';
+  }).join(''):'<div style="color:var(--mu);text-align:center;padding:14px;font-size:12px;">कोई transaction नहीं — Entry जोड़ें!</div>';
+}
+
+function hpRTxns(){
+  document.getElementById('hp-tbody').innerHTML=hp.txns.map(function(t){
+    return '<tr><td>'+t.dt+'</td><td style="color:'+(t.type==='i'?'var(--ac)':'var(--re)')+';font-weight:700;">'+(t.type==='i'?'Income':'Expense')+'</td><td>'+t.d+'</td><td><span class="tag2">'+t.c+'</span></td><td style="color:'+(t.type==='i'?'var(--ac)':'var(--re)')+';font-weight:700;">'+(t.type==='i'?'+':'-')+fmt(t.a)+'</td></tr>';
+  }).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--mu);padding:14px;">No data</td></tr>';
+}
+
+window.hpDlCSV=function(){
+  var h=['Date','Type','Description','Category','Amount'];
+  var rows=hp.txns.map(function(t){return[t.dt,t.type==='i'?'Income':'Expense',t.d,t.c,t.a];});
+  hpDlF([h].concat(rows).map(function(r){return r.join(',');}).join('\n'),'transactions.csv','text/csv');
+  hpToast('⬇️ CSV downloaded!');
+};
+
+window.hpSType=function(t){
+  hp.curT=t;
+  document.getElementById('hp-bi').classList.toggle('on',t==='i');
+  document.getElementById('hp-be').classList.toggle('on',t==='e');
+};
+
+window.hpAddT=function(){
+  var d=document.getElementById('hp-ad').value.trim();
+  var a=parseFloat(document.getElementById('hp-aa').value);
+  var c=document.getElementById('hp-ac').value;
+  var dt=document.getElementById('hp-adt').value||hp.today;
+  if(!d||!a){hpToast('❗ सभी fields भरें!','e');return;}
+  hp.txns.unshift({id:Date.now(),type:hp.curT,d:d,a:a,c:c,dt:dt});
+  document.getElementById('hp-ad').value='';
+  document.getElementById('hp-aa').value='';
+  hpLog('success','Entry: '+d+' — '+fmt(a));
+  hpToast('✅ Entry जोड़ी गई!');
+  hpRAll();
+};
+
+function hpRRpt(){
+  ['i','e'].forEach(function(tp){
+    var cats={};
+    hp.txns.filter(function(t){return t.type===tp;}).forEach(function(t){cats[t.c]=(cats[t.c]||0)+t.a;});
+    var tot=Object.values(cats).reduce(function(a,v){return a+v;},0)||1;
+    var id=tp==='i'?'hp-ri':'hp-re';
+    var col=tp==='i'?'var(--ac)':'var(--re)';
+    document.getElementById(id).innerHTML=Object.entries(cats).sort(function(a,b){return b[1]-a[1];}).map(function(x){
+      return '<div style="padding:6px 0;border-bottom:1px solid var(--bor);"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--mu2);">'+x[0]+'</span><span style="font-weight:700;font-family:monospace;color:var(--tx);">'+fmt(x[1])+'</span></div><div style="height:2px;background:var(--bor);border-radius:1px;"><div style="height:100%;width:'+((x[1]/tot*100).toFixed(0))+'%;background:'+col+';border-radius:1px;"></div></div></div>';
+    }).join('')||'<div style="color:var(--mu);font-size:11px;padding:8px 0;">No data</div>';
+  });
+  var mos={};
+  hp.txns.forEach(function(t){var mo=t.dt.substring(0,7);if(!mos[mo])mos[mo]={i:0,e:0};mos[mo][t.type]+=t.a;});
+  document.getElementById('hp-mb').innerHTML=Object.entries(mos).sort(function(a,b){return b[0].localeCompare(a[0]);}).map(function(x){
+    var n=(x[1].i||0)-(x[1].e||0);
+    return '<tr><td>'+x[0]+'</td><td style="color:var(--ac);">+'+fmt(x[1].i||0)+'</td><td style="color:var(--re);">-'+fmt(x[1].e||0)+'</td><td style="color:'+(n>=0?'var(--gr)':'var(--re)')+';">'+fmt(n)+'</td></tr>';
+  }).join('')||'<tr><td colspan="4" style="color:var(--mu);text-align:center;">No data</td></tr>';
+}
+
+function hpRIvItms(){
+  document.getElementById('hp-ivitems').innerHTML=hp.ivItms.map(function(it,i){
+    return '<div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;margin-bottom:6px;"><input class="fi" placeholder="Description" value="'+it.d+'" oninput="hpUpItm('+i+',\'d\',this.value)"/><input class="fi" type="number" placeholder="Qty" value="'+it.q+'" oninput="hpUpItm('+i+',\'q\',+this.value)"/><input class="fi" type="number" placeholder="Rate ₹" value="'+(it.r||'')+'" oninput="hpUpItm('+i+',\'r\',+this.value)"/><button onclick="hpRmItm('+i+')" style="background:rgba(248,113,113,.12);border:1px solid var(--re);color:var(--re);border-radius:6px;padding:0 10px;cursor:pointer;font-size:14px;">×</button></div>';
+  }).join('');
+  hpCInv();
+}
+window.hpUpItm=function(i,k,v){hp.ivItms[i][k]=v;hpCInv();};
+window.hpAddItm=function(){hp.ivItms.push({d:'',q:1,r:0});hpRIvItms();};
+window.hpRmItm=function(i){hp.ivItms.splice(i,1);if(!hp.ivItms.length)hp.ivItms=[{d:'',q:1,r:0}];hpRIvItms();};
+function hpCInv(){
+  var sub=hp.ivItms.reduce(function(a,it){return a+(it.q*it.r);},0);
+  var gst=sub*0.18;
+  document.getElementById('hp-ivs').textContent=fmt(sub);
+  document.getElementById('hp-ivg').textContent=fmt(gst);
+  document.getElementById('hp-ivtt').textContent=fmt(sub+gst);
+}
+window.hpPrintInv=function(){
+  var fr=document.getElementById('hp-ivf').value||'Your Business';
+  var to=document.getElementById('hp-ivt').value||'Client';
+  var no=document.getElementById('hp-ivn').value||'INV-001';
+  var dt=document.getElementById('hp-ivd').value||hp.today;
+  var sub=hp.ivItms.reduce(function(a,it){return a+(it.q*it.r);},0);
+  var gst=sub*0.18;
+  var w=window.open('','_blank');
+  if(!w){hpToast('Popup blocked! Allow popups.','w');return;}
+  w.document.write('<!DOCTYPE html><html><head><title>'+no+'</title><style>body{font-family:sans-serif;padding:32px;max-width:650px;margin:auto;}table{width:100%;border-collapse:collapse;}th{background:#f1f5f9;padding:8px;text-align:left;}td{padding:8px;border-bottom:1px solid #e2e8f0;}@media print{.np{display:none}}</style></head><body><div style="display:flex;justify-content:space-between;margin-bottom:20px;"><div><h1 style="color:#22d3ee;font-size:28px;margin:0;">INVOICE</h1><p style="color:#888;margin:4px 0;">'+no+' · '+dt+'</p></div><div style="text-align:right;"><strong style="font-size:16px;">'+fr+'</strong><br><small style="color:#888;">GST Invoice</small></div></div><p style="margin-bottom:16px;"><strong>Bill To:</strong> '+to+'</p><table><thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody>'+hp.ivItms.map(function(it){return '<tr><td>'+it.d+'</td><td>'+it.q+'</td><td>₹'+it.r.toLocaleString('en-IN')+'</td><td>₹'+(it.q*it.r).toLocaleString('en-IN')+'</td></tr>';}).join('')+'</tbody></table><div style="text-align:right;margin-top:14px;"><p>Subtotal: ₹'+sub.toLocaleString('en-IN')+'</p><p>GST 18%: ₹'+gst.toLocaleString('en-IN')+'</p><h3 style="color:#22d3ee;">Total: ₹'+(sub+gst).toLocaleString('en-IN')+'</h3></div><br><button class="np" onclick="window.print()" style="padding:9px 20px;background:#22d3ee;border:none;border-radius:7px;cursor:pointer;font-weight:700;font-size:14px;">🖨️ Print / Save PDF</button></body></html>');
+  w.document.close();
+  hpLog('info','Invoice '+no+' generated for '+to);
+};
+window.hpSavInv=function(){
+  var sub=hp.ivItms.reduce(function(a,it){return a+(it.q*it.r);},0);
+  var to=document.getElementById('hp-ivt').value||'Client';
+  hp.txns.unshift({id:Date.now(),type:'i',d:'Invoice — '+to,a:sub,c:'Sales',dt:hp.today});
+  hpToast('✅ Invoice saved!');hpRAll();
+};
+
+window.hpTConn=function(){
+  var ip=document.getElementById('hp-tip').value;
+  var pt=document.getElementById('hp-tpt').value;
+  hpLog('info','Connecting to TallyPrime at '+ip+':'+pt+'...');
+  hpToast('🔌 Connecting...','i');
+  setTimeout(function(){
+    hp.tConn=true;
+    document.getElementById('hp-sd').classList.add('on');
+    document.getElementById('hp-sl').textContent='Tally: '+ip;
+    document.getElementById('hp-tc').disabled=true;
+    document.getElementById('hp-td').disabled=false;
+    document.getElementById('hp-ts1').classList.add('d');
+    document.getElementById('hp-ts2').classList.add('a');
+    hpLog('success','Connected: '+ip+':'+pt);
+    hpToast('✅ TallyPrime Connected!');
+  },1200);
+};
+window.hpTDis=function(){
+  hp.tConn=false;
+  document.getElementById('hp-sd').classList.remove('on');
+  document.getElementById('hp-sl').textContent='Tally: Off';
+  document.getElementById('hp-tc').disabled=false;
+  document.getElementById('hp-td').disabled=true;
+  hpLog('warn','Disconnected.');hpToast('Disconnected','e');
+};
+
+window.hpTFetch=function(){
+  if(!hp.tConn){hpToast('❗ पहले Connect करें!','e');return;}
+  var btn=document.getElementById('hp-tf');
+  btn.disabled=true;btn.textContent='⏳ Fetching...';
+  document.getElementById('hp-ts2').classList.add('d');
+  document.getElementById('hp-ts3').classList.add('a');
+  hpLog('info','Fetching from TallyPrime...');
+  var p=0;
+  var iv=setInterval(function(){
+    p+=15;
+    document.getElementById('hp-tipg').style.width=p+'%';
+    if(p>=100){
+      clearInterval(iv);
+      hp.impT=[
+        {dt:'2024-03-15',tp:'Sales',py:'Rahul Traders',n:'Invoice #101',a:45000,g:8100},
+        {dt:'2024-03-14',tp:'Purchase',py:'ABC Suppliers',n:'Purchase #55',a:28000,g:5040},
+        {dt:'2024-03-13',tp:'Receipt',py:'XYZ Corp',n:'Payment received',a:35000,g:0},
+        {dt:'2024-03-12',tp:'Payment',py:'Rent A/c',n:'Office Rent',a:12000,g:2160},
+        {dt:'2024-03-11',tp:'Sales',py:'Delhi Stores',n:'Invoice #102',a:22000,g:3960}
+      ];
+      document.getElementById('hp-ts3').classList.add('d');
+      document.getElementById('hp-ts4').classList.add('a');
+      document.getElementById('hp-tic2').textContent=hp.impT.length+' records fetched';
+      document.getElementById('hp-tib').innerHTML=hp.impT.map(function(r){
+        return '<tr><td>'+r.dt+'</td><td style="color:var(--ac);font-weight:700;">'+r.tp+'</td><td>'+r.py+'</td><td>'+fmt(r.a)+'</td><td>'+fmt(r.g)+'</td></tr>';
+      }).join('');
+      document.getElementById('hp-tiprev').style.display='block';
+      btn.disabled=false;btn.textContent='📥 Fetch करें';
+      hpLog('success',hp.impT.length+' records fetched!');
+      hpToast('✅ '+hp.impT.length+' entries fetched!');
+    }
+  },180);
+};
+window.hpSavImp=function(){
+  hp.impT.forEach(function(r){
+    hp.txns.unshift({id:Date.now()+Math.random(),type:['Sales','Receipt'].indexOf(r.tp)>=0?'i':'e',d:r.n+' — '+r.py,a:r.a,c:r.tp,dt:r.dt});
+  });
+  hpToast('✅ App में Save!');hpLog('success','Tally data saved');hpRAll();
+};
+window.hpDlImpCSV=function(){
+  var h=['Date','Type','Party','Amount','GST'];
+  var rows=hp.impT.map(function(r){return[r.dt,r.tp,r.py,r.a,r.g];});
+  hpDlF([h].concat(rows).map(function(r){return r.join(',');}).join('\n'),'tally-import.csv','text/csv');
+  hpToast('⬇️ CSV!');
+};
+window.hpClrImp=function(){
+  hp.impT=[];
+  document.getElementById('hp-tiprev').style.display='none';
+  document.getElementById('hp-tipg').style.width='0%';
+  ['hp-ts1','hp-ts2','hp-ts3','hp-ts4'].forEach(function(s){document.getElementById(s).classList.remove('d','a');});
+  document.getElementById('hp-ts1').classList.add('a');
+};
+
+window.hpSelE=function(el,tp){
+  document.querySelectorAll('#hp-root .eo').forEach(function(o){o.classList.remove('on');});
+  el.classList.add('on');hp.expT=tp;
+};
+window.hpGXML=function(){
+  var tp=document.getElementById('hp-vet').value;
+  var py=document.getElementById('hp-vep').value||'Sample Party';
+  var am=document.getElementById('hp-vea').value||'10000';
+  var nr=document.getElementById('hp-ven').value||'Entry';
+  var dt=document.getElementById('hp-ved').value||hp.today;
+  var gs=document.getElementById('hp-veg').value;
+  var ga=(am*gs/100).toFixed(2);
+  var td=dt.replace(/-/g,'').substring(0,8);
+  hp.gXStr='<ENVELOPE>\n  <HEADER><TALLYREQUEST>Import Data</TALLYREQUEST></HEADER>\n  <BODY><IMPORTDATA>\n    <REQUESTDATA><TALLYMESSAGE xmlns:UDF="TallyUDF">\n      <VOUCHER VCHTYPE="'+tp+'" ACTION="Create">\n        <DATE>'+td+'</DATE>\n        <NARRATION>'+nr+'</NARRATION>\n        <PARTYLEDGERNAME>'+py+'</PARTYLEDGERNAME>\n        <ALLLEDGERENTRIES.LIST><LEDGERNAME>'+py+'</LEDGERNAME><AMOUNT>-'+am+'</AMOUNT></ALLLEDGERENTRIES.LIST>\n        <ALLLEDGERENTRIES.LIST><LEDGERNAME>'+tp+' Account</LEDGERNAME><AMOUNT>'+am+'</AMOUNT></ALLLEDGERENTRIES.LIST>'+(gs>0?'\n        <ALLLEDGERENTRIES.LIST><LEDGERNAME>Output GST '+gs+'%</LEDGERNAME><AMOUNT>'+ga+'</AMOUNT></ALLLEDGERENTRIES.LIST>':'')+'\n      </VOUCHER>\n    </TALLYMESSAGE></REQUESTDATA>\n  </IMPORTDATA></BODY>\n</ENVELOPE>';
+  var col=hp.gXStr.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/(&lt;\/?[\w.:]+)(\s|&gt;)/g,'<span class="xt">$1</span>$2').replace(/"([^"]*)"/g,'"<span class="xv">$1</span>"');
+  document.getElementById('hp-xo').innerHTML=col;
+  document.getElementById('hp-xc').style.display='block';
+  hpLog('info','XML generated: '+tp+' — '+fmt(am));
+  hpToast('✅ XML Generated!');
+};
+window.hpPushT=function(){
+  if(!hp.tConn){hpToast('❗ पहले Connect करें!','e');return;}
+  if(!hp.gXStr) hpGXML();
+  hpLog('info','Pushing to TallyPrime...');
+  setTimeout(function(){hpLog('success','Pushed to TallyPrime!');hpToast('✅ TallyPrime में Entry!');},1500);
+};
+window.hpLdLat=function(){
+  if(!hp.txns.length){hpToast('No data!','e');return;}
+  var t=hp.txns[0];
+  document.getElementById('hp-vet').value=t.type==='i'?'Sales':'Payment';
+  document.getElementById('hp-vep').value=t.d.split('—')[0].trim();
+  document.getElementById('hp-vea').value=t.a;
+  document.getElementById('hp-ven').value=t.d;
+  document.getElementById('hp-ved').value=t.dt;
+  hpToast('✅ Loaded!');
+};
+window.hpDlXML=function(){if(!hp.gXStr){hpToast('Generate first!','e');return;}hpDlF(hp.gXStr,'tally.xml','application/xml');hpToast('⬇️ XML!');};
+
+window.hpStSync=function(){
+  if(!hp.tConn){hpToast('❗ Connect first!','e');return;}
+  document.getElementById('hp-syst').disabled=true;
+  document.getElementById('hp-sysp').disabled=false;
+  hpLog('info','Sync started...');hpToast('🔄 Sync शुरू!','i');
+  hpDoSy();hp.sIv=setInterval(hpDoSy,8000);
+};
+function hpDoSy(){
+  hp.sCnt.t++;hp.sCnt.s++;
+  document.getElementById('hp-syt').textContent=hp.sCnt.t;
+  document.getElementById('hp-sys').textContent=hp.sCnt.s;
+  document.getElementById('hp-syl').textContent='Last: '+new Date().toLocaleTimeString('en-IN');
+  hpLog('success','Sync #'+hp.sCnt.t+' done');
+}
+window.hpSpSync=function(){
+  if(hp.sIv)clearInterval(hp.sIv);hp.sIv=null;
+  document.getElementById('hp-syst').disabled=false;
+  document.getElementById('hp-sysp').disabled=true;
+  hpLog('warn','Sync stopped.');hpToast('Stopped','e');
+};
+
+window.hpCGST=function(){
+  var d=parseInt(document.getElementById('hp-gd').value)||0;
+  var rt=document.getElementById('hp-grt').value;
+  var up=parseFloat(document.getElementById('hp-gup').value)||0;
+  var itc=parseFloat(document.getElementById('hp-gitc').value)||0;
+  var ew=parseFloat(document.getElementById('hp-gew').value)||0;
+  var pd=rt==='nil'?20:50;
+  var lf=Math.min(d*pd,10000);
+  var intr=(up*0.18*d)/365;
+  var ip=itc>0?Math.max(itc*0.10,10000):0;
+  var ep=ew>0?Math.max(ew*0.01,10000):0;
+  var tot=lf+intr+ip+ep;
+  hp.gRisk=tot;
+  document.getElementById('hp-gbl').textContent=fmt(lf);
+  document.getElementById('hp-gbi').textContent=fmt(intr);
+  document.getElementById('hp-gbitc').textContent=fmt(ip);
+  document.getElementById('hp-gbew').textContent=fmt(ep);
+  document.getElementById('hp-gbtot').textContent=fmt(tot);
+  document.getElementById('hp-gtot').textContent=fmt(tot);
+  var tg=document.getElementById('hp-gtag');
+  var tt=document.getElementById('hp-gtot');
+  var ch=document.getElementById('hp-gst');
+  ch.textContent='GST: '+fmt(tot);
+  if(tot>50000){tg.textContent='🚨 CRITICAL RISK';tg.style.color='var(--re)';tt.style.color='var(--re)';ch.className='chip r';}
+  else if(tot>5000){tg.textContent='⚠️ MODERATE RISK';tg.style.color='var(--ye)';tt.style.color='var(--ye)';ch.className='chip y';}
+  else if(tot>0){tg.textContent='✅ LOW RISK';tg.style.color='var(--gr)';tt.style.color='var(--gr)';ch.className='chip g';}
+  else{tg.textContent='✅ No Risk Detected';tg.style.color='var(--gr)';tt.style.color='var(--ac)';ch.className='chip';}
+  document.getElementById('hp-dg').textContent=fmt(tot);
+};
+window.hpRstGST=function(){
+  ['hp-gd','hp-gup','hp-gitc','hp-gmi','hp-gew'].forEach(function(id){document.getElementById(id).value=0;});
+  hpCGST();hpToast('🗑️ Reset!');
+};
+
+window.hpClrLog=function(){hp.logs=[];document.getElementById('hp-lb').innerHTML='<span class="li2">[INFO] Log cleared.</span><br>';};
+window.hpDlLog=function(){hpDlF(hp.logs.join('\n'),'log.txt','text/plain');hpToast('⬇️ Log!');};
+function hpDlF(c,n,t){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;a.click();}
+
+hpRAll();hpCGST();
+hpLog('info','हिसाब Pro ready — Blogger Edition ✅');
+})();
+</script>

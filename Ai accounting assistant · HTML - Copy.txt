@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger AI — Accounting Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --bg2: #13161e;
+    --bg3: #1a1e28;
+    --bg4: #222637;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8eaf0;
+    --text2: #8b90a0;
+    --text3: #5a5f70;
+    --accent: #4ade80;
+    --accent2: #22c55e;
+    --accent-dim: rgba(74,222,128,0.1);
+    --accent-dim2: rgba(74,222,128,0.18);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.12);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.1);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251,191,36,0.1);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,0.1);
+    --sidebar-w: 240px;
+    --header-h: 56px;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --font-serif: 'DM Serif Display', Georgia, serif;
+    --font-body: 'Manrope', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --transition: 0.18s ease;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    transition: transform var(--transition);
+  }
+  .sidebar-logo {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-serif);
+    font-size: 18px;
+    color: #0d0f14;
+    flex-shrink: 0;
+  }
+  .logo-text {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+  .logo-text span { color: var(--accent); }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 12px 10px;
+    overflow-y: auto;
+  }
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--text3);
+    text-transform: uppercase;
+    padding: 10px 10px 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 13.5px;
+    font-weight: 500;
+    transition: background var(--transition), color var(--transition);
+    user-select: none;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+  .nav-item:hover { background: var(--bg4); color: var(--text); }
+  .nav-item.active {
+    background: var(--accent-dim2);
+    color: var(--accent);
+  }
+  .nav-item .nav-icon { font-size: 16px; width: 18px; text-align: center; flex-shrink: 0; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--accent-dim2);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 20px;
+  }
+
+  .sidebar-footer {
+    padding: 12px 10px;
+    border-top: 1px solid var(--border);
+  }
+  .user-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+  .user-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--purple-dim);
+    border: 1px solid var(--purple);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--purple);
+    flex-shrink: 0;
+  }
+  .user-name { font-size: 12.5px; font-weight: 500; color: var(--text); }
+  .user-plan { font-size: 11px; color: var(--text3); }
+
+  /* MOBILE HEADER */
+  .mobile-header {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--header-h);
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    z-index: 99;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+  }
+  .hamburger {
+    background: none;
+    border: none;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+  }
+  .mobile-logo {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    color: var(--text);
+  }
+  .mobile-logo span { color: var(--accent); }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 99;
+  }
+
+  /* MAIN */
+  .main {
+    margin-left: var(--sidebar-w);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* PAGE */
+  .page { display: none; flex: 1; }
+  .page.active { display: flex; flex-direction: column; }
+
+  /* DASHBOARD */
+  .page-header {
+    padding: 28px 32px 0;
+  }
+  .page-title {
+    font-family: var(--font-serif);
+    font-size: 26px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+  .page-sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+  .dashboard-grid {
+    padding: 24px 32px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .kpi-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    transition: border-color var(--transition);
+  }
+  .kpi-card:hover { border-color: var(--border2); }
+  .kpi-label { font-size: 11.5px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 8px; }
+  .kpi-value { font-family: var(--font-mono); font-size: 24px; font-weight: 500; color: var(--text); line-height: 1; }
+  .kpi-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11.5px;
+    font-weight: 600;
+    margin-top: 6px;
+    padding: 2px 7px;
+    border-radius: 20px;
+  }
+  .kpi-change.up { background: var(--accent-dim); color: var(--accent); }
+  .kpi-change.down { background: var(--red-dim); color: var(--red); }
+
+  .dash-row {
+    padding: 0 32px 24px;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 16px;
+  }
+
+  .chart-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+  }
+  .card-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .card-sub { font-size: 12px; color: var(--text3); margin-bottom: 18px; }
+
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 140px;
+  }
+  .bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .bar-wrap {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    justify-content: center;
+  }
+  .bar {
+    flex: 1;
+    border-radius: 3px 3px 0 0;
+    min-width: 8px;
+    max-width: 18px;
+    transition: opacity var(--transition);
+    cursor: pointer;
+  }
+  .bar:hover { opacity: 0.75; }
+  .bar.income { background: var(--accent); }
+  .bar.expense { background: var(--red); opacity: 0.7; }
+  .bar-label { font-size: 10px; color: var(--text3); }
+
+  .recent-list { display: flex; flex-direction: column; gap: 0; }
+  .txn-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .txn-item:last-child { border-bottom: none; }
+  .txn-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .txn-info { flex: 1; min-width: 0; }
+  .txn-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .txn-date { font-size: 11px; color: var(--text3); }
+  .txn-amount { font-family: var(--font-mono); font-size: 13.5px; font-weight: 500; white-space: nowrap; }
+  .txn-amount.pos { color: var(--accent); }
+  .txn-amount.neg { color: var(--red); }
+
+  .alerts-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+  }
+  .alert-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  .alert-item:last-child { margin-bottom: 0; }
+  .alert-item.warn { background: var(--amber-dim); color: var(--amber); }
+  .alert-item.info { background: var(--blue-dim); color: var(--blue); }
+  .alert-item.success { background: var(--accent-dim); color: var(--accent); }
+  .alert-item.error { background: var(--red-dim); color: var(--red); }
+  .alert-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+  /* TRANSACTIONS */
+  .page-content { padding: 24px 32px; }
+
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    color: var(--text2);
+  }
+  .search-box input {
+    background: none;
+    border: none;
+    outline: none;
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    color: var(--text);
+    padding: 9px 0;
+    flex: 1;
+  }
+  .search-box input::placeholder { color: var(--text3); }
+
+  .filter-select {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    padding: 8px 12px;
+    outline: none;
+    cursor: pointer;
+  }
+  .filter-select:focus { border-color: var(--accent); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: var(--text);
+    transition: all var(--transition);
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg4); border-color: var(--border2); }
+  .btn.primary {
+    background: var(--accent);
+    color: #0d0f14;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .btn.primary:hover { background: var(--accent2); }
+
+  .data-table {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .table-header {
+    display: grid;
+    grid-template-columns: 40px 1fr 130px 110px 100px 90px;
+    gap: 0;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .th {
+    padding: 11px 8px;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .th:hover { color: var(--text2); }
+  .table-body {}
+  .table-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 130px 110px 100px 90px;
+    gap: 0;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background var(--transition);
+    cursor: pointer;
+  }
+  .table-row:last-child { border-bottom: none; }
+  .table-row:hover { background: var(--bg3); }
+  .td {
+    padding: 13px 8px;
+    font-size: 13px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+  }
+  .td.mono { font-family: var(--font-mono); }
+  .cat-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--text3);
+  }
+  .page-btns { display: flex; gap: 4px; }
+  .page-btn {
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-size: 12.5px;
+    cursor: pointer;
+    font-family: var(--font-body);
+  }
+  .page-btn.active, .page-btn:hover { background: var(--bg4); color: var(--text); border-color: var(--border2); }
+
+  /* AI CHAT */
+  .chat-layout {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 0px);
+    overflow: hidden;
+  }
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    scroll-behavior: smooth;
+  }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
+
+  .msg {
+    display: flex;
+    gap: 12px;
+    max-width: 760px;
+  }
+  .msg.user { flex-direction: row-reverse; margin-left: auto; }
+  .msg-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .msg.ai .msg-avatar { background: var(--accent-dim2); color: var(--accent); border: 1px solid rgba(74,222,128,0.3); font-family: var(--font-serif); }
+  .msg.user .msg-avatar { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(167,139,250,0.3); }
+  .msg-bubble {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 13.5px;
+    line-height: 1.65;
+    max-width: 600px;
+  }
+  .msg.user .msg-bubble {
+    background: var(--bg3);
+    border-color: var(--border2);
+  }
+  .msg-bubble p { margin-bottom: 8px; }
+  .msg-bubble p:last-child { margin-bottom: 0; }
+  .msg-bubble strong { color: var(--accent); font-weight: 600; }
+  .msg-bubble .highlight-box {
+    background: var(--bg4);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+  .msg-bubble .data-table-mini {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin: 10px 0;
+  }
+  .msg-bubble .data-table-mini th {
+    text-align: left;
+    padding: 6px 10px;
+    background: var(--bg4);
+    color: var(--text3);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .msg-bubble .data-table-mini td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .msg-bubble .data-table-mini tr:last-child td { border-bottom: none; }
+
+  .typing-indicator {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 4px 0;
+  }
+  .typing-dot {
+    width: 6px; height: 6px;
+    background: var(--text3);
+    border-radius: 50%;
+    animation: typingBounce 1.2s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+  }
+
+  .chat-input-area {
+    padding: 16px 32px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .chat-suggestions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .suggestion-chip {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: var(--font-body);
+    white-space: nowrap;
+  }
+  .suggestion-chip:hover { background: var(--bg4); color: var(--text); border-color: var(--accent); }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  .chat-textarea-wrap {
+    flex: 1;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: flex-end;
+    padding: 10px 14px;
+    gap: 10px;
+    transition: border-color var(--transition);
+  }
+  .chat-textarea-wrap:focus-within { border-color: var(--accent); }
+  .chat-textarea {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    color: var(--text);
+    resize: none;
+    max-height: 120px;
+    overflow-y: auto;
+    line-height: 1.5;
+  }
+  .chat-textarea::placeholder { color: var(--text3); }
+  .send-btn {
+    width: 34px; height: 34px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #0d0f14;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background var(--transition);
+    flex-shrink: 0;
+  }
+  .send-btn:hover { background: var(--accent2); }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* INVOICES */
+  .invoice-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .invoice-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    transition: border-color var(--transition), transform var(--transition);
+    cursor: pointer;
+  }
+  .invoice-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+  .inv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .inv-number { font-family: var(--font-mono); font-size: 12px; color: var(--text3); }
+  .inv-status {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .inv-status.paid { background: var(--accent-dim); color: var(--accent); }
+  .inv-status.pending { background: var(--amber-dim); color: var(--amber); }
+  .inv-status.overdue { background: var(--red-dim); color: var(--red); }
+  .inv-status.draft { background: var(--bg4); color: var(--text3); }
+  .inv-client { font-size: 14.5px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .inv-desc { font-size: 12px; color: var(--text3); margin-bottom: 14px; }
+  .inv-footer { display: flex; justify-content: space-between; align-items: flex-end; }
+  .inv-amount { font-family: var(--font-mono); font-size: 20px; font-weight: 500; color: var(--text); }
+  .inv-date { font-size: 11.5px; color: var(--text3); }
+
+  /* REPORTS */
+  .report-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .report-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .report-card:hover { border-color: var(--accent); }
+  .report-icon { font-size: 22px; margin-bottom: 10px; }
+  .report-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .report-desc { font-size: 12px; color: var(--text3); line-height: 1.5; }
+
+  .p-l-section {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .p-l-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .p-l-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+    transition: background var(--transition);
+  }
+  .p-l-row:last-child { border-bottom: none; }
+  .p-l-row:hover { background: var(--bg3); }
+  .p-l-row.total {
+    background: var(--bg3);
+    font-weight: 600;
+  }
+  .p-l-row.section-head {
+    background: var(--bg4);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text3);
+    padding: 8px 20px;
+  }
+  .p-l-label { color: var(--text2); }
+  .p-l-amount { font-family: var(--font-mono); }
+
+  /* MODAL */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(12px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .modal-title {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    color: var(--text);
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--text3);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+  }
+  .modal-close:hover { color: var(--text); }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: block; }
+  .form-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color var(--transition);
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text3); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* TOAST */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toast {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: toastIn 0.25s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    max-width: 300px;
+  }
+  @keyframes toastIn {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  .toast.success .toast-icon { color: var(--accent); }
+  .toast.error .toast-icon { color: var(--red); }
+  .toast.info .toast-icon { color: var(--blue); }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay.open { display: block; }
+    .mobile-header { display: flex; }
+    .main { margin-left: 0; padding-top: var(--header-h); }
+    .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+    .dash-row { grid-template-columns: 1fr; }
+    .table-header, .table-row { grid-template-columns: 1fr 120px 80px; }
+    .th:nth-child(1), .td:nth-child(1),
+    .th:nth-child(3), .td:nth-child(3),
+    .th:nth-child(6), .td:nth-child(6) { display: none; }
+    .page-header { padding: 20px 18px 0; }
+    .page-content, .dash-row, .dashboard-grid { padding-left: 18px; padding-right: 18px; }
+    .chat-messages, .chat-input-area { padding-left: 18px; padding-right: 18px; }
+  }
+  @media (max-width: 560px) {
+    .dashboard-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-row { grid-template-columns: 1fr; }
+    .chat-suggestions { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+    .chat-suggestions::-webkit-scrollbar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">L</div>
+    <div class="logo-text">Ledger<span>AI</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <button class="nav-item active" onclick="navigate('dashboard', this)">
+      <span class="nav-icon">⊞</span> Dashboard
+    </button>
+    <button class="nav-item" onclick="navigate('ai-chat', this)">
+      <span class="nav-icon">◈</span> AI Assistant
+      <span class="nav-badge">New</span>
+    </button>
+
+    <div class="nav-section-label">Finance</div>
+    <button class="nav-item" onclick="navigate('transactions', this)">
+      <span class="nav-icon">↕</span> Transactions
+    </button>
+    <button class="nav-item" onclick="navigate('invoices', this)">
+      <span class="nav-icon">◻</span> Invoices
+    </button>
+    <button class="nav-item" onclick="navigate('reports', this)">
+      <span class="nav-icon">▥</span> Reports
+    </button>
+
+    <div class="nav-section-label">Settings</div>
+    <button class="nav-item" onclick="showToast('Opening settings…', 'info')">
+      <span class="nav-icon">⚙</span> Settings
+    </button>
+    <button class="nav-item" onclick="showToast('Integrations coming soon', 'info')">
+      <span class="nav-icon">◈</span> Integrations
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">JD</div>
+      <div>
+        <div class="user-name">Jane Doe</div>
+        <div class="user-plan">Pro Plan</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Mobile Header -->
+<div class="mobile-header">
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <div class="mobile-logo">Ledger<span>AI</span></div>
+</div>
+
+<!-- Main Content -->
+<main class="main">
+
+  <!-- DASHBOARD PAGE -->
+  <section class="page active" id="page-dashboard">
+    <div class="page-header">
+      <div class="page-title">Good morning, Jane ☀️</div>
+      <div class="page-sub">Here's your financial overview for May 2026.</div>
+    </div>
+    <div class="dashboard-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Revenue</div>
+        <div class="kpi-value">$84,291</div>
+        <span class="kpi-change up">↑ 12.4%</span>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Expenses</div>
+        <div class="kpi-value">$31,047</div>
+        <span class="kpi-change down">↑ 3.1%</span>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Net Profit</div>
+        <div class="kpi-value">$53,244</div>
+        <span class="kpi-change up">↑ 18.7%</span>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Pending Invoices</div>
+        <div class="kpi-value">$12,800</div>
+        <span class="kpi-change down">5 overdue</span>
+      </div>
+    </div>
+
+    <div class="dash-row">
+      <div class="chart-card">
+        <div class="card-title">Revenue vs Expenses</div>
+        <div class="card-sub">Monthly comparison — 2026</div>
+        <div class="bar-chart" id="barChart"></div>
+        <div style="display:flex;gap:16px;margin-top:12px;">
+          <span style="font-size:12px;color:var(--text3);display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:var(--accent);border-radius:2px;display:inline-block;"></span> Revenue</span>
+          <span style="font-size:12px;color:var(--text3);display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:var(--red);opacity:0.7;border-radius:2px;display:inline-block;"></span> Expenses</span>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="card-title">Recent Transactions</div>
+        <div class="card-sub">Last 5 entries</div>
+        <div class="recent-list">
+          <div class="txn-item">
+            <div class="txn-icon" style="background:var(--accent-dim);">💰</div>
+            <div class="txn-info"><div class="txn-name">Stripe Payment — Acme Corp</div><div class="txn-date">May 14, 2026</div></div>
+            <div class="txn-amount pos">+$4,200</div>
+          </div>
+          <div class="txn-item">
+            <div class="txn-icon" style="background:var(--red-dim);">🏢</div>
+            <div class="txn-info"><div class="txn-name">Office Rent — Q2</div><div class="txn-date">May 13, 2026</div></div>
+            <div class="txn-amount neg">-$2,800</div>
+          </div>
+          <div class="txn-item">
+            <div class="txn-icon" style="background:var(--accent-dim);">💳</div>
+            <div class="txn-info"><div class="txn-name">Client Payment — NovaTech</div><div class="txn-date">May 12, 2026</div></div>
+            <div class="txn-amount pos">+$7,500</div>
+          </div>
+          <div class="txn-item">
+            <div class="txn-icon" style="background:var(--amber-dim);">☁️</div>
+            <div class="txn-info"><div class="txn-name">AWS Cloud Services</div><div class="txn-date">May 11, 2026</div></div>
+            <div class="txn-amount neg">-$340</div>
+          </div>
+          <div class="txn-item">
+            <div class="txn-icon" style="background:var(--accent-dim);">📊</div>
+            <div class="txn-info"><div class="txn-name">Consulting Fee — BrightPath</div><div class="txn-date">May 10, 2026</div></div>
+            <div class="txn-amount pos">+$3,100</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding: 0 32px 32px; display:grid; grid-template-columns:1fr 340px; gap:16px;" class="dash-alerts">
+      <div class="alerts-card">
+        <div class="card-title" style="margin-bottom:14px;">Smart Alerts</div>
+        <div class="alert-item warn">
+          <span class="alert-icon">⚠</span>
+          <span>Invoice #INV-0042 is 14 days overdue. Send a reminder to GlobalMart?</span>
+        </div>
+        <div class="alert-item info">
+          <span class="alert-icon">ℹ</span>
+          <span>Q2 estimated tax payment of <strong>$8,420</strong> is due June 15.</span>
+        </div>
+        <div class="alert-item success">
+          <span class="alert-icon">✓</span>
+          <span>Your profit margin improved by 6.3% compared to last quarter.</span>
+        </div>
+        <div class="alert-item error">
+          <span class="alert-icon">✕</span>
+          <span>Subscription expense spike detected — 34% above monthly average.</span>
+        </div>
+      </div>
+      <div class="chart-card" style="display:flex;flex-direction:column;gap:10px;">
+        <div class="card-title">Expense Breakdown</div>
+        <div class="card-sub">By category — May 2026</div>
+        <div id="expenseBreakdown" style="flex:1;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRANSACTIONS PAGE -->
+  <section class="page" id="page-transactions">
+    <div class="page-header">
+      <div class="page-title">Transactions</div>
+      <div class="page-sub">All income and expense records</div>
+    </div>
+    <div class="page-content">
+      <div class="toolbar">
+        <div class="search-box">
+          <span style="font-size:15px;color:var(--text3);">⌕</span>
+          <input type="text" id="txnSearch" placeholder="Search transactions…" oninput="filterTransactions()">
+        </div>
+        <select class="filter-select" id="txnTypeFilter" onchange="filterTransactions()">
+          <option value="">All Types</option>
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+        <select class="filter-select" id="txnCatFilter" onchange="filterTransactions()">
+          <option value="">All Categories</option>
+          <option value="Revenue">Revenue</option>
+          <option value="Operations">Operations</option>
+          <option value="Software">Software</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Payroll">Payroll</option>
+        </select>
+        <button class="btn primary" onclick="openModal('addTxnModal')">+ Add Transaction</button>
+      </div>
+      <div class="data-table">
+        <div class="table-header">
+          <div class="th"></div>
+          <div class="th">Description ↕</div>
+          <div class="th">Category</div>
+          <div class="th">Date ↕</div>
+          <div class="th">Amount ↕</div>
+          <div class="th">Status</div>
+        </div>
+        <div class="table-body" id="txnTableBody"></div>
+        <div class="pagination">
+          <span id="txnCount">Showing 10 of 24 transactions</span>
+          <div class="page-btns">
+            <button class="page-btn active">1</button>
+            <button class="page-btn" onclick="showToast('Page 2 loaded','info')">2</button>
+            <button class="page-btn" onclick="showToast('Page 3 loaded','info')">3</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI CHAT PAGE -->
+  <section class="page" id="page-ai-chat">
+    <div class="chat-layout">
+      <div style="padding:20px 32px 0; border-bottom:1px solid var(--border); background:var(--bg);">
+        <div class="page-title">AI Assistant</div>
+        <div class="page-sub" style="padding-bottom:14px;">Ask anything about your finances — analysis, forecasts, advice.</div>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg ai">
+          <div class="msg-avatar">L</div>
+          <div class="msg-bubble">
+            <p>Hello Jane! I'm your <strong>Ledger AI</strong> assistant — your intelligent accountant. I can help you with:</p>
+            <div class="highlight-box">
+              • Financial analysis & forecasts<br>
+              • Transaction categorization<br>
+              • Tax planning & estimates<br>
+              • Invoice management<br>
+              • Profit & loss insights
+            </div>
+            <p>What would you like to explore today?</p>
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <div class="chat-suggestions" id="chatSuggestions">
+          <button class="suggestion-chip" onclick="sendSuggestion(this)">What's my profit margin this month?</button>
+          <button class="suggestion-chip" onclick="sendSuggestion(this)">Summarize Q1 vs Q2 expenses</button>
+          <button class="suggestion-chip" onclick="sendSuggestion(this)">Which clients owe me money?</button>
+          <button class="suggestion-chip" onclick="sendSuggestion(this)">Estimate my tax liability</button>
+          <button class="suggestion-chip" onclick="sendSuggestion(this)">Top expense categories</button>
+        </div>
+        <div class="input-row">
+          <div class="chat-textarea-wrap">
+            <textarea class="chat-textarea" id="chatInput" rows="1" placeholder="Ask your AI accountant anything…" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+          </div>
+          <button class="send-btn" id="sendBtn" onclick="sendChat()">➤</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INVOICES PAGE -->
+  <section class="page" id="page-invoices">
+    <div class="page-header">
+      <div class="page-title">Invoices</div>
+      <div class="page-sub">Manage and track all client invoices</div>
+    </div>
+    <div class="page-content">
+      <div class="toolbar">
+        <div class="search-box">
+          <span style="font-size:15px;color:var(--text3);">⌕</span>
+          <input type="text" placeholder="Search invoices…" oninput="">
+        </div>
+        <select class="filter-select">
+          <option>All Status</option>
+          <option>Paid</option>
+          <option>Pending</option>
+          <option>Overdue</option>
+          <option>Draft</option>
+        </select>
+        <button class="btn primary" onclick="openModal('addInvModal')">+ New Invoice</button>
+      </div>
+      <div class="invoice-grid" id="invoiceGrid"></div>
+    </div>
+  </section>
+
+  <!-- REPORTS PAGE -->
+  <section class="page" id="page-reports">
+    <div class="page-header">
+      <div class="page-title">Reports</div>
+      <div class="page-sub">Financial statements and analytics</div>
+    </div>
+    <div class="page-content">
+      <div class="report-cards">
+        <div class="report-card" onclick="showToast('Generating P&L Report…','info')">
+          <div class="report-icon">📊</div>
+          <div class="report-name">Profit & Loss</div>
+          <div class="report-desc">Monthly income statement with expense breakdown</div>
+        </div>
+        <div class="report-card" onclick="showToast('Generating Balance Sheet…','info')">
+          <div class="report-icon">⚖️</div>
+          <div class="report-name">Balance Sheet</div>
+          <div class="report-desc">Assets, liabilities, and equity snapshot</div>
+        </div>
+        <div class="report-card" onclick="showToast('Generating Cash Flow…','info')">
+          <div class="report-icon">💵</div>
+          <div class="report-name">Cash Flow</div>
+          <div class="report-desc">Operating, investing, and financing activities</div>
+        </div>
+        <div class="report-card" onclick="showToast('Generating Tax Report…','info')">
+          <div class="report-icon">🧾</div>
+          <div class="report-name">Tax Summary</div>
+          <div class="report-desc">Quarterly estimates and deductions overview</div>
+        </div>
+        <div class="report-card" onclick="showToast('Generating Accounts Receivable…','info')">
+          <div class="report-icon">📋</div>
+          <div class="report-name">Accounts Receivable</div>
+          <div class="report-desc">Outstanding invoices and aging schedule</div>
+        </div>
+        <div class="report-card" onclick="showToast('Generating Custom Report…','info')">
+          <div class="report-icon">✨</div>
+          <div class="report-name">AI-Generated Report</div>
+          <div class="report-desc">Let AI summarize your custom date range</div>
+        </div>
+      </div>
+
+      <div class="p-l-section">
+        <div class="p-l-header">
+          <div>
+            <div class="card-title">Profit & Loss Statement</div>
+            <div class="card-sub">January – May 2026</div>
+          </div>
+          <button class="btn" onclick="showToast('Exporting PDF…','success')">⬇ Export PDF</button>
+        </div>
+        <div class="p-l-row section-head"><span>Revenue</span></div>
+        <div class="p-l-row"><span class="p-l-label">Consulting Services</span><span class="p-l-amount" style="color:var(--accent);">$54,200</span></div>
+        <div class="p-l-row"><span class="p-l-label">Product Sales</span><span class="p-l-amount" style="color:var(--accent);">$18,400</span></div>
+        <div class="p-l-row"><span class="p-l-label">Retainer Clients</span><span class="p-l-amount" style="color:var(--accent);">$11,691</span></div>
+        <div class="p-l-row total"><span>Total Revenue</span><span class="p-l-amount" style="color:var(--accent);">$84,291</span></div>
+        <div class="p-l-row section-head"><span>Expenses</span></div>
+        <div class="p-l-row"><span class="p-l-label">Payroll & Contractors</span><span class="p-l-amount" style="color:var(--red);">$14,000</span></div>
+        <div class="p-l-row"><span class="p-l-label">Office & Rent</span><span class="p-l-amount" style="color:var(--red);">$8,400</span></div>
+        <div class="p-l-row"><span class="p-l-label">Software & Tools</span><span class="p-l-amount" style="color:var(--red);">$4,347</span></div>
+        <div class="p-l-row"><span class="p-l-label">Marketing</span><span class="p-l-amount" style="color:var(--red);">$2,100</span></div>
+        <div class="p-l-row"><span class="p-l-label">Miscellaneous</span><span class="p-l-amount" style="color:var(--red);">$2,200</span></div>
+        <div class="p-l-row total"><span>Total Expenses</span><span class="p-l-amount" style="color:var(--red);">$31,047</span></div>
+        <div class="p-l-row total" style="background:var(--accent-dim);"><span style="color:var(--accent);font-size:15px;">Net Profit</span><span class="p-l-amount" style="color:var(--accent);font-size:17px;">$53,244</span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Modals -->
+<div class="modal-backdrop" id="addTxnModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Transaction</div>
+      <button class="modal-close" onclick="closeModal('addTxnModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-input" type="text" placeholder="e.g. AWS Cloud Services" id="txnDesc">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Amount ($)</label>
+        <input class="form-input" type="number" placeholder="0.00" id="txnAmount">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-input" id="txnType">
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-input" id="txnCat">
+          <option>Revenue</option>
+          <option>Operations</option>
+          <option>Software</option>
+          <option>Marketing</option>
+          <option>Payroll</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" type="date" id="txnDate">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('addTxnModal')">Cancel</button>
+      <button class="btn primary" onclick="addTransaction()">Save Transaction</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="addInvModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">New Invoice</div>
+      <button class="modal-close" onclick="closeModal('addInvModal')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Client Name</label>
+        <input class="form-input" type="text" placeholder="Acme Corp" id="invClient">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Invoice #</label>
+        <input class="form-input" type="text" placeholder="INV-0051" id="invNum">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-input" type="text" placeholder="Services rendered…" id="invDesc">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Amount ($)</label>
+        <input class="form-input" type="number" placeholder="0.00" id="invAmount">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Due Date</label>
+        <input class="form-input" type="date" id="invDue">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('addInvModal')">Cancel</button>
+      <button class="btn primary" onclick="addInvoice()">Create Invoice</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────
+const TRANSACTIONS = [
+  { id:1, desc:'Stripe Payment — Acme Corp', cat:'Revenue', date:'2026-05-14', amount:4200, type:'income', status:'cleared' },
+  { id:2, desc:'Office Rent Q2', cat:'Operations', date:'2026-05-13', amount:-2800, type:'expense', status:'cleared' },
+  { id:3, desc:'Client Payment — NovaTech', cat:'Revenue', date:'2026-05-12', amount:7500, type:'income', status:'cleared' },
+  { id:4, desc:'AWS Cloud Services', cat:'Software', date:'2026-05-11', amount:-340, type:'expense', status:'cleared' },
+  { id:5, desc:'Consulting Fee — BrightPath', cat:'Revenue', date:'2026-05-10', amount:3100, type:'income', status:'cleared' },
+  { id:6, desc:'Google Ads Campaign', cat:'Marketing', date:'2026-05-09', amount:-580, type:'expense', status:'pending' },
+  { id:7, desc:'Freelancer Payment — Design', cat:'Payroll', date:'2026-05-08', amount:-1200, type:'expense', status:'cleared' },
+  { id:8, desc:'SaaS Subscription — Figma', cat:'Software', date:'2026-05-07', amount:-45, type:'expense', status:'cleared' },
+  { id:9, desc:'Invoice #INV-0038 — Paid', cat:'Revenue', date:'2026-05-06', amount:5400, type:'income', status:'cleared' },
+  { id:10, desc:'Team Payroll — May', cat:'Payroll', date:'2026-05-01', amount:-12000, type:'expense', status:'cleared' },
+];
+
+const INVOICES = [
+  { num:'INV-0050', client:'Acme Corp', desc:'Web Development Services', amount:12000, status:'paid', date:'2026-05-01' },
+  { num:'INV-0049', client:'NovaTech Inc', desc:'UX Consulting — Q2', amount:7500, status:'paid', date:'2026-04-28' },
+  { num:'INV-0048', client:'GlobalMart', desc:'Digital Strategy Retainer', amount:4800, status:'overdue', date:'2026-04-15' },
+  { num:'INV-0047', client:'BrightPath', desc:'Consulting Hours — April', amount:3100, status:'pending', date:'2026-05-10' },
+  { num:'INV-0046', client:'Moonrise Studios', desc:'Brand Identity Package', amount:8200, status:'paid', date:'2026-04-20' },
+  { num:'INV-0045', client:'TechForge Ltd', desc:'API Integration Services', amount:5600, status:'pending', date:'2026-05-12' },
+  { num:'INV-0044', client:'StartupXYZ', desc:'MVP Development', amount:15000, status:'overdue', date:'2026-04-01' },
+  { num:'INV-0043', client:'GreenField Co', desc:'Data Analysis Report', amount:2400, status:'draft', date:'2026-05-15' },
+];
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May'];
+const INCOME_DATA = [62000, 68400, 74100, 79300, 84291];
+const EXPENSE_DATA = [28000, 29500, 30100, 30700, 31047];
+
+const AI_RESPONSES = {
+  'profit margin': `<p>Your profit margin for <strong>May 2026</strong> is looking strong:</p>
+    <div class="highlight-box">Revenue: $84,291<br>Expenses: $31,047<br>Net Profit: $53,244<br><strong>Margin: 63.2%</strong></div>
+    <p>This is <strong>6.3% above Q1 average</strong> — excellent growth. Your consulting services are driving the most margin at ~72%.</p>`,
+  'q1 vs q2': `<p>Here's your Q1 vs Q2 expense comparison:</p>
+    <table class="data-table-mini"><thead><tr><th>Category</th><th>Q1</th><th>Q2 (est.)</th><th>Change</th></tr></thead><tbody>
+    <tr><td>Payroll</td><td>$38,400</td><td>$42,000</td><td style="color:var(--red)">+9.4%</td></tr>
+    <tr><td>Software</td><td>$11,200</td><td>$13,041</td><td style="color:var(--red)">+16.4%</td></tr>
+    <tr><td>Office</td><td>$24,000</td><td>$25,200</td><td style="color:var(--red)">+5.0%</td></tr>
+    <tr><td>Marketing</td><td>$5,400</td><td>$6,300</td><td style="color:var(--red)">+16.7%</td></tr>
+    </tbody></table>
+    <p>Software costs rose the fastest — primarily due to new SaaS subscriptions. Consider auditing tools you no longer actively use.</p>`,
+  'owe me money': `<p>Here are clients with outstanding balances:</p>
+    <table class="data-table-mini"><thead><tr><th>Client</th><th>Invoice</th><th>Amount</th><th>Days Overdue</th></tr></thead><tbody>
+    <tr><td>GlobalMart</td><td>INV-0048</td><td style="color:var(--red)">$4,800</td><td style="color:var(--red)">30 days</td></tr>
+    <tr><td>StartupXYZ</td><td>INV-0044</td><td style="color:var(--red)">$15,000</td><td style="color:var(--red)">44 days</td></tr>
+    <tr><td>BrightPath</td><td>INV-0047</td><td style="color:var(--amber)">$3,100</td><td style="color:var(--amber)">Pending</td></tr>
+    <tr><td>TechForge Ltd</td><td>INV-0045</td><td style="color:var(--amber)">$5,600</td><td style="color:var(--amber)">Pending</td></tr>
+    </tbody></table>
+    <p>I recommend sending a reminder to <strong>StartupXYZ</strong> immediately — $15,000 at 44 days is your highest risk receivable.</p>`,
+  'tax': `<p>Based on your YTD income of <strong>$84,291</strong> and applicable deductions:</p>
+    <div class="highlight-box">Estimated Federal Tax: ~$18,540<br>Self-Employment Tax: ~$7,200<br>State Tax (est.): ~$4,215<br><strong>Total Estimated: ~$29,955</strong></div>
+    <p>Your next quarterly payment of <strong>~$8,420</strong> is due <strong>June 15, 2026</strong>. Ensure you've set aside funds. Would you like me to prepare a full tax planning summary?</p>`,
+  'expense categories': `<p>Here's your top expense breakdown for May 2026:</p>
+    <table class="data-table-mini"><thead><tr><th>Category</th><th>Amount</th><th>% of Total</th></tr></thead><tbody>
+    <tr><td>Payroll</td><td>$14,000</td><td>45.1%</td></tr>
+    <tr><td>Office & Rent</td><td>$8,400</td><td>27.1%</td></tr>
+    <tr><td>Software & Tools</td><td>$4,347</td><td>14.0%</td></tr>
+    <tr><td>Marketing</td><td>$2,100</td><td>6.8%</td></tr>
+    <tr><td>Miscellaneous</td><td>$2,200</td><td>7.0%</td></tr>
+    </tbody></table>
+    <p>Payroll is your dominant expense at 45%. This is within healthy range for a service business. Software costs are growing — a subscription audit could save $800–$1,200/month.</p>`,
+};
+
+// ── NAVIGATION ─────────────────────────────────────────
+function navigate(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if(el) el.classList.add('active');
+  closeSidebar();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+// ── BAR CHART ─────────────────────────────────────────
+function renderBarChart() {
+  const container = document.getElementById('barChart');
+  if(!container) return;
+  const maxVal = Math.max(...INCOME_DATA);
+  container.innerHTML = MONTHS.map((m, i) => {
+    const incH = Math.round((INCOME_DATA[i]/maxVal)*120);
+    const expH = Math.round((EXPENSE_DATA[i]/maxVal)*120);
+    return `<div class="bar-group">
+      <div class="bar-wrap">
+        <div class="bar income" style="height:${incH}px" title="Revenue: $${INCOME_DATA[i].toLocaleString()}"></div>
+        <div class="bar expense" style="height:${expH}px" title="Expenses: $${EXPENSE_DATA[i].toLocaleString()}"></div>
+      </div>
+      <div class="bar-label">${m}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderExpenseBreakdown() {
+  const container = document.getElementById('expenseBreakdown');
+  if(!container) return;
+  const items = [
+    { label:'Payroll', pct:45.1, color:'var(--purple)' },
+    { label:'Office', pct:27.1, color:'var(--blue)' },
+    { label:'Software', pct:14.0, color:'var(--accent)' },
+    { label:'Marketing', pct:6.8, color:'var(--amber)' },
+    { label:'Other', pct:7.0, color:'var(--text3)' },
+  ];
+  container.innerHTML = items.map(item => `
+    <div style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px;">
+        <span>${item.label}</span><span style="font-family:var(--font-mono);color:var(--text);">${item.pct}%</span>
+      </div>
+      <div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${item.pct}%;background:${item.color};border-radius:3px;transition:width 0.6s ease;"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── TRANSACTIONS ───────────────────────────────────────
+let allTxns = [...TRANSACTIONS];
+
+function renderTransactions(data) {
+  const body = document.getElementById('txnTableBody');
+  if(!body) return;
+  const catColors = {
+    Revenue: { bg:'var(--accent-dim)', color:'var(--accent)' },
+    Operations: { bg:'var(--blue-dim)', color:'var(--blue)' },
+    Software: { bg:'var(--purple-dim)', color:'var(--purple)' },
+    Marketing: { bg:'var(--amber-dim)', color:'var(--amber)' },
+    Payroll: { bg:'var(--red-dim)', color:'var(--red)' },
+  };
+  body.innerHTML = data.map(t => {
+    const c = catColors[t.cat] || { bg:'var(--bg4)', color:'var(--text3)' };
+    const amtStr = (t.amount > 0 ? '+' : '') + '$' + Math.abs(t.amount).toLocaleString();
+    const amtClass = t.amount > 0 ? 'pos' : 'neg';
+    const amtColor = t.amount > 0 ? 'var(--accent)' : 'var(--red)';
+    const statusColor = t.status === 'cleared' ? 'var(--accent)' : 'var(--amber)';
+    return `<div class="table-row">
+      <div class="td" style="color:var(--text3);font-size:11px;font-family:var(--font-mono);">#${t.id}</div>
+      <div class="td" style="flex-direction:column;align-items:flex-start;gap:2px;">
+        <span>${t.desc}</span>
+      </div>
+      <div class="td"><span class="cat-badge" style="background:${c.bg};color:${c.color};">${t.cat}</span></div>
+      <div class="td" style="color:var(--text2);font-size:12px;">${t.date}</div>
+      <div class="td mono" style="color:${amtColor};font-weight:500;">${amtStr}</div>
+      <div class="td">
+        <span class="status-dot" style="background:${statusColor};"></span>
+        <span style="font-size:12px;color:var(--text2);">${t.status}</span>
+      </div>
+    </div>`;
+  }).join('') || `<div style="padding:32px;text-align:center;color:var(--text3);">No transactions found.</div>`;
+  document.getElementById('txnCount').textContent = `Showing ${data.length} of ${allTxns.length} transactions`;
+}
+
+function filterTransactions() {
+  const search = document.getElementById('txnSearch')?.value.toLowerCase() || '';
+  const type = document.getElementById('txnTypeFilter')?.value || '';
+  const cat = document.getElementById('txnCatFilter')?.value || '';
+  const filtered = allTxns.filter(t => {
+    const matchSearch = !search || t.desc.toLowerCase().includes(search) || t.cat.toLowerCase().includes(search);
+    const matchType = !type || t.type === type;
+    const matchCat = !cat || t.cat === cat;
+    return matchSearch && matchType && matchCat;
+  });
+  renderTransactions(filtered);
+}
+
+function addTransaction() {
+  const desc = document.getElementById('txnDesc')?.value.trim();
+  const amount = parseFloat(document.getElementById('txnAmount')?.value);
+  const type = document.getElementById('txnType')?.value;
+  const cat = document.getElementById('txnCat')?.value;
+  const date = document.getElementById('txnDate')?.value;
+  if(!desc || isNaN(amount)) { showToast('Please fill all required fields', 'error'); return; }
+  const newTxn = {
+    id: allTxns.length + 1,
+    desc, cat, date: date || new Date().toISOString().split('T')[0],
+    amount: type === 'expense' ? -Math.abs(amount) : Math.abs(amount),
+    type, status: 'pending'
+  };
+  allTxns.unshift(newTxn);
+  renderTransactions(allTxns);
+  closeModal('addTxnModal');
+  showToast('Transaction added successfully', 'success');
+  document.getElementById('txnDesc').value = '';
+  document.getElementById('txnAmount').value = '';
+}
+
+// ── INVOICES ───────────────────────────────────────────
+let allInvoices = [...INVOICES];
+
+function renderInvoices(data) {
+  const grid = document.getElementById('invoiceGrid');
+  if(!grid) return;
+  grid.innerHTML = data.map(inv => `
+    <div class="invoice-card" onclick="showToast('Opening invoice ${inv.num}…','info')">
+      <div class="inv-header">
+        <div class="inv-number">${inv.num}</div>
+        <div class="inv-status ${inv.status}">${inv.status.charAt(0).toUpperCase()+inv.status.slice(1)}</div>
+      </div>
+      <div class="inv-client">${inv.client}</div>
+      <div class="inv-desc">${inv.desc}</div>
+      <div class="inv-footer">
+        <div class="inv-amount">$${inv.amount.toLocaleString()}</div>
+        <div class="inv-date">Due ${inv.date}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addInvoice() {
+  const client = document.getElementById('invClient')?.value.trim();
+  const num = document.getElementById('invNum')?.value.trim();
+  const desc = document.getElementById('invDesc')?.value.trim();
+  const amount = parseFloat(document.getElementById('invAmount')?.value);
+  const due = document.getElementById('invDue')?.value;
+  if(!client || isNaN(amount)) { showToast('Please fill all required fields', 'error'); return; }
+  allInvoices.unshift({
+    num: num || `INV-00${50+allInvoices.length}`,
+    client, desc: desc || 'Services rendered',
+    amount, status: 'draft', date: due || '2026-06-01'
+  });
+  renderInvoices(allInvoices);
+  closeModal('addInvModal');
+  showToast('Invoice created!', 'success');
+  ['invClient','invNum','invDesc','invAmount','invDue'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = ''; });
+}
+
+// ── AI CHAT ────────────────────────────────────────────
+let chatLoading = false;
+
+function appendMsg(role, html) {
+  const msgs = document.getElementById('chatMessages');
+  const isAI = role === 'ai';
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `
+    <div class="msg-avatar">${isAI ? 'L' : 'J'}</div>
+    <div class="msg-bubble">${html}</div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.id = 'typingIndicator';
+  div.innerHTML = `
+    <div class="msg-avatar">L</div>
+    <div class="msg-bubble"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typingIndicator');
+  if(el) el.remove();
+}
+
+function getAIResponse(input) {
+  const lower = input.toLowerCase();
+  if(lower.includes('profit margin') || lower.includes('margin')) return AI_RESPONSES['profit margin'];
+  if(lower.includes('q1') || lower.includes('q2') || lower.includes('expense')) return AI_RESPONSES['q1 vs q2'];
+  if(lower.includes('owe') || lower.includes('client') || lower.includes('outstanding') || lower.includes('receivable')) return AI_RESPONSES['owe me money'];
+  if(lower.includes('tax') || lower.includes('irs') || lower.includes('liability')) return AI_RESPONSES['tax'];
+  if(lower.includes('category') || lower.includes('categories') || lower.includes('breakdown')) return AI_RESPONSES['expense categories'];
+  return `<p>Great question! Based on your financial data for May 2026, here's what I can tell you:</p>
+    <div class="highlight-box">Revenue: $84,291 | Expenses: $31,047 | Net Profit: $53,244</div>
+    <p>I can analyze your <strong>profit margins</strong>, <strong>expense trends</strong>, <strong>outstanding invoices</strong>, or <strong>tax estimates</strong>. Try asking me something more specific about any of these areas!</p>`;
+}
+
+async function sendChat() {
+  if(chatLoading) return;
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  input.style.height = 'auto';
+  appendMsg('user', `<p>${text}</p>`);
+  chatLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping();
+  await new Promise(r => setTimeout(r, 900 + Math.random()*600));
+  removeTyping();
+  const response = getAIResponse(text);
+  appendMsg('ai', response);
+  chatLoading = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function sendSuggestion(chip) {
+  const text = chip.textContent;
+  document.getElementById('chatInput').value = text;
+  sendChat();
+}
+
+function handleChatKey(e) {
+  if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// ── MODALS ─────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-backdrop').forEach(m => {
+  m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); });
+});
+
+// ── TOAST ──────────────────────────────────────────────
+function showToast(msg, type='info') {
+  const icons = { success:'✓', error:'✕', info:'ℹ' };
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span class="toast-icon">${icons[type]||'ℹ'}</span><span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.style.opacity = '0', 2800);
+  setTimeout(() => toast.remove(), 3200);
+}
+
+// ── INIT ───────────────────────────────────────────────
+function init() {
+  renderBarChart();
+  renderExpenseBreakdown();
+  renderTransactions(allTxns);
+  renderInvoices(allInvoices);
+  // Set today's date as default in forms
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('input[type="date"]').forEach(el => el.value = today);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

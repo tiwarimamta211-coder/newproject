@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuralStream AI | Smart Chat Interface</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0b0f1a; color: #f8fafc; padding: 16px; min-height: 100vh; }
+  .wrap { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; height: calc(100vh - 32px); min-height: 500px; }
+
+  /* HEADER */
+  .header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #161b2a; border: 1px solid #2d3343; border-radius: 16px; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+  .logo { font-size: 18px; font-weight: 800; color: #8b5cf6; display: flex; align-items: center; gap: 8px; }
+  .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .model-select { background: #0b0f1a; border: 1px solid #2d3343; color: #94a3b8; padding: 7px 12px; border-radius: 9px; font-size: 12px; font-family: inherit; outline: none; appearance: none; -webkit-appearance: none; }
+  .model-select:focus { border-color: #8b5cf6; }
+  .token-pill { background: rgba(139,92,246,0.1); color: #a78bfa; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(139,92,246,0.2); }
+  .clear-btn { background: #1e293b; color: #64748b; border: 1px solid #2d3343; padding: 7px 14px; border-radius: 9px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 600; }
+  .clear-btn:hover { color: #ef4444; border-color: #ef4444; }
+
+  /* API BAR */
+  .api-bar { background: #161b2a; border: 1px solid #2d3343; border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .api-bar label { font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+  .api-bar input { flex: 1; min-width: 160px; padding: 7px 12px; background: #0b0f1a; border: 1px solid #2d3343; border-radius: 8px; font-size: 12px; font-family: inherit; color: #e2e8f0; outline: none; }
+  .api-bar input:focus { border-color: #8b5cf6; }
+  .api-bar input::placeholder { color: #334155; }
+  .api-status { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 8px; white-space: nowrap; }
+  .api-status.demo { background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2); }
+  .api-status.live { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+  .api-link { font-size: 11px; color: #8b5cf6; text-decoration: none; white-space: nowrap; }
+  .api-link:hover { text-decoration: underline; }
+
+  /* SYSTEM PROMPT */
+  .sys-bar { background: #161b2a; border: 1px solid #2d3343; border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .sys-bar label { font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+  .sys-bar input { flex: 1; min-width: 200px; padding: 7px 12px; background: #0b0f1a; border: 1px solid #2d3343; border-radius: 8px; font-size: 12px; font-family: inherit; color: #e2e8f0; outline: none; }
+  .sys-bar input:focus { border-color: #8b5cf6; }
+  .sys-bar input::placeholder { color: #334155; }
+
+  /* CHAT WINDOW */
+  .chat-window { flex: 1; overflow-y: auto; background: #0b0f1a; border: 1px solid #2d3343; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 16px; scrollbar-width: thin; scrollbar-color: #2d3343 transparent; min-height: 300px; margin-bottom: 14px; }
+
+  /* MESSAGES */
+  .msg { max-width: 82%; padding: 14px 18px; border-radius: 18px; line-height: 1.65; font-size: 14px; word-break: break-word; }
+  .msg.user { align-self: flex-end; background: #8b5cf6; color: #fff; border-bottom-right-radius: 4px; }
+  .msg.ai   { align-self: flex-start; background: #161b2a; border: 1px solid #2d3343; color: #e2e8f0; border-bottom-left-radius: 4px; }
+  .msg.system-note { align-self: center; background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.15); color: #64748b; font-size: 11px; padding: 6px 14px; border-radius: 20px; max-width: 90%; text-align: center; }
+  .msg-meta { font-size: 10px; color: #475569; margin-bottom: 6px; font-weight: 600; }
+  .msg.user .msg-meta { color: rgba(255,255,255,0.5); text-align: right; }
+
+  /* TYPING INDICATOR */
+  .typing { display: flex; gap: 5px; align-items: center; padding: 14px 18px; }
+  .typing-dot { width: 7px; height: 7px; background: #475569; border-radius: 50%; animation: typingBounce 1.2s infinite; }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingBounce { 0%,80%,100%{transform:translateY(0);opacity:0.4;} 40%{transform:translateY(-6px);opacity:1;} }
+
+  /* INPUT AREA */
+  .input-area { background: #161b2a; border: 1px solid #2d3343; border-radius: 16px; padding: 10px; display: flex; align-items: flex-end; gap: 8px; transition: border-color 0.2s; }
+  .input-area:focus-within { border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
+  .msg-input { flex: 1; background: transparent; border: none; color: #f8fafc; font-size: 14px; font-family: inherit; outline: none; resize: none; line-height: 1.5; max-height: 120px; padding: 8px 10px; }
+  .msg-input::placeholder { color: #334155; }
+  .send-btn { background: #8b5cf6; color: #fff; border: none; width: 40px; height: 40px; border-radius: 11px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s, transform 0.1s; }
+  .send-btn:hover:not(:disabled) { background: #7c3aed; transform: scale(1.05); }
+  .send-btn:disabled { background: #334155; cursor: not-allowed; transform: none; }
+  .input-hint { font-size: 10px; color: #334155; text-align: center; margin-top: 8px; }
+
+  /* QUICK PROMPTS */
+  .quick-row { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }
+  .qchip { background: #161b2a; border: 1px solid #2d3343; color: #64748b; font-size: 11px; font-weight: 600; padding: 6px 13px; border-radius: 20px; cursor: pointer; transition: all 0.15s; font-family: inherit; white-space: nowrap; }
+  .qchip:hover { border-color: #8b5cf6; color: #a78bfa; background: rgba(139,92,246,0.07); }
+
+  /* SPIN */
+  .spin { display: inline-block; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 500px) {
+    .msg { max-width: 92%; }
+    .quick-row { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">🧠 NeuralStream AI</div>
+    <div class="header-right">
+      <select class="model-select" id="modelSelect">
+        <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+        <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (Fast)</option>
+      </select>
+      <div class="token-pill">🔋 <span id="tokenCount">3,500,000</span> tokens</div>
+      <button class="clear-btn" onclick="clearChat()">🗑 Clear</button>
+    </div>
+  </div>
+
+  <!-- API BAR -->
+  <div class="api-bar">
+    <label>API Key</label>
+    <input type="password" id="apiKey" placeholder="sk-ant-... (Anthropic API Key for real AI responses)">
+    <span class="api-status demo" id="apiStatus">Demo Mode</span>
+    <a class="api-link" href="https://console.anthropic.com" target="_blank">Get Key →</a>
+  </div>
+
+  <!-- SYSTEM PROMPT -->
+  <div class="sys-bar">
+    <label>System Prompt</label>
+    <input type="text" id="systemPrompt" placeholder="e.g. You are a helpful GST & Finance expert assistant." value="You are NeuralStream AI — a helpful, knowledgeable, and friendly assistant. Answer clearly and concisely.">
+  </div>
+
+  <!-- QUICK PROMPTS -->
+  <div class="quick-row">
+    <button class="qchip" onclick="setPrompt('Explain GST input tax credit in simple terms')">GST ITC Explained</button>
+    <button class="qchip" onclick="setPrompt('What are the GST slabs in India in 2026?')">GST Slabs 2026</button>
+    <button class="qchip" onclick="setPrompt('How to file GSTR-1 online? Step by step guide')">GSTR-1 Filing</button>
+    <button class="qchip" onclick="setPrompt('What is the difference between CGST, SGST and IGST?')">CGST vs IGST</button>
+    <button class="qchip" onclick="setPrompt('Write a professional email to a client about invoice payment due')">Invoice Email</button>
+    <button class="qchip" onclick="setPrompt('Explain WACC in simple terms with an example')">WACC Explained</button>
+  </div>
+
+  <!-- CHAT WINDOW -->
+  <div class="chat-window" id="chatWindow">
+    <div class="msg ai">
+      <div class="msg-meta">🧠 NeuralStream AI</div>
+      Hello! I'm your NeuralStream AI assistant. I can help with GST, finance, accounting, coding, writing, and much more. Add your Anthropic API Key above for real AI responses, or try the quick prompts to see demo mode! How can I assist you? 😊
+    </div>
+  </div>
+
+  <!-- INPUT AREA -->
+  <div class="input-area">
+    <textarea class="msg-input" id="msgInput" placeholder="Ask anything... (Enter to send, Shift+Enter for new line)" rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+  </div>
+  <div class="input-hint">NeuralStream AI can make mistakes. Verify important information.</div>
+
+</div>
+
+<script>
+  var conversationHistory = [];
+  var tokens = 3500000;
+  var isGenerating = false;
+
+  // Demo responses
+  var demoResponses = {
+    'gst': 'GST (Goods and Services Tax) is a comprehensive indirect tax levied on the supply of goods and services in India. It replaced multiple cascading taxes and was implemented on July 1, 2017. The main GST slabs are 0%, 5%, 12%, 18%, and 28%.\n\n**Key components:**\n- CGST: Central GST (collected by Central Govt)\n- SGST: State GST (collected by State Govt)\n- IGST: Integrated GST (for inter-state transactions)\n\nWould you like to know more about a specific aspect of GST?',
+    'itc': 'Input Tax Credit (ITC) allows businesses to reduce their tax liability by the amount of GST paid on inputs. For example, if you pay ₹18,000 GST on purchases and collect ₹25,000 GST on sales, you only pay ₹7,000 to the government.\n\n**Conditions to claim ITC:**\n1. Must have a valid tax invoice\n2. Goods/services must be received\n3. Supplier must have filed their returns\n4. You must file GSTR-3B\n\nITC cannot be claimed on personal expenses, food & beverages, and certain exempt items.',
+    'default': 'That\'s a great question! In demo mode, I provide sample responses. For real AI-powered answers from Claude, please add your Anthropic API Key in the field above.\n\nYou can get a free API key at **console.anthropic.com** — it takes just 2 minutes to sign up!\n\nIn the meantime, feel free to explore the quick prompts above for demo responses on GST and Finance topics. 😊'
+  };
+
+  function getDemoResponse(text) {
+    var lower = text.toLowerCase();
+    if (lower.includes('itc') || lower.includes('input tax')) return demoResponses.itc;
+    if (lower.includes('gst') || lower.includes('gstin') || lower.includes('gstr')) return demoResponses.gst;
+    return demoResponses.default;
+  }
+
+  function setPrompt(text) {
+    document.getElementById('msgInput').value = text;
+    autoResize(document.getElementById('msgInput'));
+    document.getElementById('msgInput').focus();
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  function addMessage(role, text, meta) {
+    var win = document.getElementById('chatWindow');
+    var div = document.createElement('div');
+    div.className = 'msg ' + role;
+    if (meta) {
+      var metaEl = document.createElement('div');
+      metaEl.className = 'msg-meta';
+      metaEl.innerText = meta;
+      div.appendChild(metaEl);
+    }
+    var textEl = document.createElement('div');
+    textEl.innerText = text;
+    div.appendChild(textEl);
+    win.appendChild(div);
+    win.scrollTop = win.scrollHeight;
+    return textEl;
+  }
+
+  function addTyping() {
+    var win = document.getElementById('chatWindow');
+    var div = document.createElement('div');
+    div.className = 'msg ai typing';
+    div.id = 'typingIndicator';
+    div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+    win.appendChild(div);
+    win.scrollTop = win.scrollHeight;
+  }
+
+  function removeTyping() {
+    var t = document.getElementById('typingIndicator');
+    if (t) t.remove();
+  }
+
+  function streamText(textEl, fullText, callback) {
+    var i = 0;
+    var win = document.getElementById('chatWindow');
+    var interval = setInterval(function() {
+      textEl.innerText += fullText[i];
+      i++;
+      win.scrollTop = win.scrollHeight;
+      if (i >= fullText.length) {
+        clearInterval(interval);
+        if (callback) callback();
+      }
+    }, 18);
+  }
+
+  function sendMessage() {
+    if (isGenerating) return;
+    var input  = document.getElementById('msgInput');
+    var apiKey = document.getElementById('apiKey').value.trim();
+    var model  = document.getElementById('modelSelect').value;
+    var system = document.getElementById('systemPrompt').value.trim();
+    var text   = input.value.trim();
+    if (!text) return;
+
+    // Add user message
+    addMessage('user', text, '👤 You');
+    conversationHistory.push({ role: 'user', content: text });
+
+    // Deduct tokens (estimate)
+    tokens -= Math.max(50, text.length * 3);
+    document.getElementById('tokenCount').innerText = Math.max(0, tokens).toLocaleString('en-IN');
+
+    input.value = '';
+    input.style.height = 'auto';
+    isGenerating = true;
+    document.getElementById('sendBtn').disabled = true;
+    addTyping();
+
+    if (!apiKey || !apiKey.startsWith('sk-ant-')) {
+      // Demo mode
+      setTimeout(function() {
+        removeTyping();
+        var aiMsgDiv = document.createElement('div');
+        aiMsgDiv.className = 'msg ai';
+        var metaEl = document.createElement('div');
+        metaEl.className = 'msg-meta';
+        metaEl.innerText = '🧠 NeuralStream AI (Demo)';
+        aiMsgDiv.appendChild(metaEl);
+        var textEl = document.createElement('div');
+        aiMsgDiv.appendChild(textEl);
+        document.getElementById('chatWindow').appendChild(aiMsgDiv);
+        var response = getDemoResponse(text);
+        streamText(textEl, response, function() {
+          conversationHistory.push({ role: 'assistant', content: response });
+          finishGeneration();
+        });
+      }, 900);
+      return;
+    }
+
+    // Real Claude API
+    var messages = conversationHistory.slice(-20); // last 20 messages for context
+    var body = { model: model, max_tokens: 1000, messages: messages };
+    if (system) body.system = system;
+
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      removeTyping();
+      if (data.content && data.content[0]) {
+        var reply = data.content[0].text || '';
+        var aiMsgDiv = document.createElement('div');
+        aiMsgDiv.className = 'msg ai';
+        var metaEl = document.createElement('div');
+        metaEl.className = 'msg-meta';
+        metaEl.innerText = '🧠 NeuralStream AI';
+        aiMsgDiv.appendChild(metaEl);
+        var textEl = document.createElement('div');
+        aiMsgDiv.appendChild(textEl);
+        document.getElementById('chatWindow').appendChild(aiMsgDiv);
+        // Update token count from API response
+        if (data.usage) {
+          tokens -= (data.usage.input_tokens + data.usage.output_tokens);
+          document.getElementById('tokenCount').innerText = Math.max(0,tokens).toLocaleString('en-IN');
+        }
+        document.getElementById('apiStatus').className = 'api-status live';
+        document.getElementById('apiStatus').innerText = '✅ Live AI';
+        streamText(textEl, reply, function() {
+          conversationHistory.push({ role: 'assistant', content: reply });
+          finishGeneration();
+        });
+      } else {
+        addMessage('ai', '❌ ' + (data.error ? data.error.message : 'Unexpected error. Try again.'), '⚠️ Error');
+        finishGeneration();
+      }
+    })
+    .catch(function() {
+      removeTyping();
+      addMessage('ai', '❌ Network error. Check your API key and internet connection.', '⚠️ Error');
+      finishGeneration();
+    });
+  }
+
+  function finishGeneration() {
+    isGenerating = false;
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('msgInput').focus();
+  }
+
+  function clearChat() {
+    if (!confirm('Clear all chat history?')) return;
+    conversationHistory = [];
+    var win = document.getElementById('chatWindow');
+    win.innerHTML = '';
+    var div = document.createElement('div');
+    div.className = 'msg ai';
+    div.innerHTML = '<div class="msg-meta">🧠 NeuralStream AI</div>Chat cleared! How can I help you? 😊';
+    win.appendChild(div);
+  }
+</script>
+</body>
+</html>

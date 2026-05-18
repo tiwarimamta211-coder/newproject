@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Company Incorporation Cost Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; padding: 16px; }
+  .wrap { max-width: 960px; margin: 0 auto; }
+
+  /* HEADER */
+  .header { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; color: #0f172a; }
+  .logo span { color: #0284c7; font-size: 22px; }
+  .print-btn { background: #0284c7; color: #fff; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 14px; }
+  .print-btn:hover { background: #0369a1; }
+
+  /* LAYOUT */
+  .grid { display: flex; gap: 20px; flex-wrap: wrap; }
+  .sidebar { flex: 0 0 300px; display: flex; flex-direction: column; gap: 16px; }
+  .main { flex: 1; min-width: 280px; }
+
+  /* CARDS */
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; }
+  .card-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #0284c7; margin-bottom: 16px; }
+  .card-title.gray { color: #94a3b8; }
+
+  /* INPUTS */
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px; }
+  .field input { width: 100%; padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-weight: 600; outline: none; transition: border 0.2s; font-family: inherit; }
+  .field input:focus { border-color: #0284c7; }
+
+  /* RESULT PANEL */
+  .result-panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; overflow: hidden; }
+  .result-header { background: #0f172a; color: #fff; padding: 28px 28px 24px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .result-header h2 { font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; }
+  .result-header .company-name { color: #38bdf8; font-size: 13px; font-weight: 600; margin-top: 4px; }
+  .total-label { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; text-align: right; }
+  .total-amount { font-size: 30px; font-weight: 900; color: #38bdf8; text-align: right; margin-top: 4px; }
+
+  /* STAT BOXES */
+  .stat-row { display: flex; gap: 12px; padding: 20px 28px; flex-wrap: wrap; }
+  .stat-box { flex: 1; min-width: 120px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; }
+  .stat-box.blue { background: #eff6ff; border-color: #bfdbfe; }
+  .stat-box p { font-size: 9px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; }
+  .stat-box.blue p { color: #0284c7; }
+  .stat-box h4 { font-size: 17px; font-weight: 800; color: #0f172a; }
+  .stat-box.blue h4 { color: #1d4ed8; }
+
+  /* TABLE */
+  .table-wrap { padding: 4px 28px 20px; }
+  .table-head { display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 4px; }
+  .table-head span { font-weight: 700; color: #0f172a; font-size: 13px; }
+  .table-head small { font-size: 11px; color: #94a3b8; font-weight: 400; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  td { padding: 11px 4px; border-bottom: 1px solid #f1f5f9; color: #475569; }
+  td:last-child { text-align: right; font-weight: 700; color: #0f172a; }
+  .total-row td { background: #0284c7; color: #fff; font-weight: 800; font-size: 14px; padding: 12px 10px; }
+  .total-row td:first-child { border-radius: 10px 0 0 10px; padding-left: 14px; }
+  .total-row td:last-child { border-radius: 0 10px 10px 0; padding-right: 14px; font-size: 16px; color: #fff; }
+
+  /* INFO BOX */
+  .info-box { margin: 0 28px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; }
+  .info-box h5 { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; letter-spacing: 1px; }
+  .info-box p { font-size: 12px; color: #64748b; line-height: 1.7; }
+
+  /* FOOTER */
+  .result-footer { border-top: 1px solid #e2e8f0; background: #fafafa; padding: 16px 28px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .footer-note { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; line-height: 2; }
+  .sig-block { text-align: center; width: 160px; border-top: 1px solid #cbd5e1; padding-top: 6px; }
+  .sig-block span { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* PRINT STYLES */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .header, .sidebar, .info-box { display: none !important; }
+    .grid { display: block; }
+    .main { width: 100%; }
+    .result-panel { border: 1px solid #e2e8f0; box-shadow: none; }
+  }
+
+  @media (max-width: 640px) {
+    .sidebar { flex: 0 0 100%; }
+    .result-header { flex-direction: column; gap: 10px; }
+    .total-label, .total-amount { text-align: left; }
+    .stat-row { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">
+      <span>🏢</span> IncorpMaster
+    </div>
+    <button class="print-btn" onclick="window.print()">🖨️ Print Cost Proposal</button>
+  </div>
+
+  <div class="grid">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="card">
+        <div class="card-title">1. Statutory Costs</div>
+        <div class="field">
+          <label>Authorised Capital (₹)</label>
+          <input type="number" id="authCap" value="100000" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>ROC Filing Fees (₹)</label>
+          <input type="number" id="rocFees" value="2000" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>Stamp Duty – State Specific (₹)</label>
+          <input type="number" id="stampDuty" value="5000" oninput="calc()">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title gray">2. Professional &amp; Setup</div>
+        <div class="field">
+          <label>Consultancy / CA Fees (₹)</label>
+          <input type="number" id="profFees" value="15000" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>Digital Signature – DSC/DIN (₹)</label>
+          <input type="number" id="dscFees" value="3000" oninput="calc()">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title gray">Proposed Entity</div>
+        <div class="field">
+          <label>Proposed Company Name</label>
+          <input type="text" id="proposedName" placeholder="e.g. Sunrise Ventures Pvt. Ltd." oninput="sync()">
+        </div>
+        <div class="field">
+          <label>Consultant / Firm Name</label>
+          <input type="text" id="consultantName" placeholder="e.g. CA Sharma &amp; Associates" oninput="sync()">
+        </div>
+      </div>
+    </aside>
+
+    <!-- RESULT PANEL -->
+    <main class="main">
+      <div class="result-panel">
+        <div class="result-header">
+          <div>
+            <h2>Incorporation Budget</h2>
+            <div class="company-name" id="dr_name">Proposed Company Ltd.</div>
+          </div>
+          <div>
+            <div class="total-label">Total Setup Cost</div>
+            <div class="total-amount" id="resTotal">₹0</div>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-box">
+            <p>Statutory Fees</p>
+            <h4 id="resStat">₹0</h4>
+          </div>
+          <div class="stat-box">
+            <p>Consultancy</p>
+            <h4 id="resConsult">₹0</h4>
+          </div>
+          <div class="stat-box blue">
+            <p>Authorised Cap.</p>
+            <h4 id="resCap">₹0</h4>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-head">
+            <span>Estimated Expense Statement <small id="dr_firm">– Firm: Not Set</small></span>
+          </div>
+          <table>
+            <tbody>
+              <tr>
+                <td>ROC Filing Fees &amp; Name Approval</td>
+                <td id="tabRoc">₹0</td>
+              </tr>
+              <tr>
+                <td>Stamp Duty on MOA/AOA</td>
+                <td id="tabStamp">₹0</td>
+              </tr>
+              <tr>
+                <td>DSC &amp; DIN Procurement (2 Directors)</td>
+                <td id="tabDsc">₹0</td>
+              </tr>
+              <tr>
+                <td><em>Professional Consultancy Charges</em></td>
+                <td id="tabProf">₹0</td>
+              </tr>
+              <tr class="total-row">
+                <td>Total Estimated Outlay</td>
+                <td id="tabTotal">₹0</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-box">
+          <h5>📌 Incorporation Roadmap</h5>
+          <p>The incorporation cost is highly sensitive to the <strong>Authorised Share Capital</strong>. As your capital increases, the ROC fees and Stamp Duty scale exponentially. Professional fees often include PAN/TAN procurement and the drafting of the Memorandum and Articles of Association.</p>
+        </div>
+
+        <div class="result-footer">
+          <div class="footer-note">
+            Budgetary Quote • Subject to State Laws<br>
+            Report Date: <span id="reportDate"></span>
+          </div>
+          <div class="sig-block">
+            <span>Consultant Signature</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  // Set today's date
+  var d = new Date();
+  document.getElementById('reportDate').innerText = d.toLocaleDateString('en-IN', {month:'long', year:'numeric'});
+
+  function fmt(v) {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
+  }
+
+  function calc() {
+    var cap   = parseFloat(document.getElementById('authCap').value)   || 0;
+    var roc   = parseFloat(document.getElementById('rocFees').value)   || 0;
+    var stamp = parseFloat(document.getElementById('stampDuty').value) || 0;
+    var prof  = parseFloat(document.getElementById('profFees').value)  || 0;
+    var dsc   = parseFloat(document.getElementById('dscFees').value)   || 0;
+
+    var stat  = roc + stamp + dsc;
+    var total = stat + prof;
+
+    document.getElementById('resTotal').innerText   = fmt(total);
+    document.getElementById('resStat').innerText    = fmt(stat);
+    document.getElementById('resConsult').innerText = fmt(prof);
+    document.getElementById('resCap').innerText     = fmt(cap);
+    document.getElementById('tabRoc').innerText     = fmt(roc);
+    document.getElementById('tabStamp').innerText   = fmt(stamp);
+    document.getElementById('tabDsc').innerText     = fmt(dsc);
+    document.getElementById('tabProf').innerText    = fmt(prof);
+    document.getElementById('tabTotal').innerText   = fmt(total);
+  }
+
+  function sync() {
+    var n = document.getElementById('proposedName').value.trim();
+    var f = document.getElementById('consultantName').value.trim();
+    document.getElementById('dr_name').innerText = n || 'Proposed Company Ltd.';
+    document.getElementById('dr_firm').innerText = f ? '– Firm: ' + f : '– Firm: Not Set';
+  }
+
+  calc(); // run on load
+</script>
+</body>
+</html>

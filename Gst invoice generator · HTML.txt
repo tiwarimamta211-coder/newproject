@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evenzo — 5 मिनट में 200 Guests 🎬</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c14;
+  --bg2: #0d1220;
+  --card: #111827;
+  --card2: #1a2235;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --accent: #00e5ff;
+  --accent2: #7c3aed;
+  --accent3: #f59e0b;
+  --green: #10b981;
+  --red: #ef4444;
+  --pink: #ec4899;
+  --text: #f1f5f9;
+  --muted: #64748b;
+  --muted2: #334155;
+  --font-head: 'Bebas Neue', sans-serif;
+  --font-body: 'Nunito', sans-serif;
+  --glow: 0 0 30px rgba(0,229,255,0.25);
+  --glow2: 0 0 30px rgba(124,58,237,0.3);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── SCREEN WRAPPER ── */
+#screen {
+  width: 1280px;
+  height: 720px;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+  flex-shrink: 0;
+  transform-origin: center center;
+}
+
+/* ── SLIDES ── */
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+.slide.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ── BACKGROUND EFFECTS ── */
+.bg-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+/* ── PROGRESS BAR ── */
+#progress-bar {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  width: 0%;
+  transition: width 0.3s linear;
+  z-index: 100;
+  box-shadow: 0 0 12px var(--accent);
+}
+
+/* ── TIMER ── */
+#timer-display {
+  position: absolute;
+  top: 20px; right: 24px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid var(--border2);
+  border-radius: 30px;
+  padding: 6px 16px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+  z-index: 100;
+  display: flex; align-items: center; gap: 8px;
+}
+.timer-dot {
+  width: 8px; height: 8px;
+  background: var(--red);
+  border-radius: 50%;
+  animation: blink 1s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* ── SLIDE COUNTER ── */
+#slide-counter {
+  position: absolute;
+  top: 20px; left: 24px;
+  display: flex; gap: 6px;
+  z-index: 100;
+}
+.sc-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--muted2);
+  transition: all 0.3s;
+}
+.sc-dot.active { background: var(--accent); box-shadow: 0 0 8px var(--accent); width: 24px; border-radius: 4px; }
+
+/* ── CONTROLS ── */
+#controls {
+  position: absolute;
+  bottom: 16px; right: 20px;
+  display: flex; gap: 8px;
+  z-index: 100;
+}
+.ctrl-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 14px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.ctrl-btn:hover { background: rgba(255,255,255,0.15); }
+.ctrl-btn.primary { background: var(--accent); color: #000; border-color: var(--accent); }
+.ctrl-btn.primary:hover { box-shadow: var(--glow); }
+
+/* ══════════════════════
+   SLIDE 0 — INTRO HOOK
+══════════════════════ */
+#slide-0 {
+  background: radial-gradient(ellipse at 30% 40%, rgba(0,229,255,0.12) 0%, transparent 55%),
+              radial-gradient(ellipse at 70% 60%, rgba(124,58,237,0.1) 0%, transparent 50%),
+              var(--bg);
+}
+.hook-label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 18px;
+  opacity: 0;
+  animation: slideUp 0.7s 0.3s forwards;
+}
+.hook-title {
+  font-family: var(--font-head);
+  font-size: 7rem;
+  line-height: 0.9;
+  text-align: center;
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: slideUp 0.7s 0.6s forwards;
+}
+.hook-title .hl { color: var(--accent); }
+.hook-title .hl2 { color: var(--accent3); }
+.hook-sub {
+  font-size: 1.3rem;
+  color: rgba(255,255,255,0.6);
+  text-align: center;
+  margin-bottom: 40px;
+  opacity: 0;
+  animation: slideUp 0.6s 1s forwards;
+}
+.hook-stats {
+  display: flex; gap: 32px;
+  opacity: 0;
+  animation: slideUp 0.6s 1.3s forwards;
+}
+.hook-stat {
+  text-align: center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 20px 32px;
+}
+.hook-stat-val {
+  font-family: var(--font-head);
+  font-size: 3.5rem;
+  color: var(--accent);
+  line-height: 1;
+}
+.hook-stat-val.orange { color: var(--accent3); }
+.hook-stat-val.purple { color: #a78bfa; }
+.hook-stat-label { font-size: 0.82rem; color: var(--muted); margin-top: 6px; }
+@keyframes slideUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+
+/* ══════════════════════════
+   SLIDE 1 — PROBLEM (EXCEL)
+══════════════════════════ */
+#slide-1 {
+  background: radial-gradient(ellipse at center, rgba(239,68,68,0.08) 0%, transparent 60%), var(--bg);
+  padding: 40px 80px;
+}
+.prob-head {
+  font-family: var(--font-head);
+  font-size: 3.8rem;
+  color: var(--red);
+  text-align: center;
+  margin-bottom: 8px;
+  opacity: 0;
+}
+.prob-sub { font-size: 1rem; color: var(--muted); text-align: center; margin-bottom: 36px; opacity: 0; }
+.excel-window {
+  background: #1d2d1a;
+  border: 2px solid #3a5c34;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 900px;
+  opacity: 0;
+}
+.excel-titlebar {
+  background: #2d4a28;
+  padding: 8px 16px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.8rem; color: #7db87a;
+}
+.excel-dots { display: flex; gap: 5px; }
+.excel-dot { width: 11px; height: 11px; border-radius: 50%; }
+.excel-body { padding: 0; overflow: hidden; }
+.excel-row {
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 0.78rem;
+  opacity: 0;
+}
+.excel-row.header { background: rgba(255,255,255,0.05); font-weight: 700; color: #7db87a; }
+.excel-cell {
+  padding: 7px 12px;
+  border-right: 1px solid rgba(255,255,255,0.05);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.excel-cell:first-child { max-width: 40px; color: var(--muted); }
+.excel-chaos { background: rgba(239,68,68,0.15); color: var(--red); }
+.prob-pain {
+  display: flex; gap: 14px;
+  margin-top: 24px;
+  opacity: 0;
+}
+.pain-item {
+  flex: 1;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+.pain-icon { font-size: 1.8rem; margin-bottom: 8px; }
+.pain-text { font-size: 0.82rem; color: rgba(255,255,255,0.7); line-height: 1.4; }
+
+/* ══════════════════════════
+   SLIDE 2 — SOLUTION REVEAL
+══════════════════════════ */
+#slide-2 {
+  background: radial-gradient(ellipse at 40% 50%, rgba(0,229,255,0.1) 0%, transparent 55%), var(--bg);
+}
+.sol-label {
+  font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 14px; opacity: 0;
+}
+.sol-title {
+  font-family: var(--font-head);
+  font-size: 5.5rem;
+  text-align: center;
+  line-height: 0.9;
+  margin-bottom: 50px;
+  opacity: 0;
+}
+.sol-title span { color: var(--accent); }
+.sol-features {
+  display: flex; gap: 20px;
+  opacity: 0;
+}
+.sol-feat {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 24px 22px;
+  flex: 1;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transform: translateY(20px);
+  transition: all 0.3s;
+}
+.sol-feat::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.sol-feat.c1::before { background: var(--accent); }
+.sol-feat.c2::before { background: var(--accent3); }
+.sol-feat.c3::before { background: var(--pink); }
+.sol-feat.c4::before { background: var(--green); }
+.sol-feat-icon { font-size: 2.2rem; margin-bottom: 12px; }
+.sol-feat-name { font-weight: 800; font-size: 0.95rem; margin-bottom: 6px; }
+.sol-feat-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+
+/* ══════════════════════════════
+   SLIDE 3 — LIVE DEMO: ADD GUEST
+══════════════════════════════ */
+#slide-3 {
+  background: var(--bg);
+  flex-direction: row;
+  align-items: stretch;
+  padding: 0;
+}
+.demo-sidebar {
+  width: 220px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 24px 16px;
+  flex-shrink: 0;
+}
+.demo-logo {
+  font-family: var(--font-head);
+  font-size: 1.6rem;
+  color: var(--accent);
+  margin-bottom: 28px;
+  display: flex; align-items: center; gap: 8px;
+}
+.demo-logo-mark {
+  width: 28px; height: 28px;
+  background: var(--accent);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; color: #000;
+}
+.demo-nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.demo-nav-item.active { background: rgba(0,229,255,0.1); color: var(--accent); }
+.demo-main { flex: 1; display: flex; flex-direction: column; padding: 28px; overflow: hidden; }
+.demo-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.demo-page-title { font-family: var(--font-head); font-size: 2rem; }
+.demo-btn {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+.guest-table-wrap { flex: 1; overflow: hidden; }
+.guest-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.guest-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.guest-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.guest-row { opacity: 0; transform: translateX(-20px); transition: all 0.4s; }
+.guest-row.visible { opacity: 1; transform: translateX(0); }
+.g-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 800; color: #fff;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.status-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.s-conf { background: rgba(16,185,129,0.15); color: #10b981; }
+.s-pend { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.s-dec  { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+/* ══════════════════════════════════
+   SLIDE 4 — BULK IMPORT ANIMATION
+══════════════════════════════════ */
+#slide-4 {
+  background: radial-gradient(ellipse at center, rgba(124,58,237,0.1) 0%, transparent 55%), var(--bg);
+  padding: 40px 80px;
+}
+.bulk-title { font-family: var(--font-head); font-size: 4rem; text-align: center; margin-bottom: 8px; opacity: 0; }
+.bulk-title span { color: var(--accent2); }
+.bulk-sub { font-size: 1rem; color: var(--muted); text-align: center; margin-bottom: 40px; opacity: 0; }
+.bulk-visual {
+  display: flex; align-items: center; gap: 32px;
+  opacity: 0;
+}
+.bulk-excel-box {
+  background: #1d2d1a;
+  border: 2px solid #3a5c34;
+  border-radius: 12px;
+  padding: 18px 24px;
+  min-width: 260px;
+}
+.bulk-box-title { font-size: 0.75rem; font-weight: 700; color: #7db87a; margin-bottom: 10px; letter-spacing: 1px; }
+.bulk-row { font-size: 0.78rem; color: rgba(255,255,255,0.6); padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; gap: 12px; }
+.bulk-row.header { color: #7db87a; font-weight: 700; }
+.arrow-anim {
+  font-size: 2.5rem;
+  color: var(--accent2);
+  animation: arrowPulse 1s infinite;
+}
+@keyframes arrowPulse { 0%,100%{transform:translateX(0);opacity:1} 50%{transform:translateX(8px);opacity:0.6} }
+.bulk-app-box {
+  background: var(--card);
+  border: 2px solid var(--accent2);
+  border-radius: 12px;
+  padding: 18px 24px;
+  min-width: 300px;
+  box-shadow: var(--glow2);
+}
+.bulk-counter {
+  font-family: var(--font-head);
+  font-size: 3.5rem;
+  color: var(--accent2);
+  text-align: center;
+  line-height: 1;
+}
+.bulk-counter-label { font-size: 0.8rem; color: var(--muted); text-align: center; margin-top: 4px; margin-bottom: 12px; }
+.bulk-prog { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; margin-bottom: 12px; }
+.bulk-prog-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--pink)); border-radius: 4px; width: 0%; transition: width 3s ease; }
+.bulk-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.bulk-tag {
+  background: rgba(124,58,237,0.15);
+  border: 1px solid rgba(124,58,237,0.3);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  color: #a78bfa;
+  font-weight: 700;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.3s;
+}
+.bulk-tag.pop { opacity: 1; transform: scale(1); }
+.bulk-stats-row { display: flex; gap: 16px; margin-top: 28px; opacity: 0; }
+.bulk-stat-card {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+.bulk-stat-num { font-family: var(--font-head); font-size: 2.2rem; color: var(--accent); }
+.bulk-stat-lbl { font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
+
+/* ══════════════════════════════════
+   SLIDE 5 — RSVP TRACKING LIVE
+══════════════════════════════════ */
+#slide-5 {
+  background: var(--bg);
+  flex-direction: row;
+  padding: 40px 60px;
+  gap: 40px;
+  align-items: center;
+}
+.rsvp-left { flex: 1; }
+.rsvp-title { font-family: var(--font-head); font-size: 4rem; margin-bottom: 10px; opacity: 0; }
+.rsvp-title span { color: var(--green); }
+.rsvp-sub { font-size: 0.95rem; color: var(--muted); margin-bottom: 28px; opacity: 0; }
+.rsvp-list { display: flex; flex-direction: column; gap: 10px; }
+.rsvp-item {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: all 0.4s;
+}
+.rsvp-item.in { opacity: 1; transform: translateX(0); }
+.rsvp-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 800; color: #fff; flex-shrink: 0; }
+.rsvp-name { flex: 1; font-weight: 700; font-size: 0.88rem; }
+.rsvp-info { font-size: 0.75rem; color: var(--muted); }
+.rsvp-notification {
+  background: rgba(16,185,129,0.12);
+  border: 1px solid rgba(16,185,129,0.3);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  color: var(--green);
+  font-weight: 700;
+  opacity: 0;
+  animation: notifPop 0.4s forwards;
+  margin-bottom: 6px;
+}
+@keyframes notifPop { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+.rsvp-right { width: 320px; flex-shrink: 0; }
+.donut-card {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 16px;
+  opacity: 0;
+}
+.donut-title { font-weight: 800; font-size: 0.9rem; margin-bottom: 20px; }
+.donut-svg-wrap { position: relative; display: inline-block; }
+.donut-center-text {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.donut-pct { font-family: var(--font-head); font-size: 2.4rem; color: var(--green); line-height: 1; }
+.donut-pct-lbl { font-size: 0.72rem; color: var(--muted); }
+.donut-legend { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.donut-leg-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; }
+.donut-leg-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; display: inline-block; }
+.meal-card {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 18px 20px;
+  opacity: 0;
+}
+.meal-title { font-weight: 800; font-size: 0.85rem; margin-bottom: 12px; }
+.meal-bar { margin-bottom: 8px; }
+.meal-bar-label { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px; }
+.meal-bar-track { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+.meal-bar-fill { height: 100%; border-radius: 3px; width: 0; transition: width 1.5s ease; }
+
+/* ══════════════════════════════════
+   SLIDE 6 — SEATING & TABLE MGMT
+══════════════════════════════════ */
+#slide-6 {
+  background: radial-gradient(ellipse at 60% 40%, rgba(245,158,11,0.08) 0%, transparent 55%), var(--bg);
+  padding: 40px 60px;
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: center;
+}
+.seat-title { font-family: var(--font-head); font-size: 4rem; margin-bottom: 8px; opacity: 0; }
+.seat-title span { color: var(--accent3); }
+.seat-sub { font-size: 0.95rem; color: var(--muted); margin-bottom: 32px; opacity: 0; }
+.seat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; opacity: 0; }
+.table-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+  transition: all 0.3s;
+  cursor: pointer;
+  position: relative;
+}
+.table-card:hover { border-color: var(--accent3); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(245,158,11,0.2); }
+.table-card.full { border-color: rgba(239,68,68,0.4); }
+.table-card.vip { border-color: rgba(245,158,11,0.5); background: rgba(245,158,11,0.05); }
+.table-num { font-family: var(--font-head); font-size: 1.6rem; color: var(--accent3); line-height: 1; }
+.table-name { font-size: 0.7rem; color: var(--muted); margin-bottom: 8px; }
+.table-seats {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 3px; margin-bottom: 8px;
+}
+.seat {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  transition: all 0.3s;
+}
+.seat.taken { background: var(--green); border-color: var(--green); }
+.seat.vip-seat { background: var(--accent3); border-color: var(--accent3); }
+.table-count { font-size: 0.72rem; color: var(--muted); }
+.seat-summary { display: flex; gap: 16px; margin-top: 24px; opacity: 0; }
+.sum-item { background: var(--card); border: 1px solid var(--border2); border-radius: 10px; padding: 12px 18px; flex: 1; text-align: center; }
+.sum-val { font-family: var(--font-head); font-size: 1.8rem; }
+.sum-lbl { font-size: 0.74rem; color: var(--muted); }
+
+/* ══════════════════════════════════
+   SLIDE 7 — RESULT / CTA
+══════════════════════════════════ */
+#slide-7 {
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,229,255,0.12) 0%, transparent 60%), var(--bg);
+}
+.result-label { font-size: 0.82rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; opacity: 0; animation: slideUp 0.6s 0.2s forwards; }
+.result-title { font-family: var(--font-head); font-size: 6rem; text-align: center; line-height: 0.9; margin-bottom: 20px; opacity: 0; animation: slideUp 0.6s 0.5s forwards; }
+.result-title .done { color: var(--green); }
+.result-proof {
+  display: flex; gap: 20px; margin-bottom: 36px;
+  opacity: 0; animation: slideUp 0.6s 0.9s forwards;
+}
+.result-stat {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  padding: 18px 24px;
+  text-align: center;
+  min-width: 160px;
+}
+.result-stat-val { font-family: var(--font-head); font-size: 2.8rem; line-height: 1; }
+.result-stat-val.g { color: var(--green); }
+.result-stat-val.a { color: var(--accent); }
+.result-stat-val.o { color: var(--accent3); }
+.result-stat-lbl { font-size: 0.76rem; color: var(--muted); margin-top: 4px; }
+.result-cta {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  opacity: 0; animation: slideUp 0.6s 1.2s forwards;
+}
+.cta-main {
+  background: linear-gradient(135deg, var(--accent), #00b4d8);
+  color: #000;
+  font-family: var(--font-head);
+  font-size: 1.8rem;
+  padding: 16px 48px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 1px;
+  box-shadow: 0 0 40px rgba(0,229,255,0.3);
+  transition: all 0.2s;
+}
+.cta-main:hover { transform: scale(1.03); box-shadow: 0 0 60px rgba(0,229,255,0.5); }
+.cta-sub { font-size: 0.85rem; color: var(--muted); }
+.cta-contact { display: flex; gap: 16px; }
+.cta-pill {
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  border-radius: 50px;
+  padding: 8px 22px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cta-pill.wa { border-color: rgba(16,185,129,0.4); color: var(--green); }
+.cta-pill.ph { border-color: rgba(0,229,255,0.4); color: var(--accent); }
+
+/* ── WATERMARK ── */
+.watermark {
+  position: absolute; bottom: 20px; left: 24px;
+  font-size: 0.72rem; color: var(--muted2); z-index: 100;
+  font-weight: 700; letter-spacing: 1px;
+}
+
+/* ── ANIMATED TYPING CURSOR ── */
+.typing::after { content: '|'; animation: blink 0.7s infinite; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div id="screen">
+  <div id="progress-bar"></div>
+  <div id="timer-display"><span class="timer-dot"></span><span id="timer-text">00:00</span></div>
+  <div id="slide-counter"></div>
+  <div class="watermark">EVENZO © 2026</div>
+  <div id="controls">
+    <button class="ctrl-btn" onclick="prevSlide()">‹ Prev</button>
+    <button class="ctrl-btn" id="play-pause-btn" onclick="toggleAuto()">⏸ Pause</button>
+    <button class="ctrl-btn" onclick="nextSlide()">Next ›</button>
+    <button class="ctrl-btn primary" onclick="restartDemo()">↺ Restart</button>
+  </div>
+
+  <!-- ═══ SLIDE 0 — HOOK ═══ -->
+  <div class="slide active" id="slide-0">
+    <div class="hook-label">🎬 Evenzo presents</div>
+    <div class="hook-title">
+      देखो कैसे<br>
+      <span class="hl">200 Guests</span><br>
+      <span class="hl2">5 मिनट</span> में Manage होते हैं
+    </div>
+    <div class="hook-sub">Excel छोड़ो — Smart App अपनाओ 🚀</div>
+    <div class="hook-stats">
+      <div class="hook-stat">
+        <div class="hook-stat-val" id="count-guests">0</div>
+        <div class="hook-stat-label">Guests Added</div>
+      </div>
+      <div class="hook-stat">
+        <div class="hook-stat-val orange">5</div>
+        <div class="hook-stat-label">Minutes Only</div>
+      </div>
+      <div class="hook-stat">
+        <div class="hook-stat-val purple">0</div>
+        <div class="hook-stat-label">Excel Sheets</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 1 — PROBLEM ═══ -->
+  <div class="slide" id="slide-1">
+    <div class="prob-head" id="prob-head">❌ क्या यह है आपका Guest Management?</div>
+    <div class="prob-sub" id="prob-sub">ज्यादातर event planners अभी भी यही कर रहे हैं...</div>
+    <div class="excel-window" id="excel-win">
+      <div class="excel-titlebar">
+        <div class="excel-dots">
+          <div class="excel-dot" style="background:#ff5f57"></div>
+          <div class="excel-dot" style="background:#febc2e"></div>
+          <div class="excel-dot" style="background:#28c840"></div>
+        </div>
+        <span>Wedding_Guests_FINAL_v3_UPDATED_USE_THIS.xlsx</span>
+      </div>
+      <div class="excel-body">
+        <div class="excel-row header" id="ex-r0">
+          <div class="excel-cell">#</div>
+          <div class="excel-cell">Name</div>
+          <div class="excel-cell">Phone</div>
+          <div class="excel-cell">RSVP</div>
+          <div class="excel-cell">Meal</div>
+          <div class="excel-cell">Table</div>
+          <div class="excel-cell">Notes</div>
+        </div>
+        <div class="excel-row" id="ex-r1"><div class="excel-cell">1</div><div class="excel-cell">Priya Sharma</div><div class="excel-cell">98765-43210</div><div class="excel-cell excel-chaos">????</div><div class="excel-cell">Veg</div><div class="excel-cell excel-chaos">A? B?</div><div class="excel-cell excel-chaos">she confirmed right?</div></div>
+        <div class="excel-row" id="ex-r2"><div class="excel-cell">2</div><div class="excel-cell">Rahul K.</div><div class="excel-cell excel-chaos">check WhatsApp</div><div class="excel-cell">Yes</div><div class="excel-cell excel-chaos">NV or V???</div><div class="excel-cell">12</div><div class="excel-cell"></div></div>
+        <div class="excel-row" id="ex-r3"><div class="excel-cell">3</div><div class="excel-cell excel-chaos">Anita + family (3?)</div><div class="excel-cell">-</div><div class="excel-cell excel-chaos">No response</div><div class="excel-cell">Jain</div><div class="excel-cell excel-chaos">???</div><div class="excel-cell excel-chaos">called 3 times!!</div></div>
+        <div class="excel-row" id="ex-r4"><div class="excel-cell">4</div><div class="excel-cell">Vikram</div><div class="excel-cell">99001-12233</div><div class="excel-cell">Yes</div><div class="excel-cell">Non-Veg</div><div class="excel-cell">5</div><div class="excel-cell excel-chaos">DUPLICATE? check row 87</div></div>
+        <div class="excel-row" id="ex-r5"><div class="excel-cell">...</div><div class="excel-cell excel-chaos">196 more rows...</div><div class="excel-cell"></div><div class="excel-cell"></div><div class="excel-cell"></div><div class="excel-cell"></div><div class="excel-cell excel-chaos">😭 HELP</div></div>
+      </div>
+    </div>
+    <div class="prob-pain" id="prob-pain">
+      <div class="pain-item"><div class="pain-icon">😵</div><div class="pain-text">Confusing spreadsheet<br>कोई clarity नहीं</div></div>
+      <div class="pain-item"><div class="pain-icon">⏰</div><div class="pain-text">हर update में<br>घंटों लगते हैं</div></div>
+      <div class="pain-item"><div class="pain-icon">😤</div><div class="pain-text">Team को share करना<br>बड़ा झंझट</div></div>
+      <div class="pain-item"><div class="pain-icon">🤦</div><div class="pain-text">Last minute में<br>सब कुछ गलत</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 2 — SOLUTION ═══ -->
+  <div class="slide" id="slide-2">
+    <div class="sol-label">✨ The Solution</div>
+    <div class="sol-title" id="sol-title">Meet <span>EVENZO</span><br>Guest Manager</div>
+    <div class="sol-features" id="sol-feats">
+      <div class="sol-feat c1">
+        <div class="sol-feat-icon">⚡</div>
+        <div class="sol-feat-name">Instant Import</div>
+        <div class="sol-feat-desc">Excel से 200 guests<br>एक click में</div>
+      </div>
+      <div class="sol-feat c2">
+        <div class="sol-feat-icon">📊</div>
+        <div class="sol-feat-name">Live Dashboard</div>
+        <div class="sol-feat-desc">RSVP, meals, tables<br>real-time update</div>
+      </div>
+      <div class="sol-feat c3">
+        <div class="sol-feat-icon">🪑</div>
+        <div class="sol-feat-name">Auto Seating</div>
+        <div class="sol-feat-desc">Smart table assignment<br>conflicts नहीं होंगे</div>
+      </div>
+      <div class="sol-feat c4">
+        <div class="sol-feat-icon">🔔</div>
+        <div class="sol-feat-name">RSVP Tracking</div>
+        <div class="sol-feat-desc">हर guest का status<br>live notification</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 3 — LIVE DEMO ═══ -->
+  <div class="slide" id="slide-3">
+    <div class="demo-sidebar">
+      <div class="demo-logo"><div class="demo-logo-mark">⚡</div>EVENZO</div>
+      <div class="demo-nav-item">📊 Dashboard</div>
+      <div class="demo-nav-item active">👥 Guests</div>
+      <div class="demo-nav-item">🎉 Events</div>
+      <div class="demo-nav-item">🪑 Seating</div>
+      <div class="demo-nav-item">💰 Budget</div>
+      <div class="demo-nav-item">✅ Tasks</div>
+    </div>
+    <div class="demo-main">
+      <div class="demo-topbar">
+        <div class="demo-page-title">Guest Management <span style="font-size:1rem;color:var(--accent);font-family:var(--font-body);font-weight:700">• 200 Guests</span></div>
+        <div style="display:flex;gap:10px">
+          <button class="demo-btn" style="background:var(--card2);color:var(--text)">📥 Import Excel</button>
+          <button class="demo-btn">+ Add Guest</button>
+        </div>
+      </div>
+      <div id="notif-area" style="margin-bottom:12px;min-height:30px"></div>
+      <div class="guest-table-wrap">
+        <table class="guest-table">
+          <thead>
+            <tr>
+              <th>Guest</th>
+              <th>Event</th>
+              <th>RSVP Status</th>
+              <th>Meal</th>
+              <th>Table</th>
+              <th>Phone</th>
+            </tr>
+          </thead>
+          <tbody id="live-guest-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 4 — BULK IMPORT ═══ -->
+  <div class="slide" id="slide-4">
+    <div class="bulk-title" id="bulk-title"><span>200 Guests</span> — एक Click में!</div>
+    <div class="bulk-sub" id="bulk-sub">Excel file drag करो → Evenzo automatically import कर लेगा</div>
+    <div class="bulk-visual" id="bulk-vis">
+      <div class="bulk-excel-box">
+        <div class="bulk-box-title">📄 GUESTS_LIST.XLSX</div>
+        <div class="bulk-row header"><span>Name</span><span>Phone</span><span>Meal</span></div>
+        <div class="bulk-row"><span>Priya Sharma</span><span>98765-43210</span><span>Veg</span></div>
+        <div class="bulk-row"><span>Rahul Kumar</span><span>99001-12233</span><span>Non-Veg</span></div>
+        <div class="bulk-row"><span>Anita Patel</span><span>77890-55512</span><span>Jain</span></div>
+        <div class="bulk-row"><span>Vikram Mehta</span><span>88001-33445</span><span>Veg</span></div>
+        <div class="bulk-row" style="color:var(--muted);font-style:italic"><span>+196 more rows...</span></div>
+      </div>
+      <div class="arrow-anim">→</div>
+      <div class="bulk-app-box">
+        <div class="bulk-counter" id="bulk-counter">0</div>
+        <div class="bulk-counter-label">Guests Imported</div>
+        <div class="bulk-prog"><div class="bulk-prog-fill" id="bulk-prog-fill"></div></div>
+        <div class="bulk-tags" id="bulk-tags">
+          <div class="bulk-tag">👤 Names</div>
+          <div class="bulk-tag">📞 Phones</div>
+          <div class="bulk-tag">🍽 Meals</div>
+          <div class="bulk-tag">📍 Tables</div>
+          <div class="bulk-tag">✉ Emails</div>
+          <div class="bulk-tag">📝 Notes</div>
+          <div class="bulk-tag">🪑 Seating</div>
+          <div class="bulk-tag">✅ RSVP</div>
+        </div>
+      </div>
+    </div>
+    <div class="bulk-stats-row" id="bulk-stats">
+      <div class="bulk-stat-card"><div class="bulk-stat-num" style="color:var(--green)">200</div><div class="bulk-stat-lbl">Imported</div></div>
+      <div class="bulk-stat-card"><div class="bulk-stat-num" style="color:var(--accent)">0.8s</div><div class="bulk-stat-lbl">Time Taken</div></div>
+      <div class="bulk-stat-card"><div class="bulk-stat-num" style="color:var(--accent3)">0</div><div class="bulk-stat-lbl">Errors</div></div>
+      <div class="bulk-stat-card"><div class="bulk-stat-num" style="color:var(--pink)">8</div><div class="bulk-stat-lbl">Fields Auto-Mapped</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 5 — RSVP ═══ -->
+  <div class="slide" id="slide-5">
+    <div class="rsvp-left">
+      <div class="rsvp-title" id="rsvp-title">Live <span>RSVP</span> Tracking</div>
+      <div class="rsvp-sub" id="rsvp-sub">हर guest की response real-time में — कोई follow-up call नहीं</div>
+      <div id="notif-feed" style="margin-bottom:12px;min-height:36px"></div>
+      <div class="rsvp-list" id="rsvp-list"></div>
+    </div>
+    <div class="rsvp-right">
+      <div class="donut-card" id="donut-card">
+        <div class="donut-title">RSVP Overview</div>
+        <div class="donut-svg-wrap">
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r="54" fill="none" stroke="#1a2235" stroke-width="18"/>
+            <circle id="donut-conf" cx="70" cy="70" r="54" fill="none" stroke="#10b981" stroke-width="18" stroke-dasharray="339.29" stroke-dashoffset="339.29" stroke-linecap="round" transform="rotate(-90 70 70)" style="transition:stroke-dashoffset 2s ease"/>
+            <circle id="donut-pend" cx="70" cy="70" r="54" fill="none" stroke="#f59e0b" stroke-width="18" stroke-dasharray="339.29" stroke-dashoffset="339.29" stroke-linecap="round" transform="rotate(-90 70 70)" style="transition:stroke-dashoffset 2s ease 0.5s"/>
+          </svg>
+          <div class="donut-center-text">
+            <div class="donut-pct" id="donut-pct">0%</div>
+            <div class="donut-pct-lbl">Confirmed</div>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <div class="donut-leg-row"><span><span class="donut-leg-dot" style="background:#10b981"></span>Confirmed</span><span id="leg-conf" style="font-weight:700;color:#10b981">0</span></div>
+          <div class="donut-leg-row"><span><span class="donut-leg-dot" style="background:#f59e0b"></span>Pending</span><span id="leg-pend" style="font-weight:700;color:#f59e0b">0</span></div>
+          <div class="donut-leg-row"><span><span class="donut-leg-dot" style="background:#ef4444"></span>Declined</span><span id="leg-dec" style="font-weight:700;color:#ef4444">0</span></div>
+        </div>
+      </div>
+      <div class="meal-card" id="meal-card">
+        <div class="meal-title">🍽 Meal Preferences</div>
+        <div class="meal-bar">
+          <div class="meal-bar-label"><span>🥗 Veg</span><span>118</span></div>
+          <div class="meal-bar-track"><div class="meal-bar-fill" id="meal-veg" style="background:#10b981"></div></div>
+        </div>
+        <div class="meal-bar">
+          <div class="meal-bar-label"><span>🍗 Non-Veg</span><span>54</span></div>
+          <div class="meal-bar-track"><div class="meal-bar-fill" id="meal-nv" style="background:#f59e0b"></div></div>
+        </div>
+        <div class="meal-bar">
+          <div class="meal-bar-label"><span>🌿 Jain</span><span>28</span></div>
+          <div class="meal-bar-track"><div class="meal-bar-fill" id="meal-jain" style="background:#7c3aed"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 6 — SEATING ═══ -->
+  <div class="slide" id="slide-6">
+    <div class="seat-title" id="seat-title">Smart <span>Seating</span> Map</div>
+    <div class="seat-sub" id="seat-sub">Drag & Drop से tables assign करो — conflicts automatically detect होंगे</div>
+    <div class="seat-grid" id="seat-grid"></div>
+    <div class="seat-summary" id="seat-summary">
+      <div class="sum-item"><div class="sum-val" style="color:var(--green)">186</div><div class="sum-lbl">Seats Assigned</div></div>
+      <div class="sum-item"><div class="sum-val" style="color:var(--accent3)">14</div><div class="sum-lbl">VIP Seats</div></div>
+      <div class="sum-item"><div class="sum-val" style="color:var(--muted)">14</div><div class="sum-lbl">Remaining</div></div>
+      <div class="sum-item"><div class="sum-val" style="color:var(--red)">0</div><div class="sum-lbl">Conflicts</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 7 — RESULT ═══ -->
+  <div class="slide" id="slide-7">
+    <div class="result-label">🏆 Result</div>
+    <div class="result-title">200 Guests<br><span class="done">Done!</span> ✅</div>
+    <div class="result-proof">
+      <div class="result-stat"><div class="result-stat-val g">5</div><div class="result-stat-lbl">Minutes Total</div></div>
+      <div class="result-stat"><div class="result-stat-val a">200</div><div class="result-stat-lbl">Guests Managed</div></div>
+      <div class="result-stat"><div class="result-stat-val o">0</div><div class="result-stat-lbl">Excel Sheets</div></div>
+      <div class="result-stat"><div class="result-stat-val" style="color:var(--pink)">100%</div><div class="result-stat-lbl">Stress-Free</div></div>
+    </div>
+    <div class="result-cta">
+      <button class="cta-main">FREE Demo Book करें 🎯</button>
+      <div class="cta-sub">15 minutes • कोई commitment नहीं • Hindi में समझाएंगे</div>
+      <div class="cta-contact">
+        <div class="cta-pill wa">💬 WhatsApp: +91 XXXXX XXXXX</div>
+        <div class="cta-pill ph">📞 Call Now</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#screen -->
+
+<script>
+// ── DATA ─────────────────────────────────
+const guests = [
+  { name:"Priya Sharma", event:"Riya Wedding", status:"Confirmed", meal:"Veg", table:"A-1", phone:"98765-43210", color:"#10b981" },
+  { name:"Rahul Kumar", event:"Riya Wedding", status:"Confirmed", meal:"Non-Veg", table:"B-3", phone:"99001-12233", color:"#7c3aed" },
+  { name:"Anita Patel", event:"Riya Wedding", status:"Pending", meal:"Jain", table:"—", phone:"77890-55512", color:"#f59e0b" },
+  { name:"Vikram Mehta", event:"Riya Wedding", status:"Confirmed", meal:"Non-Veg", table:"C-5", phone:"88001-33445", color:"#ec4899" },
+  { name:"Neha Singh", event:"Riya Wedding", status:"Declined", meal:"Veg", table:"—", phone:"91234-56789", color:"#ef4444" },
+  { name:"Aditya Nair", event:"Riya Wedding", status:"Confirmed", meal:"Veg", table:"A-2", phone:"96543-21098", color:"#00e5ff" },
+  { name:"Shreya Das", event:"Riya Wedding", status:"Pending", meal:"Veg", table:"—", phone:"87654-32109", color:"#f59e0b" },
+  { name:"Karan Joshi", event:"Riya Wedding", status:"Confirmed", meal:"Non-Veg", table:"D-1", phone:"95432-10987", color:"#10b981" },
+];
+const rsvpGuests = [
+  { name:"Pooja Agarwal", status:"Confirmed", time:"Just now", color:"#10b981" },
+  { name:"Arjun Kapoor", status:"Confirmed", time:"2 min ago", color:"#7c3aed" },
+  { name:"Sunita Rao", status:"Pending", time:"5 min ago", color:"#f59e0b" },
+  { name:"Manoj Tiwari", status:"Confirmed", time:"8 min ago", color:"#ec4899" },
+  { name:"Kavya Reddy", status:"Declined", time:"12 min ago", color:"#ef4444" },
+  { name:"Suresh Patel", status:"Confirmed", time:"15 min ago", color:"#00e5ff" },
+];
+const tables = [
+  { num:"T1", name:"VIP Family", taken:8, total:10, vip:true },
+  { num:"T2", name:"Bride Side", taken:10, total:10, full:true },
+  { num:"T3", name:"Groom Side", taken:9, total:10 },
+  { num:"T4", name:"College Friends", taken:8, total:10 },
+  { num:"T5", name:"Office", taken:7, total:10 },
+  { num:"T6", name:"Relatives", taken:10, total:10, full:true },
+  { num:"T7", name:"Neighbours", taken:6, total:10 },
+  { num:"T8", name:"VIP Guest", taken:4, total:6, vip:true },
+  { num:"T9", name:"Family B", taken:9, total:10 },
+  { num:"T10", name:"Misc", taken:5, total:10 },
+];
+
+// ── SLIDE SYSTEM ─────────────────────────
+let currentSlide = 0;
+const totalSlides = 8;
+let autoInterval = null;
+let slideTimers = [];
+let timerStart = Date.now();
+let timerInterval = null;
+let isAutoPlaying = true;
+const SLIDE_DURATION = 7500;
+
+function initCounter() {
+  // Slide 0 guest counter
+  let n = 0;
+  const target = 200;
+  const el = document.getElementById('count-guests');
+  const step = target / 60;
+  const iv = setInterval(() => {
+    n = Math.min(n + step, target);
+    el.textContent = Math.round(n);
+    if(n >= target) clearInterval(iv);
+  }, 30);
+}
+
+function initSlideCounters() {
+  const wrap = document.getElementById('slide-counter');
+  wrap.innerHTML = Array.from({length:totalSlides}).map((_,i) =>
+    `<div class="sc-dot${i===0?' active':''}" id="scd-${i}"></div>`
+  ).join('');
+}
+
+function updateSlideCounter(i) {
+  document.querySelectorAll('.sc-dot').forEach((d,j) => {
+    d.classList.toggle('active', j===i);
+  });
+}
+
+function showSlide(i) {
+  clearAllTimers();
+  document.querySelectorAll('.slide').forEach((s,j) => {
+    s.classList.toggle('active', j===i);
+  });
+  currentSlide = i;
+  updateSlideCounter(i);
+  updateProgress(i);
+  runSlideAnimation(i);
+}
+
+function updateProgress(i) {
+  const pct = (i / (totalSlides-1)) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+function clearAllTimers() {
+  slideTimers.forEach(t => clearTimeout(t));
+  slideTimers = [];
+}
+
+function addTimer(fn, delay) {
+  slideTimers.push(setTimeout(fn, delay));
+}
+
+function nextSlide() {
+  if(currentSlide < totalSlides - 1) showSlide(currentSlide + 1);
+}
+function prevSlide() {
+  if(currentSlide > 0) showSlide(currentSlide - 1);
+}
+
+function toggleAuto() {
+  if(isAutoPlaying) {
+    isAutoPlaying = false;
+    clearInterval(autoInterval);
+    document.getElementById('play-pause-btn').textContent = '▶ Play';
+  } else {
+    isAutoPlaying = true;
+    startAuto();
+    document.getElementById('play-pause-btn').textContent = '⏸ Pause';
+  }
+}
+
+function startAuto() {
+  clearInterval(autoInterval);
+  autoInterval = setInterval(() => {
+    if(currentSlide < totalSlides - 1) nextSlide();
+    else { clearInterval(autoInterval); }
+  }, SLIDE_DURATION);
+}
+
+function restartDemo() {
+  clearInterval(autoInterval);
+  clearAllTimers();
+  clearInterval(timerInterval);
+  timerStart = Date.now();
+  startTimer();
+  isAutoPlaying = true;
+  document.getElementById('play-pause-btn').textContent = '⏸ Pause';
+  showSlide(0);
+  startAuto();
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+    const m = String(Math.floor(elapsed/60)).padStart(2,'0');
+    const s = String(elapsed%60).padStart(2,'0');
+    document.getElementById('timer-text').textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+// ── SLIDE ANIMATIONS ────────────────────
+function runSlideAnimation(i) {
+  if(i===0) animSlide0();
+  if(i===1) animSlide1();
+  if(i===2) animSlide2();
+  if(i===3) animSlide3();
+  if(i===4) animSlide4();
+  if(i===5) animSlide5();
+  if(i===6) animSlide6();
+  if(i===7) animSlide7();
+}
+
+function animSlide0() { initCounter(); }
+
+function animSlide1() {
+  const els = ['prob-head','prob-sub','excel-win'];
+  els.forEach((id,i) => addTimer(() => {
+    const el = document.getElementById(id);
+    if(el) { el.style.opacity='1'; el.style.transition='opacity 0.5s'; el.style.transform='translateY(0)'; }
+  }, i*300));
+  const rows = ['ex-r0','ex-r1','ex-r2','ex-r3','ex-r4','ex-r5'];
+  rows.forEach((id,i) => addTimer(() => {
+    const el = document.getElementById(id);
+    if(el) { el.style.opacity='1'; el.style.transition='opacity 0.3s'; }
+  }, 800 + i*150));
+  addTimer(() => {
+    const pain = document.getElementById('prob-pain');
+    if(pain) { pain.style.opacity='1'; pain.style.transition='opacity 0.5s'; }
+  }, 2000);
+}
+
+function animSlide2() {
+  addTimer(() => {
+    document.querySelector('.sol-label').style.cssText += 'opacity:1;transition:opacity 0.5s';
+  }, 200);
+  addTimer(() => {
+    const t = document.getElementById('sol-title');
+    t.style.cssText += 'opacity:1;transition:opacity 0.6s';
+  }, 500);
+  addTimer(() => {
+    const f = document.getElementById('sol-feats');
+    f.style.cssText += 'opacity:1;transition:opacity 0.5s';
+    f.querySelectorAll('.sol-feat').forEach((el,i) => {
+      addTimer(() => { el.style.transform='translateY(0)'; el.style.opacity='1'; el.style.transition='all 0.4s'; }, i*150);
+    });
+  }, 900);
+}
+
+function animSlide3() {
+  const tbody = document.getElementById('live-guest-table');
+  tbody.innerHTML = '';
+  const statusClass = { Confirmed:'s-conf', Pending:'s-pend', Declined:'s-dec' };
+  guests.forEach((g,i) => {
+    addTimer(() => {
+      const tr = document.createElement('tr');
+      tr.className = 'guest-row';
+      tr.innerHTML = `
+        <td><div class="g-avatar" style="background:${g.color}">${g.name.split(' ').map(n=>n[0]).join('')}</div>${g.name}</td>
+        <td style="color:var(--muted)">${g.event}</td>
+        <td><span class="status-pill ${statusClass[g.status]}">${g.status}</span></td>
+        <td>${g.meal}</td>
+        <td style="font-family:monospace;color:var(--accent)">${g.table}</td>
+        <td style="color:var(--muted)">${g.phone}</td>
+      `;
+      tbody.appendChild(tr);
+      requestAnimationFrame(() => { requestAnimationFrame(() => { tr.classList.add('visible'); }); });
+      // Notification
+      const notifArea = document.getElementById('notif-area');
+      notifArea.innerHTML = `<div class="rsvp-notification">✅ ${g.name} added — ${g.status}</div>`;
+    }, i * 400);
+  });
+}
+
+function animSlide4() {
+  ['bulk-title','bulk-sub'].forEach((id,i) => {
+    addTimer(() => {
+      const el = document.getElementById(id);
+      if(el) { el.style.opacity='1'; el.style.transition='opacity 0.5s'; }
+    }, i*250);
+  });
+  addTimer(() => {
+    const vis = document.getElementById('bulk-vis');
+    vis.style.opacity='1'; vis.style.transition='opacity 0.5s';
+  }, 600);
+  addTimer(() => {
+    // Counter animation
+    let n = 0;
+    const el = document.getElementById('bulk-counter');
+    const fill = document.getElementById('bulk-prog-fill');
+    fill.style.width = '100%';
+    const iv = setInterval(() => {
+      n = Math.min(n + 4, 200);
+      el.textContent = n;
+      if(n >= 200) clearInterval(iv);
+    }, 50);
+    // Pop tags
+    const tags = document.querySelectorAll('.bulk-tag');
+    tags.forEach((t,i) => addTimer(() => t.classList.add('pop'), i*200));
+  }, 900);
+  addTimer(() => {
+    const stats = document.getElementById('bulk-stats');
+    stats.style.opacity='1'; stats.style.transition='opacity 0.5s';
+  }, 3500);
+}
+
+function animSlide5() {
+  ['rsvp-title','rsvp-sub'].forEach((id,i) => {
+    addTimer(() => {
+      const el = document.getElementById(id);
+      if(el) { el.style.opacity='1'; el.style.transition='opacity 0.5s'; }
+    }, i*200);
+  });
+  // Animate rsvp list
+  addTimer(() => {
+    const list = document.getElementById('rsvp-list');
+    list.innerHTML = '';
+    rsvpGuests.forEach((g,i) => {
+      const statusCls = g.status==='Confirmed'?'s-conf':g.status==='Pending'?'s-pend':'s-dec';
+      const div = document.createElement('div');
+      div.className = 'rsvp-item';
+      div.innerHTML = `
+        <div class="rsvp-avatar" style="background:${g.color}">${g.name.split(' ').map(n=>n[0]).join('')}</div>
+        <div class="rsvp-name">${g.name}</div>
+        <div class="rsvp-info">${g.time}</div>
+        <span class="status-pill ${statusCls}">${g.status}</span>
+      `;
+      list.appendChild(div);
+      addTimer(() => div.classList.add('in'), i*350);
+    });
+  }, 500);
+  // Notifications
+  const notifs = ['✅ Pooja Agarwal — Confirmed!', '✅ Arjun Kapoor — Confirmed!', '⏳ Sunita Rao — Reminder sent'];
+  notifs.forEach((n,i) => {
+    addTimer(() => {
+      const feed = document.getElementById('notif-feed');
+      feed.innerHTML = `<div class="rsvp-notification">${n}</div>`;
+    }, i*1800);
+  });
+  // Donut
+  addTimer(() => {
+    const donut = document.getElementById('donut-card');
+    donut.style.opacity='1'; donut.style.transition='opacity 0.5s';
+    // Animate donut
+    const circ = 2 * Math.PI * 54; // 339.29
+    const confPct = 0.72;
+    const pendPct = 0.18;
+    const confOffset = circ * (1 - confPct);
+    const pendOffset = circ * (1 - pendPct);
+    addTimer(() => {
+      document.getElementById('donut-conf').style.strokeDashoffset = confOffset;
+      document.getElementById('donut-pend').style.strokeDashoffset = pendOffset;
+      // Animate counter
+      let pct = 0;
+      const iv = setInterval(() => {
+        pct = Math.min(pct+2, 72);
+        document.getElementById('donut-pct').textContent = pct+'%';
+        document.getElementById('leg-conf').textContent = Math.round(pct/100*200);
+        document.getElementById('leg-pend').textContent = Math.round(0.18*200);
+        document.getElementById('leg-dec').textContent = Math.round(0.10*200);
+        if(pct>=72) clearInterval(iv);
+      }, 30);
+    }, 300);
+  }, 1200);
+  // Meal card
+  addTimer(() => {
+    const meal = document.getElementById('meal-card');
+    meal.style.opacity='1'; meal.style.transition='opacity 0.5s';
+    addTimer(() => {
+      document.getElementById('meal-veg').style.width = '59%';
+      document.getElementById('meal-nv').style.width = '27%';
+      document.getElementById('meal-jain').style.width = '14%';
+    }, 300);
+  }, 2000);
+}
+
+function animSlide6() {
+  ['seat-title','seat-sub'].forEach((id,i) => {
+    addTimer(() => {
+      const el = document.getElementById(id);
+      if(el) { el.style.opacity='1'; el.style.transition='opacity 0.5s'; }
+    }, i*200);
+  });
+  addTimer(() => {
+    const grid = document.getElementById('seat-grid');
+    grid.innerHTML = tables.map(t => {
+      const seats = Array.from({length:t.total}).map((_,i) => {
+        let cls = i < t.taken ? (t.vip ? 'seat vip-seat' : 'seat taken') : 'seat';
+        return `<div class="${cls}"></div>`;
+      }).join('');
+      return `
+        <div class="table-card${t.vip?' vip':''}${t.full?' full':''}">
+          <div class="table-num">${t.num}</div>
+          <div class="table-name">${t.name}</div>
+          <div class="table-seats">${seats}</div>
+          <div class="table-count">${t.taken}/${t.total}</div>
+        </div>
+      `;
+    }).join('');
+    grid.style.opacity='1'; grid.style.transition='opacity 0.5s';
+  }, 600);
+  addTimer(() => {
+    const sum = document.getElementById('seat-summary');
+    sum.style.opacity='1'; sum.style.transition='opacity 0.5s';
+  }, 2000);
+}
+
+function animSlide7() {
+  // Animations are CSS-driven
+}
+
+// ── SCALE TO FIT ─────────────────────────
+function scaleScreen() {
+  const screen = document.getElementById('screen');
+  const scaleX = window.innerWidth / 1280;
+  const scaleY = window.innerHeight / 720;
+  const scale = Math.min(scaleX, scaleY);
+  screen.style.transform = `scale(${scale})`;
+}
+window.addEventListener('resize', scaleScreen);
+scaleScreen();
+
+// ── KEYBOARD NAV ─────────────────────────
+document.addEventListener('keydown', e => {
+  if(e.key==='ArrowRight'||e.key===' ') nextSlide();
+  if(e.key==='ArrowLeft') prevSlide();
+  if(e.key==='r'||e.key==='R') restartDemo();
+  if(e.key==='p'||e.key==='P') toggleAuto();
+});
+
+// ── INIT ────────────────────────────────
+initSlideCounters();
+showSlide(0);
+startAuto();
+startTimer();
+</script>
+</body>
+</html>

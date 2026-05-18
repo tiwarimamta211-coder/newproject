@@ -1,0 +1,417 @@
+import { useState } from "react";
+
+const CHAIN_DATA = {
+  ca: {
+    id: "ca-001",
+    name: "CA Sharma & Associates",
+    gstin: "27AABCS1234A1Z5",
+    clients: ["biz-001", "biz-002", "biz-003"],
+    tools: ["GST Filing", "ITR", "Audit", "TDS", "ROC"],
+    pendingTasks: 12,
+    revenue: "₹8,40,000",
+  },
+  businesses: [
+    {
+      id: "biz-001", name: "Mehta Traders Pvt Ltd", type: "Manufacturing",
+      gstin: "27AABCM5678B1Z3", employees: 45, annualTurnover: "₹2.4 Cr",
+      gstStatus: "Filed", itrStatus: "Pending", tdsStatus: "Done",
+      lastContact: "2 days ago", health: 92,
+    },
+    {
+      id: "biz-002", name: "Kapoor Retail Chain", type: "Retail",
+      gstin: "27AABCK9012C1Z1", employees: 120, annualTurnover: "₹5.8 Cr",
+      gstStatus: "Pending", itrStatus: "Filed", tdsStatus: "Pending",
+      lastContact: "5 days ago", health: 67,
+    },
+    {
+      id: "biz-003", name: "Singh IT Solutions", type: "Services",
+      gstin: "27AABCS3456D1Z9", employees: 22, annualTurnover: "₹1.2 Cr",
+      gstStatus: "Filed", itrStatus: "Filed", tdsStatus: "Done",
+      lastContact: "Today", health: 98,
+    },
+  ],
+  employees: [
+    { id: "emp-001", bizId: "biz-001", name: "Rajesh Kumar", role: "Manager", salary: "₹55,000", tds: "₹3,200", pf: "₹6,600", esi: "₹1,375", form16: "Done", pan: "ABCPK1234D" },
+    { id: "emp-002", bizId: "biz-001", name: "Priya Singh", role: "Accountant", salary: "₹38,000", tds: "₹1,800", pf: "₹4,560", esi: "₹950", form16: "Pending", pan: "DEFPS5678E" },
+    { id: "emp-003", bizId: "biz-002", name: "Amit Shah", role: "Supervisor", salary: "₹42,000", tds: "₹2,100", pf: "₹5,040", esi: "₹1,050", form16: "Done", pan: "GHIAS9012F" },
+    { id: "emp-004", bizId: "biz-003", name: "Neha Verma", role: "Developer", salary: "₹68,000", tds: "₹5,500", pf: "₹8,160", esi: "0", form16: "Done", pan: "IJKNV3456G" },
+  ],
+  accounts: [
+    { id: "acc-001", bizId: "biz-001", type: "GST Payable", amount: "₹1,24,500", due: "25 Apr 2026", status: "Due" },
+    { id: "acc-002", bizId: "biz-001", type: "TDS Deposit", amount: "₹48,200", due: "7 Apr 2026", status: "Overdue" },
+    { id: "acc-003", bizId: "biz-002", type: "Advance Tax", amount: "₹2,10,000", due: "15 Jun 2026", status: "Upcoming" },
+    { id: "acc-004", bizId: "biz-002", type: "GST Payable", amount: "₹3,67,800", due: "25 Apr 2026", status: "Due" },
+    { id: "acc-005", bizId: "biz-003", type: "TDS Deposit", amount: "₹22,500", due: "7 May 2026", status: "Upcoming" },
+  ],
+};
+
+const statusColor = (s) => ({
+  "Filed": "#00e5a0", "Done": "#00e5a0",
+  "Pending": "#ffb347", "Due": "#ffb347",
+  "Overdue": "#ff4d6d", "Upcoming": "#4dc3ff",
+}[s] || "#aaa");
+
+const healthColor = (h) => h >= 90 ? "#00e5a0" : h >= 60 ? "#ffb347" : "#ff4d6d";
+
+export default function CAChainSystem() {
+  const [activeView, setActiveView] = useState("chain");
+  const [selectedBiz, setSelectedBiz] = useState(null);
+  const [activeTab, setActiveTab] = useState("employees");
+
+  const biz = selectedBiz ? CHAIN_DATA.businesses.find(b => b.id === selectedBiz) : null;
+  const bizEmployees = selectedBiz ? CHAIN_DATA.employees.filter(e => e.bizId === selectedBiz) : [];
+  const bizAccounts = selectedBiz ? CHAIN_DATA.accounts.filter(a => a.bizId === selectedBiz) : [];
+
+  return (
+    <div style={{
+      minHeight: "100vh", background: "#0a0d14",
+      fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+      color: "#e8eaf0",
+    }}>
+      {/* Ambient bg */}
+      <div style={{
+        position: "fixed", inset: 0, pointerEvents: "none",
+        background: "radial-gradient(ellipse 60% 40% at 20% 10%, #1a2744 0%, transparent 60%), radial-gradient(ellipse 50% 30% at 80% 80%, #1a1030 0%, transparent 60%)",
+        zIndex: 0,
+      }} />
+
+      {/* Header */}
+      <div style={{
+        position: "relative", zIndex: 10,
+        background: "linear-gradient(90deg, #0d1525 0%, #111827 100%)",
+        borderBottom: "1px solid #1e3a5f",
+        padding: "16px 28px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: 10,
+            background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 20, fontWeight: 900, color: "#fff",
+          }}>⊕</div>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: 1 }}>CA OFFICE PRO</div>
+            <div style={{ fontSize: 11, color: "#4a90d9", letterSpacing: 2 }}>CHAIN MANAGEMENT SYSTEM</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {["chain", "tools"].map(v => (
+            <button key={v} onClick={() => { setActiveView(v); setSelectedBiz(null); }} style={{
+              padding: "7px 18px", borderRadius: 8, border: "1px solid",
+              borderColor: activeView === v ? "#2563eb" : "#1e3a5f",
+              background: activeView === v ? "#2563eb22" : "transparent",
+              color: activeView === v ? "#60a5fa" : "#6b7280",
+              cursor: "pointer", fontSize: 12, fontWeight: 600, letterSpacing: 1,
+              textTransform: "uppercase",
+            }}>{v === "chain" ? "🔗 Chain View" : "🛠 Tools"}</button>
+          ))}
+        </div>
+        <div style={{
+          background: "#0f1f3d", border: "1px solid #1e3a5f",
+          borderRadius: 8, padding: "6px 14px", fontSize: 12, color: "#4a90d9",
+        }}>
+          FY 2025-26 &nbsp;|&nbsp; <span style={{ color: "#00e5a0" }}>● Live</span>
+        </div>
+      </div>
+
+      <div style={{ position: "relative", zIndex: 10, padding: 24 }}>
+
+        {/* === CHAIN VIEW === */}
+        {activeView === "chain" && !selectedBiz && (
+          <>
+            {/* CA Node */}
+            <div style={{
+              background: "linear-gradient(135deg, #0f1f3d 0%, #0d1525 100%)",
+              border: "2px solid #2563eb", borderRadius: 16,
+              padding: 24, marginBottom: 24,
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: 14,
+                  background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 26,
+                }}>⚖️</div>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>{CHAIN_DATA.ca.name}</div>
+                  <div style={{ fontSize: 12, color: "#4a90d9", marginTop: 3 }}>GSTIN: {CHAIN_DATA.ca.gstin}</div>
+                  <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                    {CHAIN_DATA.ca.tools.map(t => (
+                      <span key={t} style={{
+                        background: "#1e3a5f", borderRadius: 6, padding: "2px 10px",
+                        fontSize: 11, color: "#60a5fa",
+                      }}>{t}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 12, color: "#6b7280" }}>Total Revenue</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#00e5a0" }}>{CHAIN_DATA.ca.revenue}</div>
+                <div style={{ fontSize: 12, color: "#ffb347", marginTop: 4 }}>⚠ {CHAIN_DATA.ca.pendingTasks} Pending Tasks</div>
+              </div>
+            </div>
+
+            {/* Chain connector */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+              <div style={{ width: 2, height: 20, background: "linear-gradient(#2563eb, #4a90d9)" }} />
+            </div>
+            <div style={{ textAlign: "center", fontSize: 11, color: "#4a90d9", letterSpacing: 2, marginBottom: 16 }}>
+              ◆ CONNECTED BUSINESSES ◆
+            </div>
+
+            {/* Business Cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, marginBottom: 24 }}>
+              {CHAIN_DATA.businesses.map((biz, i) => (
+                <div key={biz.id} onClick={() => setSelectedBiz(biz.id)} style={{
+                  background: "#0d1525", border: "1px solid #1e3a5f",
+                  borderRadius: 14, padding: 20, cursor: "pointer",
+                  transition: "all 0.2s", position: "relative", overflow: "hidden",
+                }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = "#2563eb"}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = "#1e3a5f"}
+                >
+                  <div style={{
+                    position: "absolute", top: 0, right: 0,
+                    width: 80, height: 80, borderRadius: "0 14px 0 80px",
+                    background: `${healthColor(biz.health)}15`,
+                  }} />
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{biz.name}</div>
+                      <div style={{ fontSize: 11, color: "#4a90d9", marginTop: 2 }}>{biz.type} · {biz.employees} Employees</div>
+                      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>GSTIN: {biz.gstin}</div>
+                    </div>
+                    <div style={{
+                      fontSize: 20, fontWeight: 800, color: healthColor(biz.health),
+                    }}>{biz.health}%</div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 16 }}>
+                    {[
+                      { label: "GST", val: biz.gstStatus },
+                      { label: "ITR", val: biz.itrStatus },
+                      { label: "TDS", val: biz.tdsStatus },
+                    ].map(item => (
+                      <div key={item.label} style={{
+                        background: "#111827", borderRadius: 8, padding: "8px",
+                        textAlign: "center", border: `1px solid ${statusColor(item.val)}30`,
+                      }}>
+                        <div style={{ fontSize: 10, color: "#6b7280" }}>{item.label}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: statusColor(item.val), marginTop: 2 }}>{item.val}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 14, paddingTop: 12, borderTop: "1px solid #1e3a5f" }}>
+                    <div style={{ fontSize: 12, color: "#4a90d9" }}>Turnover: <span style={{ color: "#fff" }}>{biz.annualTurnover}</span></div>
+                    <div style={{ fontSize: 11, color: "#6b7280" }}>Last: {biz.lastContact}</div>
+                  </div>
+                  <div style={{ textAlign: "center", marginTop: 10, fontSize: 11, color: "#2563eb" }}>
+                    Click to expand chain ↓
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Summary Stats */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+              {[
+                { label: "Total Businesses", val: "3", icon: "🏢", color: "#60a5fa" },
+                { label: "Total Employees", val: "187", icon: "👥", color: "#a78bfa" },
+                { label: "Pending GST", val: "1", icon: "📋", color: "#ffb347" },
+                { label: "Overdue Entries", val: "1", icon: "⚠️", color: "#ff4d6d" },
+              ].map(s => (
+                <div key={s.label} style={{
+                  background: "#0d1525", border: "1px solid #1e3a5f",
+                  borderRadius: 12, padding: "16px 20px",
+                  display: "flex", alignItems: "center", gap: 12,
+                }}>
+                  <span style={{ fontSize: 24 }}>{s.icon}</span>
+                  <div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: s.color }}>{s.val}</div>
+                    <div style={{ fontSize: 11, color: "#6b7280" }}>{s.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* === BUSINESS DETAIL VIEW === */}
+        {activeView === "chain" && selectedBiz && biz && (
+          <>
+            <button onClick={() => setSelectedBiz(null)} style={{
+              background: "transparent", border: "1px solid #1e3a5f",
+              color: "#4a90d9", borderRadius: 8, padding: "6px 14px",
+              cursor: "pointer", fontSize: 12, marginBottom: 20,
+            }}>← Back to Chain</button>
+
+            <div style={{
+              background: "linear-gradient(135deg, #0f1f3d, #0d1525)",
+              border: "1px solid #2563eb", borderRadius: 16, padding: 22, marginBottom: 20,
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+            }}>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>{biz.name}</div>
+                <div style={{ fontSize: 12, color: "#4a90d9" }}>{biz.type} · GSTIN: {biz.gstin}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 26, fontWeight: 900, color: healthColor(biz.health) }}>{biz.health}%</div>
+                <div style={{ fontSize: 11, color: "#6b7280" }}>Compliance Health</div>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
+              {[
+                { k: "employees", label: "👥 Employees" },
+                { k: "accounts", label: "📊 Accounts" },
+                { k: "compliance", label: "✅ Compliance" },
+              ].map(t => (
+                <button key={t.k} onClick={() => setActiveTab(t.k)} style={{
+                  padding: "9px 20px", borderRadius: 8, border: "1px solid",
+                  borderColor: activeTab === t.k ? "#2563eb" : "#1e3a5f",
+                  background: activeTab === t.k ? "#2563eb22" : "transparent",
+                  color: activeTab === t.k ? "#60a5fa" : "#6b7280",
+                  cursor: "pointer", fontSize: 13, fontWeight: 600,
+                }}>{t.label}</button>
+              ))}
+            </div>
+
+            {activeTab === "employees" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {bizEmployees.length === 0 && <div style={{ color: "#6b7280" }}>No employees found.</div>}
+                {bizEmployees.map(emp => (
+                  <div key={emp.id} style={{
+                    background: "#0d1525", border: "1px solid #1e3a5f",
+                    borderRadius: 12, padding: 18,
+                    display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr",
+                    gap: 12, alignItems: "center",
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 700, color: "#fff" }}>{emp.name}</div>
+                      <div style={{ fontSize: 11, color: "#4a90d9" }}>{emp.role} · {emp.pan}</div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 11, color: "#6b7280" }}>Salary</div>
+                      <div style={{ fontWeight: 700, color: "#fff", fontSize: 13 }}>{emp.salary}</div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 11, color: "#6b7280" }}>TDS</div>
+                      <div style={{ fontWeight: 700, color: "#ffb347", fontSize: 13 }}>{emp.tds}</div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 11, color: "#6b7280" }}>PF</div>
+                      <div style={{ fontWeight: 700, color: "#60a5fa", fontSize: 13 }}>{emp.pf}</div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 11, color: "#6b7280" }}>ESI</div>
+                      <div style={{ fontWeight: 700, color: "#a78bfa", fontSize: 13 }}>{emp.esi}</div>
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 11, color: "#6b7280" }}>Form 16</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: statusColor(emp.form16) }}>{emp.form16}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === "accounts" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {bizAccounts.map(acc => (
+                  <div key={acc.id} style={{
+                    background: "#0d1525", border: `1px solid ${statusColor(acc.status)}30`,
+                    borderLeft: `3px solid ${statusColor(acc.status)}`,
+                    borderRadius: 12, padding: 18,
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 700, color: "#fff" }}>{acc.type}</div>
+                      <div style={{ fontSize: 12, color: "#6b7280", marginTop: 3 }}>Due: {acc.due}</div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: "#fff" }}>{acc.amount}</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: statusColor(acc.status) }}>{acc.status}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === "compliance" && (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+                {[
+                  { label: "GST Return", status: biz.gstStatus, desc: "GSTR-3B Monthly" },
+                  { label: "ITR Filing", status: biz.itrStatus, desc: "Income Tax Return" },
+                  { label: "TDS Deposit", status: biz.tdsStatus, desc: "Quarterly TDS" },
+                  { label: "Employees", val: biz.employees, desc: "Total Headcount", color: "#a78bfa" },
+                  { label: "Turnover", val: biz.annualTurnover, desc: "Annual FY 25-26", color: "#00e5a0" },
+                  { label: "Last Contact", val: biz.lastContact, desc: "CA Communication", color: "#60a5fa" },
+                ].map(item => (
+                  <div key={item.label} style={{
+                    background: "#0d1525", border: "1px solid #1e3a5f",
+                    borderRadius: 12, padding: 18,
+                  }}>
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>{item.label}</div>
+                    <div style={{
+                      fontSize: 20, fontWeight: 800, marginTop: 6,
+                      color: item.color || statusColor(item.status),
+                    }}>{item.val || item.status}</div>
+                    <div style={{ fontSize: 11, color: "#4a90d9", marginTop: 4 }}>{item.desc}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* === TOOLS VIEW === */}
+        {activeView === "tools" && (
+          <div>
+            <div style={{ fontSize: 14, color: "#4a90d9", marginBottom: 20, letterSpacing: 1 }}>
+              ◆ CA OFFICE AUTOMATION TOOLS
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
+              {[
+                { icon: "📋", label: "GST Filing", desc: "GSTR-1, 3B, Annual", color: "#2563eb", tag: "Monthly" },
+                { icon: "📊", label: "TDS Manager", desc: "26Q, 24Q, Form 16", color: "#7c3aed", tag: "Quarterly" },
+                { icon: "🧾", label: "ITR Filing", desc: "ITR-1 to ITR-6", color: "#059669", tag: "Annual" },
+                { icon: "📁", label: "ROC Compliance", desc: "MCA Filing, AOC-4", color: "#d97706", tag: "Annual" },
+                { icon: "💰", label: "Payroll", desc: "PF, ESI, Salary Slip", color: "#dc2626", tag: "Monthly" },
+                { icon: "📈", label: "Tally Sync", desc: "Auto import ledger", color: "#0891b2", tag: "Live" },
+                { icon: "🔔", label: "Due Date Alert", desc: "Never miss deadline", color: "#7c3aed", tag: "Auto" },
+                { icon: "👥", label: "Client Portal", desc: "Document sharing", color: "#2563eb", tag: "24/7" },
+                { icon: "🤖", label: "AI Assistant", desc: "Tax query resolver", color: "#059669", tag: "AI" },
+                { icon: "📱", label: "WhatsApp Alert", desc: "Auto client notify", color: "#25d366", tag: "API" },
+                { icon: "📑", label: "Audit Tools", desc: "Bank reconciliation", color: "#d97706", tag: "Tools" },
+                { icon: "☁️", label: "Cloud Backup", desc: "Secure doc storage", color: "#0891b2", tag: "Secure" },
+              ].map(tool => (
+                <div key={tool.label} style={{
+                  background: "#0d1525", border: "1px solid #1e3a5f",
+                  borderRadius: 14, padding: 20, cursor: "pointer",
+                  transition: "all 0.2s", position: "relative",
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = tool.color; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "#1e3a5f"; e.currentTarget.style.transform = "translateY(0)"; }}
+                >
+                  <div style={{
+                    position: "absolute", top: 12, right: 12,
+                    background: `${tool.color}20`, borderRadius: 6,
+                    padding: "2px 8px", fontSize: 10, color: tool.color, fontWeight: 700,
+                  }}>{tool.tag}</div>
+                  <div style={{ fontSize: 28, marginBottom: 10 }}>{tool.icon}</div>
+                  <div style={{ fontWeight: 700, color: "#fff", fontSize: 14 }}>{tool.label}</div>
+                  <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>{tool.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

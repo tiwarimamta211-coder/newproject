@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForexFlow Pro | Currency Converter</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; color: #0f172a; padding: 24px 16px; }
+
+  .app-wrap { max-width: 480px; margin: 0 auto; }
+
+  /* HEADER */
+  .app-header { text-align: center; margin-bottom: 28px; }
+  .logo { font-size: 22px; font-weight: 800; color: #4f46e5; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .live-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; color: #15803d; padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; border: 1px solid #bbf7d0; }
+  .pulse { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 1.8s infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(0.9);box-shadow:0 0 0 0 rgba(16,185,129,0.6);} 70%{transform:scale(1);box-shadow:0 0 0 8px rgba(16,185,129,0);} }
+
+  /* CARD */
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 28px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+
+  /* INPUTS */
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; }
+  .field input[type="number"],
+  .field select { width: 100%; padding: 13px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 15px; font-weight: 600; font-family: inherit; color: #0f172a; background: #f8fafc; outline: none; transition: border-color 0.2s, box-shadow 0.2s; appearance: none; -webkit-appearance: none; }
+  .field input:focus, .field select:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); background: #fff; }
+
+  /* CURRENCY ROW */
+  .currency-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: flex-end; margin-bottom: 18px; }
+  .swap-btn { width: 42px; height: 42px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: transform 0.3s, border-color 0.2s; margin-bottom: 1px; }
+  .swap-btn:hover { transform: rotate(180deg); border-color: #4f46e5; }
+
+  /* RESULT PANEL */
+  .result-panel { background: #0f172a; border-radius: 16px; padding: 22px; text-align: center; margin-bottom: 18px; }
+  .result-main { font-family: 'Courier New', monospace; font-size: 28px; font-weight: 800; color: #818cf8; letter-spacing: -0.5px; word-break: break-all; }
+  .result-rate { font-size: 12px; color: #475569; margin-top: 8px; }
+  .result-time { font-size: 10px; color: #334155; margin-top: 4px; }
+
+  /* CONVERT BUTTON */
+  .convert-btn { width: 100%; padding: 15px; background: #4f46e5; color: #fff; border: none; border-radius: 14px; font-weight: 800; font-size: 15px; cursor: pointer; font-family: inherit; transition: background 0.2s, transform 0.15s; }
+  .convert-btn:hover { background: #4338ca; transform: translateY(-2px); }
+  .convert-btn:active { transform: translateY(0); }
+  .convert-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+
+  /* POPULAR PAIRS */
+  .pairs-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 10px; }
+  .pairs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .pair-chip { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 9px 8px; text-align: center; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+  .pair-chip:hover { background: #eff0fe; border-color: #c7d2fe; }
+  .pair-chip .pair-name { font-size: 12px; font-weight: 700; color: #334155; }
+  .pair-chip .pair-rate { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+  /* STATUS */
+  .status-bar { text-align: center; font-size: 11px; color: #94a3b8; margin-top: 16px; }
+  .status-bar span { color: #10b981; font-weight: 700; }
+
+  /* LOADING SPIN */
+  .spin { display: inline-block; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 400px) {
+    .pairs-grid { grid-template-columns: repeat(2, 1fr); }
+    .result-main { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-wrap">
+
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="logo">💱 ForexFlow Pro</div>
+    <div class="live-badge"><div class="pulse"></div> Live Market Rates</div>
+  </div>
+
+  <!-- CARD -->
+  <div class="card">
+
+    <!-- AMOUNT -->
+    <div class="field">
+      <label>Amount to Convert</label>
+      <input type="number" id="amount" value="100" min="0" placeholder="Enter amount" oninput="convertNow()">
+    </div>
+
+    <!-- FROM / SWAP / TO -->
+    <div class="currency-row">
+      <div class="field" style="margin-bottom:0">
+        <label>From</label>
+        <select id="fromCurrency" onchange="convertNow()"></select>
+      </div>
+      <button class="swap-btn" onclick="swapCurrencies()" title="Swap">⇄</button>
+      <div class="field" style="margin-bottom:0">
+        <label>To</label>
+        <select id="toCurrency" onchange="convertNow()"></select>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="result-panel">
+      <div class="result-main" id="convertedAmount">–</div>
+      <div class="result-rate"  id="rateInfo">Fetching latest rates...</div>
+      <div class="result-time"  id="rateTime"></div>
+    </div>
+
+    <!-- BUTTON -->
+    <button class="convert-btn" id="convertBtn" onclick="getRate()">🔄 Update Conversion</button>
+
+    <!-- POPULAR PAIRS -->
+    <div class="pairs-title">Popular Pairs</div>
+    <div class="pairs-grid" id="pairsGrid"></div>
+
+    <!-- STATUS -->
+    <div class="status-bar" id="statusBar">Rates via ExchangeRate-API • <span>Free Tier</span></div>
+
+  </div>
+</div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────────────
+  var API_KEY = '626d833959838031c5874403'; // ExchangeRate-API free key
+  // ────────────────────────────────────────────────────────────
+
+  var currencies = [
+    'USD','EUR','GBP','JPY','AUD','CAD','CHF','CNY','INR',
+    'BRL','ZAR','SGD','HKD','MXN','NOK','SEK','DKK','NZD',
+    'KRW','TRY','SAR','AED','MYR','THB','IDR','PKR','BDT'
+  ];
+
+  // Fallback mock rates (USD base — updated March 2026 approximate)
+  var mockRates = {
+    USD:1, EUR:0.921, GBP:0.787, JPY:149.8, AUD:1.534, CAD:1.358,
+    CHF:0.898, CNY:7.243, INR:83.12, BRL:4.972, ZAR:18.63, SGD:1.341,
+    HKD:7.821, MXN:17.15, NOK:10.52, SEK:10.44, DKK:6.876, NZD:1.627,
+    KRW:1325, TRY:30.54, SAR:3.751, AED:3.673, MYR:4.712, THB:35.42,
+    IDR:15680, PKR:278.5, BDT:109.7
+  };
+
+  var liveRates  = null;
+  var ratesBase  = 'USD';
+  var lastFetch  = null;
+
+  var popularPairs = [
+    {from:'USD',to:'INR'}, {from:'EUR',to:'INR'}, {from:'GBP',to:'INR'},
+    {from:'USD',to:'EUR'}, {from:'USD',to:'GBP'}, {from:'AED',to:'INR'}
+  ];
+
+  // Populate selects
+  function initSelects() {
+    var f = document.getElementById('fromCurrency');
+    var t = document.getElementById('toCurrency');
+    currencies.forEach(function(c) {
+      f.add(new Option(c + ' – ' + getCurrencyName(c), c));
+      t.add(new Option(c + ' – ' + getCurrencyName(c), c));
+    });
+    f.value = 'USD';
+    t.value = 'INR';
+  }
+
+  function getCurrencyName(code) {
+    var names = {
+      USD:'US Dollar', EUR:'Euro', GBP:'Brit. Pound', JPY:'Japanese Yen',
+      AUD:'Aus. Dollar', CAD:'Can. Dollar', CHF:'Swiss Franc', CNY:'Chinese Yuan',
+      INR:'Indian Rupee', BRL:'Brazilian Real', ZAR:'S. African Rand',
+      SGD:'Singapore $', HKD:'Hong Kong $', MXN:'Mexican Peso',
+      AED:'UAE Dirham', SAR:'Saudi Riyal', MYR:'Malaysian Ringgit',
+      THB:'Thai Baht', KRW:'South Korean Won', TRY:'Turkish Lira',
+      NOK:'Norwegian Kr', SEK:'Swedish Kr', DKK:'Danish Kr',
+      NZD:'NZ Dollar', IDR:'Indonesian Rp', PKR:'Pakistani Rs', BDT:'Bangladeshi Tk'
+    };
+    return names[code] || code;
+  }
+
+  function getRate() {
+    var from = document.getElementById('fromCurrency').value;
+    var btn  = document.getElementById('convertBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin">🔄</span> Syncing...';
+
+    fetch('https://v6.exchangerate-api.com/v6/' + API_KEY + '/latest/' + from)
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        if (data.result === 'success') {
+          liveRates  = data.conversion_rates;
+          ratesBase  = from;
+          lastFetch  = new Date();
+          document.getElementById('statusBar').innerHTML = 'Live rates fetched • <span>✅ API Active</span>';
+          convert(true);
+        } else {
+          useMockRates(from);
+        }
+      })
+      .catch(function() { useMockRates(from); })
+      .finally(function() {
+        btn.disabled = false;
+        btn.innerHTML = '🔄 Update Conversion';
+      });
+  }
+
+  function useMockRates(from) {
+    liveRates = {};
+    var fromRate = mockRates[from] || 1;
+    Object.keys(mockRates).forEach(function(k) {
+      liveRates[k] = mockRates[k] / fromRate;
+    });
+    ratesBase = from;
+    lastFetch = new Date();
+    document.getElementById('statusBar').innerHTML = 'Demo rates (approx) • <span>Add API Key for live</span>';
+    convert(false);
+  }
+
+  function convert(isLive) {
+    var amount = parseFloat(document.getElementById('amount').value) || 0;
+    var from   = document.getElementById('fromCurrency').value;
+    var to     = document.getElementById('toCurrency').value;
+
+    if (!liveRates || from !== ratesBase) { getRate(); return; }
+
+    var rate  = liveRates[to] || (mockRates[to] / (mockRates[from] || 1));
+    var total = amount * rate;
+
+    // Format large numbers nicely
+    var formatted = total >= 1000
+      ? total.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})
+      : total.toFixed(4);
+
+    document.getElementById('convertedAmount').innerText = formatted + ' ' + to;
+    document.getElementById('rateInfo').innerText =
+      '1 ' + from + ' = ' + rate.toFixed(4) + ' ' + to;
+    document.getElementById('rateTime').innerText =
+      isLive ? '⚡ Live rate • ' + lastFetch.toLocaleTimeString() : '📊 Indicative rate';
+
+    renderPairs();
+  }
+
+  function convertNow() {
+    if (liveRates && document.getElementById('fromCurrency').value === ratesBase) {
+      convert(!!lastFetch);
+    } else {
+      getRate();
+    }
+  }
+
+  function swapCurrencies() {
+    var f = document.getElementById('fromCurrency');
+    var t = document.getElementById('toCurrency');
+    var tmp = f.value; f.value = t.value; t.value = tmp;
+    getRate();
+  }
+
+  function renderPairs() {
+    var grid = document.getElementById('pairsGrid');
+    grid.innerHTML = '';
+    popularPairs.forEach(function(p) {
+      var fromR = mockRates[p.from] || 1;
+      var toR   = mockRates[p.to]   || 1;
+      // Use live rate if available
+      var rate;
+      if (liveRates && ratesBase === p.from && liveRates[p.to]) {
+        rate = liveRates[p.to];
+      } else {
+        rate = toR / fromR;
+      }
+      var chip = document.createElement('div');
+      chip.className = 'pair-chip';
+      chip.innerHTML =
+        '<div class="pair-name">' + p.from + ' → ' + p.to + '</div>' +
+        '<div class="pair-rate">' + rate.toFixed(2) + '</div>';
+      chip.onclick = (function(pf, pt) {
+        return function() {
+          document.getElementById('fromCurrency').value = pf;
+          document.getElementById('toCurrency').value   = pt;
+          getRate();
+        };
+      })(p.from, p.to);
+      grid.appendChild(chip);
+    });
+  }
+
+  // INIT
+  initSelects();
+  renderPairs();
+  getRate();
+</script>
+</body>
+</html>

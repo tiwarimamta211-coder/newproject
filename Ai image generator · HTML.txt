@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NexusAI — Multi-Tool Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #18181f;
+    --surface3: #1f1f2a;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.15);
+    --text: #f0eff8;
+    --text-muted: #7b7a8e;
+    --text-dim: #4a4960;
+    --accent: #7c6dff;
+    --accent2: #ff6b9d;
+    --accent3: #00d4aa;
+    --accent-glow: rgba(124,109,255,0.25);
+    --gold: #ffd166;
+    --red: #ff4d6d;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(124,109,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,109,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .blob {
+    position: fixed; border-radius: 50%;
+    filter: blur(90px); opacity: 0.10;
+    pointer-events: none; z-index: 0;
+    animation: blob-drift 18s ease-in-out infinite;
+  }
+  .blob-1 { width:600px;height:600px;background:var(--accent);top:-150px;left:-150px; }
+  .blob-2 { width:500px;height:500px;background:var(--accent2);bottom:-100px;right:-100px;animation-delay:-9s; }
+  .blob-3 { width:300px;height:300px;background:var(--accent3);top:45%;left:45%;animation-delay:-4s; }
+  @keyframes blob-drift {
+    0%,100%{transform:translate(0,0) scale(1)}
+    33%{transform:translate(30px,-20px) scale(1.05)}
+    66%{transform:translate(-20px,30px) scale(0.97)}
+  }
+
+  /* ===== NAVBAR ===== */
+  nav {
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 28px; height:60px;
+    background:rgba(10,10,15,0.88);
+    backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-logo {
+    font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;
+    color:var(--text);display:flex;align-items:center;gap:8px;
+  }
+  .nav-logo span{color:var(--accent);}
+  .logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;
+    box-shadow:0 0 10px var(--accent);display:inline-block;
+    animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5;transform:scale(0.85)}}
+
+  .nav-tools{display:flex;align-items:center;gap:3px;}
+  .nav-tool-btn{
+    padding:6px 13px;border-radius:20px;border:1px solid transparent;
+    background:transparent;color:var(--text-muted);
+    font-family:'DM Mono',monospace;font-size:0.7rem;
+    cursor:pointer;transition:all .2s;letter-spacing:.02em;
+  }
+  .nav-tool-btn:hover{color:var(--text);border-color:var(--border-hover);}
+  .nav-tool-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(124,109,255,.1);}
+
+  .nav-right{display:flex;align-items:center;gap:10px;}
+  .credit-pill{
+    display:flex;align-items:center;gap:6px;
+    background:var(--surface2);border:1px solid var(--border);
+    border-radius:20px;padding:5px 14px;font-size:.72rem;color:var(--text-muted);
+  }
+  .credit-pill .cval{color:var(--gold);font-weight:500;font-size:.85rem;}
+  .btn-upgrade{
+    padding:7px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#fff;border:none;border-radius:20px;
+    font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;
+    cursor:pointer;letter-spacing:.05em;transition:opacity .2s,transform .15s;
+  }
+  .btn-upgrade:hover{opacity:.9;transform:scale(1.03);}
+
+  /* ===== LAYOUT ===== */
+  .app{
+    position:relative;z-index:1;
+    display:grid;
+    grid-template-columns:270px 1fr 290px;
+    grid-template-rows:60px 1fr;
+    height:100vh;
+  }
+  .app-nav{grid-column:1/-1;grid-row:1;}
+
+  /* ===== LEFT SIDEBAR ===== */
+  .sidebar{
+    grid-column:1;grid-row:2;
+    background:var(--surface);border-right:1px solid var(--border);
+    padding:18px;overflow-y:auto;
+    display:flex;flex-direction:column;gap:18px;
+  }
+  .sidebar::-webkit-scrollbar{width:3px;}
+  .sidebar::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px;}
+
+  .sec-title{
+    font-family:'Syne',sans-serif;font-size:.62rem;font-weight:600;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);
+    margin-bottom:8px;
+  }
+
+  .form-group{display:flex;flex-direction:column;gap:6px;}
+  .form-label{font-size:.7rem;color:var(--text-muted);display:flex;justify-content:space-between;}
+  .form-label em{color:var(--accent);font-style:normal;}
+
+  textarea,select{
+    width:100%;background:var(--surface2);border:1px solid var(--border);
+    border-radius:var(--radius-sm);color:var(--text);
+    font-family:'DM Mono',monospace;font-size:.76rem;
+    transition:border-color .2s,box-shadow .2s;
+  }
+  textarea:focus,select:focus{
+    outline:none;border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-glow);
+  }
+  textarea{padding:11px;resize:vertical;min-height:90px;line-height:1.6;}
+  select{
+    padding:9px 12px;cursor:pointer;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237b7a8e'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;
+  }
+  select option{background:var(--surface2);}
+
+  input[type="range"]{
+    -webkit-appearance:none;width:100%;height:4px;
+    background:var(--surface3);border:none;border-radius:2px;cursor:pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+    background:var(--accent);border:2px solid var(--bg);box-shadow:0 0 5px var(--accent);
+  }
+
+  .style-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;}
+  .style-chip{
+    padding:8px 5px;border-radius:var(--radius-sm);border:1px solid var(--border);
+    background:var(--surface2);color:var(--text-muted);font-size:.66rem;
+    text-align:center;cursor:pointer;transition:all .18s;
+    font-family:'DM Mono',monospace;
+  }
+  .style-chip:hover{border-color:var(--border-hover);color:var(--text);}
+  .style-chip.active{border-color:var(--accent);background:rgba(124,109,255,.12);color:var(--accent);}
+
+  .ratio-group{display:flex;gap:5px;flex-wrap:wrap;}
+  .ratio-btn{
+    flex:1;min-width:48px;padding:7px 4px;border:1px solid var(--border);
+    background:var(--surface2);border-radius:var(--radius-sm);
+    color:var(--text-muted);font-size:.64rem;font-family:'DM Mono',monospace;
+    text-align:center;cursor:pointer;transition:all .18s;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+  }
+  .ratio-preview{border:1.5px solid currentColor;display:block;}
+  .ratio-btn:hover{border-color:var(--border-hover);color:var(--text);}
+  .ratio-btn.active{border-color:var(--accent);background:rgba(124,109,255,.12);color:var(--accent);}
+
+  .toggle-row{
+    display:flex;align-items:center;justify-content:space-between;
+    font-size:.72rem;color:var(--text-muted);
+  }
+  .toggle{
+    width:34px;height:19px;background:var(--surface3);border-radius:10px;
+    position:relative;cursor:pointer;transition:background .2s;border:none;
+  }
+  .toggle.on{background:var(--accent);}
+  .toggle::after{
+    content:'';position:absolute;top:2px;left:2px;
+    width:15px;height:15px;border-radius:50%;background:#fff;transition:transform .2s;
+  }
+  .toggle.on::after{transform:translateX(15px);}
+
+  .suggestion-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+  .suggestion-pill{
+    padding:3px 9px;border-radius:20px;border:1px solid var(--border);
+    background:transparent;color:var(--text-dim);font-size:.63rem;
+    font-family:'DM Mono',monospace;cursor:pointer;transition:all .18s;
+  }
+  .suggestion-pill:hover{border-color:var(--accent);color:var(--accent);background:rgba(124,109,255,.08);}
+
+  .btn-generate{
+    width:100%;padding:14px;
+    background:linear-gradient(135deg,var(--accent) 0%,#a855f7 100%);
+    color:#fff;border:none;border-radius:var(--radius);
+    font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;
+    letter-spacing:.06em;cursor:pointer;position:relative;overflow:hidden;
+    transition:opacity .2s,transform .15s;
+    box-shadow:0 4px 22px rgba(124,109,255,.35);
+  }
+  .btn-generate::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,rgba(255,255,255,.15) 0%,transparent 50%);
+  }
+  .btn-generate:hover:not(:disabled){opacity:.92;transform:translateY(-1px);}
+  .btn-generate:active:not(:disabled){transform:translateY(0);}
+  .btn-generate:disabled{opacity:.45;cursor:not-allowed;}
+  .gen-cost{font-size:.68rem;opacity:.72;font-family:'DM Mono',monospace;font-weight:400;display:block;margin-top:2px;}
+
+  /* ===== MAIN CANVAS ===== */
+  .main-canvas{
+    grid-column:2;grid-row:2;
+    background:var(--surface);overflow-y:auto;
+    display:flex;flex-direction:column;align-items:center;
+    padding:28px 22px;gap:22px;
+  }
+  .main-canvas::-webkit-scrollbar{width:3px;}
+  .main-canvas::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px;}
+
+  .toolbar{
+    width:100%;display:flex;align-items:center;
+    justify-content:space-between;gap:10px;flex-wrap:wrap;
+  }
+  .toolbar-title{font-family:'Instrument Serif',serif;font-size:1.1rem;color:var(--text-muted);}
+  .toolbar-title span{color:var(--text);font-style:italic;}
+  .toolbar-actions{display:flex;gap:7px;align-items:center;}
+  .btn-icon{
+    width:34px;height:34px;border-radius:var(--radius-sm);
+    border:1px solid var(--border);background:var(--surface2);
+    color:var(--text-muted);font-size:.95rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:all .18s;
+  }
+  .btn-icon:hover{border-color:var(--border-hover);color:var(--text);}
+  .view-toggle{display:flex;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);}
+  .view-toggle button{
+    padding:5px 11px;border:none;background:transparent;
+    color:var(--text-muted);font-size:.75rem;cursor:pointer;transition:all .18s;
+    font-family:'DM Mono',monospace;
+  }
+  .view-toggle button.active{background:var(--surface3);color:var(--text);}
+
+  .output-container{width:100%;max-width:680px;}
+
+  .canvas-placeholder{
+    width:100%;aspect-ratio:1;max-height:520px;
+    border-radius:var(--radius);border:1.5px dashed var(--border);
+    display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:14px;color:var(--text-dim);
+    background:var(--surface2);transition:all .3s;
+  }
+  .ph-icon{font-size:3.2rem;opacity:.25;animation:float 4s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .canvas-placeholder p{font-size:.77rem;text-align:center;max-width:220px;line-height:1.7;}
+  .ph-models{font-size:.66rem;color:var(--text-dim);display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px;}
+
+  /* Loading */
+  .loading-container{
+    width:100%;aspect-ratio:1;max-height:520px;
+    border-radius:var(--radius);background:var(--surface2);
+    display:none;flex-direction:column;align-items:center;
+    justify-content:center;gap:18px;border:1px solid var(--border);
+    position:relative;overflow:hidden;
+  }
+  .loading-container.active{display:flex;}
+  .loading-shimmer{
+    position:absolute;inset:0;
+    background:linear-gradient(105deg,transparent 40%,rgba(124,109,255,.07) 50%,transparent 60%);
+    background-size:200% 100%;animation:shimmer 1.8s ease-in-out infinite;
+  }
+  @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+  .loading-ring{
+    width:52px;height:52px;border-radius:50%;
+    border:3px solid var(--surface3);border-top-color:var(--accent);
+    animation:spin .9s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-text{font-size:.75rem;color:var(--text-muted);text-align:center;}
+  .loading-sub{font-size:.65rem;color:var(--text-dim);margin-top:2px;}
+  .progress-bar-wrap{width:160px;height:3px;background:var(--surface3);border-radius:2px;overflow:hidden;}
+  .progress-bar-fill{
+    height:100%;border-radius:2px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    width:0%;transition:width .4s ease;
+  }
+
+  /* Result */
+  .result-wrapper{display:none;flex-direction:column;gap:10px;width:100%;}
+  .result-wrapper.active{display:flex;}
+  .result-img-box{
+    position:relative;border-radius:var(--radius);overflow:hidden;
+    box-shadow:0 8px 42px rgba(0,0,0,.5);border:1px solid var(--border);cursor:zoom-in;
+  }
+  .result-img-box img{width:100%;display:block;transition:transform .4s ease;}
+  .result-img-box:hover img{transform:scale(1.015);}
+  .img-overlay{
+    position:absolute;inset:0;
+    background:linear-gradient(to top,rgba(0,0,0,.65) 0%,transparent 55%);
+    opacity:0;transition:opacity .25s;
+    display:flex;align-items:flex-end;padding:14px;gap:7px;flex-wrap:wrap;
+  }
+  .result-img-box:hover .img-overlay{opacity:1;}
+  .overlay-btn{
+    padding:6px 13px;border-radius:20px;border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.1);backdrop-filter:blur(8px);
+    color:#fff;font-size:.7rem;font-family:'DM Mono',monospace;cursor:pointer;
+    transition:background .2s;
+  }
+  .overlay-btn:hover{background:rgba(255,255,255,.22);}
+
+  .result-meta{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:9px 13px;background:var(--surface2);
+    border:1px solid var(--border);border-radius:var(--radius-sm);
+    font-size:.68rem;color:var(--text-muted);flex-wrap:wrap;gap:8px;
+  }
+  .meta-badges{display:flex;gap:5px;flex-wrap:wrap;}
+  .meta-badge{
+    padding:3px 9px;border-radius:20px;
+    background:var(--surface3);color:var(--text-muted);font-size:.62rem;
+  }
+  .meta-badge.ac{background:rgba(124,109,255,.15);color:var(--accent);}
+  .result-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .btn-action{
+    padding:6px 13px;border-radius:20px;border:1px solid var(--border);
+    background:transparent;color:var(--text-muted);font-size:.68rem;
+    font-family:'DM Mono',monospace;cursor:pointer;transition:all .18s;
+    display:flex;align-items:center;gap:4px;
+  }
+  .btn-action:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-action.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .btn-action.primary:hover{opacity:.88;}
+
+  /* Gallery */
+  .gallery-section{width:100%;max-width:680px;}
+  .gallery-label{
+    font-family:'Syne',sans-serif;font-size:.62rem;font-weight:600;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;
+  }
+  .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+  .gallery-thumb{
+    aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;
+    cursor:pointer;border:1px solid var(--border);transition:all .2s;
+    position:relative;background:var(--surface2);
+  }
+  .gallery-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .gallery-thumb:hover{border-color:var(--accent);transform:scale(1.03);}
+  .thumb-del{
+    position:absolute;top:4px;right:4px;width:18px;height:18px;
+    border-radius:50%;background:rgba(0,0,0,.75);color:var(--red);
+    font-size:.6rem;display:none;align-items:center;justify-content:center;
+    cursor:pointer;border:none;
+  }
+  .gallery-thumb:hover .thumb-del{display:flex;}
+
+  /* ===== RIGHT PANEL ===== */
+  .history-panel{
+    grid-column:3;grid-row:2;background:var(--surface);
+    border-left:1px solid var(--border);padding:18px;overflow-y:auto;
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .history-panel::-webkit-scrollbar{width:3px;}
+  .history-panel::-webkit-scrollbar-thumb{background:var(--surface3);}
+  .panel-title{
+    font-family:'Syne',sans-serif;font-size:.62rem;font-weight:600;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);
+  }
+
+  /* Credit card */
+  .credit-card{
+    background:var(--surface2);border:1px solid var(--border);
+    border-radius:var(--radius);padding:15px;display:flex;flex-direction:column;gap:12px;
+  }
+  .cr-header{display:flex;align-items:flex-start;justify-content:space-between;}
+  .cr-balance{font-size:1.7rem;font-family:'Syne',sans-serif;font-weight:800;color:var(--gold);line-height:1;}
+  .cr-label{font-size:.62rem;color:var(--text-dim);margin-top:3px;}
+  .cr-plan{font-size:.65rem;color:var(--accent3);}
+  .cr-bar{width:100%;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;}
+  .cr-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent3),var(--gold));transition:width .6s ease;}
+  .cr-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+  .cr-stat{background:var(--surface3);border-radius:var(--radius-sm);padding:8px 10px;text-align:center;}
+  .cr-stat .sv{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;color:var(--text);}
+  .cr-stat .sl{font-size:.58rem;color:var(--text-dim);margin-top:2px;}
+
+  /* Usage log */
+  .usage-log{display:flex;flex-direction:column;gap:7px;}
+  .log-empty{font-size:.7rem;color:var(--text-dim);text-align:center;padding:18px 0;line-height:1.6;}
+  .log-item{
+    display:flex;align-items:center;gap:9px;padding:8px 9px;
+    background:var(--surface2);border-radius:var(--radius-sm);
+    border:1px solid var(--border);font-size:.68rem;color:var(--text-muted);
+    transition:border-color .2s;cursor:default;
+  }
+  .log-item:hover{border-color:var(--border-hover);}
+  .log-thumb{
+    width:34px;height:34px;border-radius:5px;
+    background:var(--surface3);overflow:hidden;flex-shrink:0;
+  }
+  .log-thumb img{width:100%;height:100%;object-fit:cover;}
+  .log-info{flex:1;min-width:0;}
+  .log-prompt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);font-size:.66rem;}
+  .log-time{font-size:.6rem;color:var(--text-dim);margin-top:2px;}
+  .log-cost{flex-shrink:0;color:var(--gold);font-size:.68rem;}
+
+  /* Toast */
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(16px);
+    background:var(--surface2);border:1px solid var(--border);
+    border-radius:var(--radius);padding:11px 18px;font-size:.78rem;color:var(--text);
+    opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);
+    z-index:999;pointer-events:none;backdrop-filter:blur(20px);
+    display:flex;align-items:center;gap:7px;white-space:nowrap;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast.success{border-color:var(--accent3);}
+  .toast.error{border-color:var(--red);}
+  .toast.warning{border-color:var(--gold);}
+
+  /* Lightbox */
+  .lightbox{
+    position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.93);
+    display:none;align-items:center;justify-content:center;
+    backdrop-filter:blur(14px);
+  }
+  .lightbox.active{display:flex;}
+  .lightbox img{max-width:90vw;max-height:90vh;border-radius:var(--radius);box-shadow:0 20px 80px rgba(0,0,0,.8);}
+  .lb-close{
+    position:absolute;top:18px;right:22px;font-size:1.4rem;
+    color:var(--text-muted);cursor:pointer;background:none;border:none;transition:color .2s;
+  }
+  .lb-close:hover{color:var(--text);}
+
+  /* Insufficient credit modal */
+  .modal-overlay{
+    position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.75);
+    display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px);
+  }
+  .modal-overlay.active{display:flex;}
+  .modal{
+    background:var(--surface2);border:1px solid var(--border);
+    border-radius:var(--radius);padding:30px;max-width:380px;width:90%;
+    text-align:center;display:flex;flex-direction:column;gap:16px;
+  }
+  .modal h2{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;}
+  .modal p{font-size:.78rem;color:var(--text-muted);line-height:1.6;}
+  .modal-actions{display:flex;gap:8px;justify-content:center;}
+  .btn-modal{
+    padding:10px 22px;border-radius:20px;border:1px solid var(--border);
+    background:transparent;color:var(--text-muted);font-family:'DM Mono',monospace;
+    font-size:.75rem;cursor:pointer;transition:all .18s;
+  }
+  .btn-modal:hover{border-color:var(--border-hover);color:var(--text);}
+  .btn-modal.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:#fff;}
+  .btn-modal.primary:hover{opacity:.9;}
+
+  /* Responsive */
+  @media(max-width:1100px){
+    .app{grid-template-columns:250px 1fr;}
+    .history-panel{display:none;}
+  }
+  @media(max-width:768px){
+    .app{grid-template-columns:1fr;grid-template-rows:60px 380px 1fr;}
+    nav{padding:0 14px;}
+    .nav-tools{display:none;}
+    .sidebar{grid-column:1;grid-row:2;border-right:none;border-bottom:1px solid var(--border);overflow-y:auto;}
+    .main-canvas{grid-column:1;grid-row:3;padding:14px;}
+    .gallery-grid{grid-template-columns:repeat(3,1fr);}
+    .btn-upgrade{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" onclick="closeLightbox()">✕</button>
+  <img id="lb-img" src="" alt="Full size" />
+</div>
+
+<!-- Credit modal -->
+<div class="modal-overlay" id="credit-modal">
+  <div class="modal">
+    <div style="font-size:2.5rem">⚡</div>
+    <h2>Not Enough Credits</h2>
+    <p>You need <strong id="modal-need">0</strong> credits but only have <strong id="modal-have">0</strong>. Upgrade to continue generating.</p>
+    <div class="modal-actions">
+      <button class="btn-modal" onclick="closeModal()">Cancel</button>
+      <button class="btn-modal primary" onclick="closeModal();showToast('Upgrade flow — demo mode!','warning')">↑ Upgrade Plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <!-- NAV -->
+  <nav class="app-nav">
+    <div class="nav-logo">
+      <div class="logo-dot"></div>Nexus<span>AI</span>
+    </div>
+    <div class="nav-tools">
+      <button class="nav-tool-btn active" onclick="selectTool(this,'image')">🖼 Image Gen</button>
+      <button class="nav-tool-btn" onclick="selectTool(this,'text')">✍️ Copywriter</button>
+      <button class="nav-tool-btn" onclick="selectTool(this,'code')">⌨️ CodeBot</button>
+      <button class="nav-tool-btn" onclick="selectTool(this,'vision')">👁 Vision AI</button>
+      <button class="nav-tool-btn" onclick="selectTool(this,'audio')">🎵 AudioGen</button>
+    </div>
+    <div class="nav-right">
+      <div class="credit-pill">⚡ <span class="cval" id="nav-credits">250</span> credits</div>
+      <button class="btn-upgrade">↑ Upgrade</button>
+    </div>
+  </nav>
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+
+    <div>
+      <div class="sec-title">Prompt</div>
+      <div class="form-group">
+        <div class="form-label">Describe your image</div>
+        <textarea id="prompt" placeholder="A majestic lion at golden hour, ultra-realistic, soft bokeh, National Geographic style…" rows="4"></textarea>
+      </div>
+      <div class="suggestion-pills">
+        <button class="suggestion-pill" onclick="insertPrompt('Cinematic portrait of a futuristic city at night, neon lights, rain reflections')">🌆 Cityscape</button>
+        <button class="suggestion-pill" onclick="insertPrompt('Abstract fluid art with vibrant neon colors flowing on dark background')">🎨 Abstract</button>
+        <button class="suggestion-pill" onclick="insertPrompt('Cozy cabin in a snowy forest, warm light glowing from inside, winter magic')">🏔 Nature</button>
+        <button class="suggestion-pill" onclick="insertPrompt('Portrait of a fantasy warrior with glowing rune armor in epic fantasy setting')">⚔️ Fantasy</button>
+        <button class="suggestion-pill" onclick="insertPrompt('Minimalist Japanese zen garden at sunrise, raked sand, cherry blossom petals')">🌸 Zen</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="sec-title">Negative Prompt</div>
+      <div class="form-group">
+        <textarea id="neg-prompt" placeholder="blurry, low quality, distorted, watermark, text, extra limbs…" rows="2"></textarea>
+      </div>
+    </div>
+
+    <div>
+      <div class="sec-title">Art Style</div>
+      <div class="style-grid" id="style-grid">
+        <div class="style-chip active" data-style="Photorealistic" onclick="selectStyle(this)">📷 Realistic</div>
+        <div class="style-chip" data-style="Anime" onclick="selectStyle(this)">⛩ Anime</div>
+        <div class="style-chip" data-style="Digital Art" onclick="selectStyle(this)">🖥 Digital Art</div>
+        <div class="style-chip" data-style="Oil Painting" onclick="selectStyle(this)">🎨 Oil Paint</div>
+        <div class="style-chip" data-style="Watercolor" onclick="selectStyle(this)">💧 Watercolor</div>
+        <div class="style-chip" data-style="Pixel Art" onclick="selectStyle(this)">🕹 Pixel Art</div>
+        <div class="style-chip" data-style="Pencil Sketch" onclick="selectStyle(this)">✏️ Sketch</div>
+        <div class="style-chip" data-style="3D Render" onclick="selectStyle(this)">🔷 3D Render</div>
+        <div class="style-chip" data-style="Cinematic" onclick="selectStyle(this)">🎬 Cinematic</div>
+        <div class="style-chip" data-style="Fantasy Art" onclick="selectStyle(this)">🧙 Fantasy</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sec-title">Aspect Ratio</div>
+      <div class="ratio-group" id="ratio-group">
+        <button class="ratio-btn active" data-ratio="1:1" onclick="selectRatio(this)">
+          <div class="ratio-preview" style="width:16px;height:16px;"></div>1:1
+        </button>
+        <button class="ratio-btn" data-ratio="16:9" onclick="selectRatio(this)">
+          <div class="ratio-preview" style="width:22px;height:13px;"></div>16:9
+        </button>
+        <button class="ratio-btn" data-ratio="9:16" onclick="selectRatio(this)">
+          <div class="ratio-preview" style="width:13px;height:22px;"></div>9:16
+        </button>
+        <button class="ratio-btn" data-ratio="4:3" onclick="selectRatio(this)">
+          <div class="ratio-preview" style="width:20px;height:15px;"></div>4:3
+        </button>
+        <button class="ratio-btn" data-ratio="3:2" onclick="selectRatio(this)">
+          <div class="ratio-preview" style="width:21px;height:14px;"></div>3:2
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <div class="sec-title">Model & Parameters</div>
+      <div class="form-group">
+        <div class="form-label">AI Model <em id="model-cost-badge">5 credits</em></div>
+        <select id="model-select" onchange="updateModelCost()">
+          <option value="dalle3" data-cost="5">DALL·E 3 — OpenAI</option>
+          <option value="dalle2" data-cost="2">DALL·E 2 — OpenAI</option>
+          <option value="sdxl" data-cost="3">Stable Diffusion XL</option>
+          <option value="midjourney" data-cost="8">Midjourney v6</option>
+          <option value="flux" data-cost="4">FLUX.1 Pro</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-top:10px">
+        <div class="form-label">Quality</div>
+        <select id="quality-select">
+          <option value="standard">Standard</option>
+          <option value="hd" selected>HD</option>
+          <option value="ultra">Ultra</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-top:10px">
+        <div class="form-label">Images per generation <em id="count-val">1</em></div>
+        <input type="range" id="count-range" min="1" max="4" value="1" oninput="updateCount()" />
+      </div>
+
+      <div class="form-group" style="margin-top:10px">
+        <div class="form-label">Guidance Scale <em id="guidance-val">7.5</em></div>
+        <input type="range" id="guidance-range" min="1" max="20" value="7.5" step="0.5" oninput="updateGuidance()" />
+      </div>
+
+      <div class="form-group" style="margin-top:10px">
+        <div class="form-label">Inference Steps <em id="steps-val">30</em></div>
+        <input type="range" id="steps-range" min="10" max="50" value="30" oninput="updateSteps()" />
+      </div>
+
+      <div class="form-group" style="margin-top:10px">
+        <div class="form-label">Seed <em id="seed-val">Random</em></div>
+        <input type="range" id="seed-range" min="0" max="9999" value="0" oninput="updateSeed()" />
+      </div>
+
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+        <div class="toggle-row">Safety Filter <button class="toggle on" id="t-safety" onclick="doToggle(this,'safety')"></button></div>
+        <div class="toggle-row">Enhance Prompt <button class="toggle on" id="t-enhance" onclick="doToggle(this,'enhance')"></button></div>
+        <div class="toggle-row">Auto Upscale <button class="toggle" id="t-upscale" onclick="doToggle(this,'upscale')"></button></div>
+        <div class="toggle-row">Watermark <button class="toggle" id="t-watermark" onclick="doToggle(this,'watermark')"></button></div>
+      </div>
+    </div>
+
+    <button class="btn-generate" id="gen-btn" onclick="generateImage()">
+      ✦ Generate Image
+      <em class="gen-cost" id="cost-display">— 5 credits</em>
+    </button>
+
+  </aside>
+
+  <!-- MAIN CANVAS -->
+  <main class="main-canvas">
+
+    <div class="toolbar">
+      <div class="toolbar-title">Image <span id="output-label">Studio</span></div>
+      <div class="toolbar-actions">
+        <div class="view-toggle">
+          <button class="active" onclick="switchView('single',this)">Single</button>
+          <button onclick="switchView('grid',this)">Gallery</button>
+        </div>
+        <button class="btn-icon" title="Randomize prompt" onclick="randomPrompt()">🎲</button>
+        <button class="btn-icon" title="Clear canvas" onclick="clearCanvas()">🗑</button>
+        <button class="btn-icon" title="Share" onclick="showToast('Share feature coming soon!','warning')">↗</button>
+      </div>
+    </div>
+
+    <div class="output-container">
+
+      <!-- Placeholder -->
+      <div class="canvas-placeholder" id="placeholder">
+        <div class="ph-icon">✦</div>
+        <p>Describe your image and hit Generate to create something stunning.</p>
+        <div class="ph-models"><span>DALL·E 3</span><span>·</span><span>SDXL</span><span>·</span><span>Midjourney</span><span>·</span><span>FLUX</span></div>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading-container" id="loading-container">
+        <div class="loading-shimmer"></div>
+        <div class="loading-ring"></div>
+        <div class="loading-text" id="load-main">Initializing model…</div>
+        <div class="loading-sub" id="load-sub">Preparing your generation</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="prog-bar"></div>
+        </div>
+      </div>
+
+      <!-- Result single -->
+      <div class="result-wrapper" id="result-wrapper">
+        <div class="result-img-box" id="result-img-box">
+          <img id="result-img" src="" alt="Generated image" onclick="openLightbox(this.src)" />
+          <div class="img-overlay">
+            <button class="overlay-btn" onclick="openLightbox(document.getElementById('result-img').src)">🔍 Fullscreen</button>
+            <button class="overlay-btn" onclick="downloadImage()">⬇ Download</button>
+            <button class="overlay-btn" onclick="remixImage()">♻ Remix</button>
+            <button class="overlay-btn" onclick="inpaintImage()">✏ Edit</button>
+          </div>
+        </div>
+        <div class="result-meta">
+          <div class="meta-badges">
+            <span class="meta-badge ac" id="meta-model">DALL·E 3</span>
+            <span class="meta-badge" id="meta-style">Photorealistic</span>
+            <span class="meta-badge" id="meta-ratio">1:1</span>
+            <span class="meta-badge" id="meta-quality">HD</span>
+            <span class="meta-badge" id="meta-seed">Seed: —</span>
+          </div>
+          <div class="result-actions">
+            <button class="btn-action" onclick="generateVariation()">🔀 Variation</button>
+            <button class="btn-action" onclick="upscaleImage()">⬆ Upscale</button>
+            <button class="btn-action" onclick="copyPrompt()">📋 Copy</button>
+            <button class="btn-action primary" onclick="downloadImage()">⬇ Save</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Gallery -->
+    <div class="gallery-section" id="gallery-section" style="display:none;">
+      <div class="gallery-label">Generation History (<span id="gallery-count">0</span>)</div>
+      <div class="gallery-grid" id="gallery-grid"></div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="history-panel">
+
+    <div class="panel-title">Credits & Usage</div>
+
+    <div class="credit-card">
+      <div class="cr-header">
+        <div>
+          <div class="cr-balance" id="panel-credits">250</div>
+          <div class="cr-label">credits remaining</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:.62rem;color:var(--text-dim)">of 300 total</div>
+          <div class="cr-plan" style="margin-top:3px">✦ Pro Plan</div>
+        </div>
+      </div>
+      <div class="cr-bar"><div class="cr-fill" id="cr-fill" style="width:83.3%"></div></div>
+      <div class="cr-stats">
+        <div class="cr-stat"><div class="sv" id="st-used">0</div><div class="sl">Used Today</div></div>
+        <div class="cr-stat"><div class="sv" id="st-gens">0</div><div class="sl">Generations</div></div>
+        <div class="cr-stat"><div class="sv">300</div><div class="sl">Monthly Cap</div></div>
+        <div class="cr-stat"><div class="sv" id="st-saved">0</div><div class="sl">Saved</div></div>
+      </div>
+      <button class="btn-upgrade" style="width:100%;border-radius:var(--radius-sm);padding:9px;" onclick="showToast('Upgrade flow — demo mode!','warning')">
+        ↑ Add 1000 Credits — $9
+      </button>
+    </div>
+
+    <div class="panel-title">Recent Generations</div>
+    <div class="usage-log" id="usage-log">
+      <div class="log-empty">No generations yet.<br>Create something amazing! ✦</div>
+    </div>
+
+  </aside>
+
+</div>
+
+<script>
+/* ===== STATE ===== */
+let credits = 250;
+let totalUsed = 0;
+let genCount = 0;
+let savedCount = 0;
+let selectedStyle = 'Photorealistic';
+let selectedRatio = '1:1';
+let modelCost = 5;
+let imageCount = 1;
+let galleryImgs = [];
+let toggleState = { safety:true, enhance:true, upscale:false, watermark:false };
+let progInterval;
+let lastSrc = '';
+let lastPrompt = '';
+
+/* Demo images via Picsum */
+function randomImg() {
+  const seeds = [10,20,30,40,50,60,70,80,90,100,11,22,33,44,55,66,77,88,99,111];
+  const seed = seeds[Math.floor(Math.random()*seeds.length)];
+  return `https://picsum.photos/seed/${seed}${Date.now()%100}/800/800`;
+}
+
+/* Random prompts */
+const RANDOM_PROMPTS = [
+  'Ethereal bioluminescent forest at midnight, glowing mushrooms, mystical fog',
+  'Steampunk airship battle over Victorian London, dramatic storm clouds',
+  'Underwater ancient ruins with colorful coral and rays of sunlight piercing through',
+  'Giant mecha robot walking through cherry blossom rain, anime style',
+  'Northern lights over a frozen lake in Iceland, long exposure photography',
+  'Cyberpunk street food market at night, neon reflections on wet pavement',
+  'Renaissance painting style portrait of a robot holding a bouquet of flowers',
+  'Surreal Salvador Dali inspired landscape with melting clocks and desert',
+  'A tiny fairytale cottage inside a giant mushroom cap, magical forest',
+  'Deep space nebula with crystalline planets, sci-fi concept art',
+];
+
+const LOAD_MSGS = [
+  ['Encoding prompt tokens…', 'Initializing latent space'],
+  ['Applying style transfer…', 'Running diffusion steps'],
+  ['Denoising latent image…', 'Reconstructing pixels'],
+  ['Upsampling resolution…', 'Post-processing colors'],
+  ['Applying style — ' , 'Finalizing output'],
+];
+
+/* ===== UI CONTROLS ===== */
+function selectTool(btn, tool) {
+  document.querySelectorAll('.nav-tool-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (tool !== 'image') showToast(`${btn.textContent.trim()} — coming soon!`, 'warning');
+}
+
+function selectStyle(el) {
+  document.querySelectorAll('.style-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedStyle = el.dataset.style;
+}
+
+function selectRatio(btn) {
+  document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedRatio = btn.dataset.ratio;
+  const [w, h] = selectedRatio.split(':').map(Number);
+  const ph = document.getElementById('placeholder');
+  ph.style.aspectRatio = w / h;
+}
+
+function updateModelCost() {
+  const sel = document.getElementById('model-select');
+  modelCost = parseInt(sel.options[sel.selectedIndex].dataset.cost);
+  document.getElementById('model-cost-badge').textContent = modelCost + ' credits';
+  updateCostDisplay();
+}
+
+function updateCostDisplay() {
+  const total = modelCost * imageCount;
+  document.getElementById('cost-display').textContent = `— ${total} credit${total>1?'s':''}`;
+}
+
+function updateCount() {
+  imageCount = parseInt(document.getElementById('count-range').value);
+  document.getElementById('count-val').textContent = imageCount;
+  updateCostDisplay();
+}
+function updateGuidance() { document.getElementById('guidance-val').textContent = document.getElementById('guidance-range').value; }
+function updateSteps() { document.getElementById('steps-val').textContent = document.getElementById('steps-range').value; }
+function updateSeed() {
+  const v = parseInt(document.getElementById('seed-range').value);
+  document.getElementById('seed-val').textContent = v === 0 ? 'Random' : v;
+}
+
+function doToggle(btn, key) {
+  toggleState[key] = !toggleState[key];
+  btn.classList.toggle('on', toggleState[key]);
+}
+
+function insertPrompt(text) {
+  document.getElementById('prompt').value = text;
+  document.getElementById('prompt').focus();
+  showToast('Prompt loaded!', 'success');
+}
+
+function randomPrompt() {
+  const p = RANDOM_PROMPTS[Math.floor(Math.random() * RANDOM_PROMPTS.length)];
+  document.getElementById('prompt').value = p;
+  showToast('🎲 Random prompt inserted!', 'success');
+}
+
+function switchView(mode, btn) {
+  document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const gallery = document.getElementById('gallery-section');
+  const result = document.getElementById('result-wrapper');
+  if (mode === 'grid') {
+    if (galleryImgs.length) {
+      gallery.style.display = 'block';
+      result.classList.remove('active');
+    }
+  } else {
+    if (lastSrc) result.classList.add('active');
+    gallery.style.display = galleryImgs.length ? 'block' : 'none';
+  }
+}
+
+/* ===== GENERATE ===== */
+async function generateImage() {
+  const prompt = document.getElementById('prompt').value.trim();
+  if (!prompt) { showToast('Please enter a prompt first!', 'error'); return; }
+
+  const cost = modelCost * imageCount;
+  if (credits < cost) {
+    document.getElementById('modal-need').textContent = cost;
+    document.getElementById('modal-have').textContent = credits;
+    document.getElementById('credit-modal').classList.add('active');
+    return;
+  }
+
+  // start UI
+  setLoadingState(true);
+  const msgSet = LOAD_MSGS[Math.floor(Math.random() * LOAD_MSGS.length)];
+  document.getElementById('load-main').textContent = msgSet[0];
+  document.getElementById('load-sub').textContent = msgSet[1];
+
+  let prog = 0;
+  const bar = document.getElementById('prog-bar');
+  bar.style.width = '0%';
+  clearInterval(progInterval);
+  progInterval = setInterval(() => {
+    prog = Math.min(prog + Math.random() * 7, 91);
+    bar.style.width = prog + '%';
+  }, 220);
+
+  // Simulate generation (1.8–3.2s)
+  await sleep(1900 + Math.random() * 1300);
+  clearInterval(progInterval);
+  bar.style.width = '100%';
+  await sleep(280);
+
+  // Deduct credits
+  credits -= cost;
+  totalUsed += cost;
+  genCount++;
+
+  const seed = parseInt(document.getElementById('seed-range').value);
+  const actualSeed = seed === 0 ? Math.floor(Math.random() * 9999) : seed;
+
+  // Use a reliable placeholder image
+  const w = selectedRatio === '16:9' ? 800 : selectedRatio === '9:16' ? 450 : 800;
+  const h = selectedRatio === '9:16' ? 800 : selectedRatio === '16:9' ? 450 : 800;
+  const imgSrc = `https://picsum.photos/seed/${actualSeed % 200}/${w}/${h}`;
+
+  lastSrc = imgSrc;
+  lastPrompt = prompt;
+
+  showResult(imgSrc, prompt, actualSeed);
+  addToLog(imgSrc, prompt, cost);
+  addToGallery(imgSrc);
+  updateCredits();
+  setLoadingState(false, true);
+  showToast('✦ Image generated!', 'success');
+}
+
+function setLoadingState(loading, success = false) {
+  const ph = document.getElementById('placeholder');
+  const lc = document.getElementById('loading-container');
+  const rw = document.getElementById('result-wrapper');
+  const btn = document.getElementById('gen-btn');
+  const label = document.getElementById('output-label');
+
+  if (loading) {
+    ph.style.display = 'none';
+    rw.classList.remove('active');
+    lc.classList.add('active');
+    btn.disabled = true;
+    label.textContent = 'Generating…';
+  } else {
+    lc.classList.remove('active');
+    btn.disabled = false;
+    label.textContent = 'Studio';
+  }
+}
+
+function showResult(src, prompt, seed) {
+  const rw = document.getElementById('result-wrapper');
+  const img = document.getElementById('result-img');
+  const box = document.getElementById('result-img-box');
+
+  img.style.opacity = 0;
+  img.src = src;
+  img.onload = () => { img.style.transition = 'opacity .5s ease'; img.style.opacity = 1; };
+
+  // Aspect ratio
+  const [w,h] = selectedRatio.split(':').map(Number);
+  box.style.aspectRatio = w / h;
+
+  rw.classList.add('active');
+
+  // Meta
+  const modelName = document.getElementById('model-select').options[document.getElementById('model-select').selectedIndex].text.split('—')[0].trim();
+  document.getElementById('meta-model').textContent = modelName;
+  document.getElementById('meta-style').textContent = selectedStyle;
+  document.getElementById('meta-ratio').textContent = selectedRatio;
+  document.getElementById('meta-quality').textContent = document.getElementById('quality-select').value.toUpperCase();
+  document.getElementById('meta-seed').textContent = 'Seed: ' + seed;
+}
+
+function addToLog(src, prompt, cost) {
+  const log = document.getElementById('usage-log');
+  const empty = log.querySelector('.log-empty');
+  if (empty) empty.remove();
+
+  const now = new Date();
+  const time = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  const item = document.createElement('div');
+  item.className = 'log-item';
+  item.innerHTML = `
+    <div class="log-thumb"><img src="${src}" alt="" /></div>
+    <div class="log-info">
+      <div class="log-prompt">${prompt.length > 38 ? prompt.substring(0,38)+'…' : prompt}</div>
+      <div class="log-time">Today ${time} · ${selectedStyle}</div>
+    </div>
+    <div class="log-cost">-${cost}⚡</div>
+  `;
+  log.insertBefore(item, log.firstChild);
+}
+
+function addToGallery(src) {
+  galleryImgs.unshift(src);
+  renderGallery();
+  const gs = document.getElementById('gallery-section');
+  gs.style.display = 'block';
+  document.getElementById('gallery-count').textContent = galleryImgs.length;
+}
+
+function renderGallery() {
+  const grid = document.getElementById('gallery-grid');
+  grid.innerHTML = '';
+  galleryImgs.forEach((src, i) => {
+    const div = document.createElement('div');
+    div.className = 'gallery-thumb';
+    div.innerHTML = `
+      <img src="${src}" alt="" onclick="openLightbox('${src}')" loading="lazy" />
+      <button class="thumb-del" onclick="delGallery(event,${i})">✕</button>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function delGallery(e, idx) {
+  e.stopPropagation();
+  galleryImgs.splice(idx, 1);
+  renderGallery();
+  document.getElementById('gallery-count').textContent = galleryImgs.length;
+  if (!galleryImgs.length) document.getElementById('gallery-section').style.display = 'none';
+}
+
+function updateCredits() {
+  document.getElementById('nav-credits').textContent = credits;
+  document.getElementById('panel-credits').textContent = credits;
+  document.getElementById('st-used').textContent = totalUsed;
+  document.getElementById('st-gens').textContent = genCount;
+  document.getElementById('st-saved').textContent = savedCount;
+  const pct = Math.max(0, Math.round((credits / 300) * 100));
+  document.getElementById('cr-fill').style.width = pct + '%';
+  if (credits < 15 && credits > 0) showToast('⚡ Low credits! Consider upgrading.', 'warning');
+  if (credits === 0) showToast('⚡ Out of credits! Please upgrade.', 'error');
+}
+
+/* ===== IMAGE ACTIONS ===== */
+function downloadImage() {
+  if (!lastSrc) return;
+  const a = document.createElement('a');
+  a.href = lastSrc;
+  a.download = `nexusai_${Date.now()}.jpg`;
+  a.target = '_blank';
+  a.click();
+  savedCount++;
+  updateCredits();
+  showToast('⬇ Image saved!', 'success');
+}
+
+function remixImage() {
+  if (!lastPrompt) return;
+  document.getElementById('prompt').value = lastPrompt + ', remixed, alternate composition';
+  showToast('♻ Prompt updated for remix!', 'success');
+}
+
+function inpaintImage() {
+  showToast('✏ Inpainting editor — coming soon!', 'warning');
+}
+
+function generateVariation() {
+  if (!lastPrompt) return;
+  document.getElementById('prompt').value = lastPrompt;
+  generateImage();
+}
+
+function upscaleImage() {
+  if (!lastSrc) return;
+  showToast('⬆ Upscaling to 4× resolution…', 'warning');
+  setTimeout(() => showToast('✦ Upscale complete! (demo)', 'success'), 2200);
+}
+
+function copyPrompt() {
+  if (!lastPrompt) return;
+  navigator.clipboard.writeText(lastPrompt).then(() => showToast('📋 Prompt copied!', 'success'));
+}
+
+function clearCanvas() {
+  document.getElementById('result-wrapper').classList.remove('active');
+  document.getElementById('placeholder').style.display = '';
+  galleryImgs = [];
+  renderGallery();
+  document.getElementById('gallery-section').style.display = 'none';
+  lastSrc = ''; lastPrompt = '';
+  showToast('Canvas cleared.', 'success');
+}
+
+/* ===== LIGHTBOX ===== */
+function openLightbox(src) {
+  document.getElementById('lb-img').src = src;
+  document.getElementById('lightbox').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.getElementById('lightbox').addEventListener('click', e => { if (e.target === e.currentTarget) closeLightbox(); });
+
+/* ===== MODAL ===== */
+function closeModal() { document.getElementById('credit-modal').classList.remove('active'); }
+document.getElementById('credit-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+/* ===== TOAST ===== */
+let toastTO;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(toastTO);
+  toastTO = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ===== UTILS ===== */
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ===== KEYBOARD ===== */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeLightbox(); closeModal(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generateImage();
+});
+
+/* ===== INIT ===== */
+updateCostDisplay();
+updateGuidance();
+updateSteps();
+updateSeed();
+</script>
+</body>
+</html>

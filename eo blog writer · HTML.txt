@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlogForge AI — SEO Blog Writer</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --paper: #f5f0e8;
+    --cream: #ede8dc;
+    --accent: #c8472a;
+    --accent2: #2a6cc8;
+    --gold: #d4a853;
+    --muted: #7a7060;
+    --border: #c8bfaa;
+    --success: #2a8c5f;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  /* HEADER */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 28px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1.5px solid var(--border);
+    background: var(--paper);
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .logo-mark {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+  }
+  .logo-tag {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    background: #c8472a18;
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 32px;
+  }
+  .stat {
+    text-align: right;
+  }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* MAIN LAYOUT */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 48px;
+  }
+
+  /* HERO */
+  .hero {
+    padding: 72px 0 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+
+  .hero-left h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(42px, 5vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -1.5px;
+    color: var(--ink);
+    margin-bottom: 20px;
+  }
+
+  .hero-left h1 em {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .hero-left p {
+    font-size: 16px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-weight: 300;
+    max-width: 380px;
+  }
+
+  .decorative-line {
+    width: 60px;
+    height: 3px;
+    background: var(--accent);
+    margin: 24px 0;
+  }
+
+  /* INPUT CARD */
+  .input-card {
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 36px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .input-card::before {
+    content: '✦';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    font-size: 120px;
+    color: var(--border);
+    line-height: 1;
+    opacity: 0.4;
+  }
+
+  .field-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .text-input {
+    width: 100%;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 18px;
+  }
+
+  .text-input:focus {
+    border-color: var(--accent);
+  }
+
+  .text-input::placeholder { color: var(--border); }
+
+  textarea.text-input {
+    resize: none;
+    height: 80px;
+    line-height: 1.6;
+  }
+
+  /* SETTINGS ROW */
+  .settings-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  select.text-input {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7060' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    margin-bottom: 0;
+  }
+
+  /* KEYWORDS */
+  .keyword-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+    min-height: 36px;
+  }
+
+  .keyword-chip {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: chipIn 0.2s ease;
+  }
+
+  @keyframes chipIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .chip-remove {
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .chip-remove:hover { opacity: 1; }
+
+  .keyword-input-wrap {
+    display: flex;
+    gap: 8px;
+  }
+
+  .keyword-input-wrap input {
+    flex: 1;
+    margin-bottom: 0;
+  }
+
+  .btn-add-kw {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 0 16px;
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .btn-add-kw:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* GENERATE BUTTON */
+  .btn-generate {
+    width: 100%;
+    padding: 18px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+    margin-top: 4px;
+  }
+
+  .btn-generate:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(13,13,13,0.2);
+  }
+
+  .btn-generate:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .btn-generate:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-generate .btn-shine {
+    position: absolute;
+    top: 0; left: -100%;
+    width: 80%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    animation: shine 2s infinite;
+  }
+
+  @keyframes shine {
+    to { left: 200%; }
+  }
+
+  /* DIVIDER */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 56px 0 40px;
+    padding: 0;
+  }
+
+  .section-divider::before,
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .section-divider span {
+    font-family: 'DM Serif Display', serif;
+    font-size: 13px;
+    color: var(--muted);
+    white-space: nowrap;
+    letter-spacing: 1px;
+  }
+
+  /* OUTPUT AREA */
+  #output-area {
+    display: none;
+    animation: fadeUp 0.5s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  .output-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--ink);
+  }
+
+  .output-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-action {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .btn-action:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .btn-action.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .btn-action.primary:hover {
+    background: #a83820;
+    border-color: #a83820;
+  }
+
+  /* BLOG CARD */
+  .blog-output {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.06);
+  }
+
+  .blog-meta-bar {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .blog-type-badge {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .blog-meta-pills {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: rgba(245,240,232,0.6);
+    font-weight: 300;
+  }
+
+  .blog-meta-pills span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .blog-body {
+    padding: 56px 56px 48px;
+  }
+
+  .blog-seo-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .blog-main-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 44px);
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+    color: var(--ink);
+    margin-bottom: 24px;
+  }
+
+  .blog-meta-line {
+    display: flex;
+    gap: 20px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 36px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--cream);
+    font-weight: 300;
+  }
+
+  .blog-content {
+    font-size: 16px;
+    line-height: 1.85;
+    color: #2a2a2a;
+    font-weight: 300;
+  }
+
+  .blog-content h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    color: var(--ink);
+    margin: 40px 0 16px;
+    letter-spacing: -0.3px;
+  }
+
+  .blog-content h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 28px 0 12px;
+    letter-spacing: 0.3px;
+  }
+
+  .blog-content p {
+    margin-bottom: 20px;
+  }
+
+  .blog-content strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .blog-content ul, .blog-content ol {
+    padding-left: 24px;
+    margin-bottom: 20px;
+  }
+
+  .blog-content li {
+    margin-bottom: 8px;
+  }
+
+  .blog-content blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 4px 0 4px 20px;
+    margin: 28px 0;
+    color: var(--muted);
+    font-style: italic;
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+  }
+
+  /* SEO SIDEBAR */
+  .output-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    margin-top: 24px;
+  }
+
+  .seo-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .seo-card {
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+  }
+
+  .seo-card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .seo-score {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .score-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--success);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .score-label {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  .seo-meta-item {
+    margin-bottom: 14px;
+  }
+
+  .seo-meta-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+  }
+
+  .seo-meta-value {
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.5;
+    font-weight: 300;
+    background: var(--paper);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .kw-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .kw-tag {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  /* LOADING */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(245,240,232,0.92);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  .loading-overlay.active {
+    display: flex;
+  }
+
+  .loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .loading-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--ink);
+    letter-spacing: -0.3px;
+  }
+
+  .loading-sub {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 300;
+    margin-top: -16px;
+  }
+
+  .loading-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .loading-step {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 300;
+    opacity: 0;
+    animation: stepIn 0.4s ease forwards;
+  }
+
+  .loading-step.active { color: var(--ink); font-weight: 500; }
+  .loading-step .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .loading-step.active .dot { background: var(--accent); }
+
+  @keyframes stepIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 400;
+    z-index: 999;
+    animation: toastIn 0.3s ease;
+    display: none;
+  }
+
+  .toast.show { display: block; }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    margin-top: 80px;
+    padding: 28px 48px;
+    border-top: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  @media (max-width: 900px) {
+    header { padding: 20px 24px; }
+    .header-stats { display: none; }
+    .container { padding: 0 24px; }
+    .hero { grid-template-columns: 1fr; gap: 32px; padding: 48px 0 32px; }
+    .output-grid { grid-template-columns: 1fr; }
+    .blog-body { padding: 32px; }
+    footer { padding: 20px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Crafting your blog…</div>
+  <div class="loading-sub">AI is working its magic</div>
+  <div class="loading-steps" id="loadingSteps"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <span class="logo-mark">BlogForge</span>
+    <span class="logo-tag">AI</span>
+  </div>
+  <div class="header-stats">
+    <div class="stat">
+      <div class="stat-num" id="statBlogs">0</div>
+      <div class="stat-label">Blogs Written</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="statWords">0</div>
+      <div class="stat-label">Words Generated</div>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-left">
+      <h1>Write <em>SEO blogs</em> that rank — in one click</h1>
+      <div class="decorative-line"></div>
+      <p>Paste your topic, choose your settings, hit Generate. BlogForge AI crafts full, publish-ready SEO blog posts with meta tags, keywords, and structure — instantly.</p>
+    </div>
+
+    <!-- INPUT CARD -->
+    <div class="input-card">
+      <label class="field-label">Blog Topic / Title Idea</label>
+      <input type="text" class="text-input" id="topicInput"
+        placeholder="e.g. Best practices for GST filing in India 2024">
+
+      <label class="field-label">Target Audience</label>
+      <input type="text" class="text-input" id="audienceInput"
+        placeholder="e.g. Small business owners, CA professionals">
+
+      <label class="field-label">Additional Context (optional)</label>
+      <textarea class="text-input" id="contextInput"
+        placeholder="Any specific points, angle, or tone you want covered…"></textarea>
+
+      <div class="settings-row">
+        <div>
+          <label class="field-label">Blog Length</label>
+          <select class="text-input" id="lengthSelect">
+            <option value="short">Short (~600 words)</option>
+            <option value="medium" selected>Medium (~1000 words)</option>
+            <option value="long">Long (~1500 words)</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Tone</label>
+          <select class="text-input" id="toneSelect">
+            <option value="professional">Professional</option>
+            <option value="conversational" selected>Conversational</option>
+            <option value="authoritative">Authoritative</option>
+            <option value="friendly">Friendly & Simple</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="field-label">Target Keywords</label>
+      <div class="keyword-row" id="keywordChips"></div>
+      <div class="keyword-input-wrap">
+        <input type="text" class="text-input" id="keywordInput" placeholder="Add keyword and press Enter or +" style="margin-bottom:0">
+        <button class="btn-add-kw" onclick="addKeyword()">+</button>
+      </div>
+      <div style="height:18px;"></div>
+
+      <button class="btn-generate" onclick="generateBlog()" id="generateBtn">
+        <span class="btn-shine"></span>
+        ✦ Generate SEO Blog Post
+      </button>
+    </div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div id="output-area">
+    <div class="section-divider">
+      <span>✦ Your Generated Blog Post</span>
+    </div>
+
+    <div class="output-header">
+      <h2>Ready to Publish</h2>
+      <div class="output-actions">
+        <button class="btn-action" onclick="copyMarkdown()">Copy Markdown</button>
+        <button class="btn-action" onclick="copyText()">Copy Plain Text</button>
+        <button class="btn-action primary" onclick="downloadBlog()">↓ Download .txt</button>
+      </div>
+    </div>
+
+    <div class="output-grid">
+      <div class="blog-output" id="blogOutput">
+        <div class="blog-meta-bar">
+          <span class="blog-type-badge">✦ AI Generated · SEO Optimized</span>
+          <div class="blog-meta-pills">
+            <span>📝 <span id="wordCount">0</span> words</span>
+            <span>⏱ <span id="readTime">0</span> min read</span>
+          </div>
+        </div>
+        <div class="blog-body">
+          <div class="blog-seo-title" id="blogSEOTitle"></div>
+          <h1 class="blog-main-title" id="blogTitle"></h1>
+          <div class="blog-meta-line">
+            <span>By BlogForge AI</span>
+            <span id="blogDate"></span>
+            <span id="blogCategory"></span>
+          </div>
+          <div class="blog-content" id="blogContent"></div>
+        </div>
+      </div>
+
+      <div class="seo-sidebar">
+        <div class="seo-card">
+          <div class="seo-card-title">📊 SEO Score</div>
+          <div class="seo-score">
+            <div class="score-circle" id="seoScore">—</div>
+            <div class="score-label">Well-optimized post ready for publishing</div>
+          </div>
+        </div>
+
+        <div class="seo-card">
+          <div class="seo-card-title">🔍 Meta Details</div>
+          <div class="seo-meta-item">
+            <div class="seo-meta-label">Meta Title</div>
+            <div class="seo-meta-value" id="metaTitle">—</div>
+          </div>
+          <div class="seo-meta-item">
+            <div class="seo-meta-label">Meta Description</div>
+            <div class="seo-meta-value" id="metaDesc">—</div>
+          </div>
+          <div class="seo-meta-item">
+            <div class="seo-meta-label">URL Slug</div>
+            <div class="seo-meta-value" id="urlSlug">—</div>
+          </div>
+        </div>
+
+        <div class="seo-card">
+          <div class="seo-card-title">🏷 Keywords Used</div>
+          <div class="kw-tags" id="seoKeywords"></div>
+        </div>
+
+        <div class="seo-card">
+          <div class="seo-card-title">💡 Writing Tips</div>
+          <div id="seoTips" style="font-size:13px;color:var(--muted);line-height:1.7;font-weight:300;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span>BlogForge AI — Powered by Claude</span>
+  <span>One click. Full blog. Ranked.</span>
+</footer>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let keywords = [];
+let blogCount = parseInt(localStorage.getItem('bf_count') || '0');
+let wordTotal = parseInt(localStorage.getItem('bf_words') || '0');
+let lastBlogData = null;
+
+updateStats();
+
+// ─── KEYWORDS ────────────────────────────────────────────────────────────────
+document.getElementById('keywordInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addKeyword();
+});
+
+function addKeyword() {
+  const input = document.getElementById('keywordInput');
+  const val = input.value.trim();
+  if (!val || keywords.includes(val)) { input.value = ''; return; }
+  keywords.push(val);
+  renderChips();
+  input.value = '';
+}
+
+function removeKeyword(kw) {
+  keywords = keywords.filter(k => k !== kw);
+  renderChips();
+}
+
+function renderChips() {
+  const container = document.getElementById('keywordChips');
+  container.innerHTML = keywords.map(kw =>
+    `<div class="keyword-chip">${kw}<span class="chip-remove" onclick="removeKeyword('${kw}')">×</span></div>`
+  ).join('');
+}
+
+// ─── STATS ───────────────────────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('statBlogs').textContent = blogCount;
+  document.getElementById('statWords').textContent = wordTotal >= 1000
+    ? (wordTotal / 1000).toFixed(1) + 'k' : wordTotal;
+}
+
+// ─── LOADING STEPS ───────────────────────────────────────────────────────────
+const steps = [
+  'Analyzing topic & audience…',
+  'Researching SEO keywords…',
+  'Crafting headline & structure…',
+  'Writing full blog content…',
+  'Generating meta tags & slug…',
+  'Finalizing & polishing…'
+];
+
+function animateSteps() {
+  const container = document.getElementById('loadingSteps');
+  container.innerHTML = '';
+  steps.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'loading-step';
+    el.style.animationDelay = `${i * 0.5}s`;
+    el.innerHTML = `<span class="dot"></span>${s}`;
+    container.appendChild(el);
+    setTimeout(() => el.classList.add('active'), i * 500);
+  });
+}
+
+// ─── GENERATE ────────────────────────────────────────────────────────────────
+async function generateBlog() {
+  const topic = document.getElementById('topicInput').value.trim();
+  if (!topic) { showToast('Please enter a blog topic!'); return; }
+
+  const audience = document.getElementById('audienceInput').value.trim() || 'general readers';
+  const context = document.getElementById('contextInput').value.trim();
+  const length = document.getElementById('lengthSelect').value;
+  const tone = document.getElementById('toneSelect').value;
+
+  const wordTarget = length === 'short' ? 600 : length === 'medium' ? 1000 : 1500;
+
+  document.getElementById('loadingOverlay').classList.add('active');
+  document.getElementById('generateBtn').disabled = true;
+  animateSteps();
+
+  const kwList = keywords.length ? keywords.join(', ') : 'relevant industry terms';
+
+  const prompt = `You are an expert SEO blog writer. Write a complete, publish-ready SEO blog post based on:
+
+TOPIC: ${topic}
+TARGET AUDIENCE: ${audience}
+TONE: ${tone}
+WORD COUNT TARGET: ~${wordTarget} words
+TARGET KEYWORDS: ${kwList}
+${context ? `EXTRA CONTEXT: ${context}` : ''}
+
+Return ONLY a valid JSON object (no markdown, no backticks) with this exact structure:
+{
+  "seoTitle": "SEO-optimized H1 title (60-70 chars)",
+  "metaTitle": "Meta title for search engines (55-60 chars)",
+  "metaDescription": "Compelling meta description (150-160 chars)",
+  "urlSlug": "url-friendly-slug-here",
+  "category": "Blog category label",
+  "keywordsUsed": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
+  "seoScore": 87,
+  "body": "Full blog post content in HTML using only: <h2>, <h3>, <p>, <ul>, <ol>, <li>, <strong>, <blockquote> tags",
+  "tips": "2-3 short SEO tips for this post"
+}
+
+Rules for body:
+- Use proper H2/H3 heading structure
+- Include an engaging intro paragraph
+- Use the target keywords naturally throughout
+- Add a conclusion with a call-to-action
+- Write exactly in the specified tone
+- Aim for exactly ${wordTarget} words`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    const raw = data.content.map(i => i.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const blog = JSON.parse(clean);
+
+    lastBlogData = blog;
+    renderBlog(blog, topic);
+
+    // Update stats
+    const wc = countWords(blog.body.replace(/<[^>]+>/g, ''));
+    blogCount++;
+    wordTotal += wc;
+    localStorage.setItem('bf_count', blogCount);
+    localStorage.setItem('bf_words', wordTotal);
+    updateStats();
+
+  } catch (err) {
+    console.error(err);
+    showToast('Error generating blog. Please try again.');
+  } finally {
+    document.getElementById('loadingOverlay').classList.remove('active');
+    document.getElementById('generateBtn').disabled = false;
+  }
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function renderBlog(blog, topic) {
+  document.getElementById('blogSEOTitle').textContent = '✦ SEO Optimized Post';
+  document.getElementById('blogTitle').textContent = blog.seoTitle;
+  document.getElementById('blogDate').textContent = new Date().toLocaleDateString('en-IN', { year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('blogCategory').textContent = blog.category || 'General';
+  document.getElementById('blogContent').innerHTML = blog.body;
+
+  const wc = countWords(blog.body.replace(/<[^>]+>/g, ''));
+  document.getElementById('wordCount').textContent = wc;
+  document.getElementById('readTime').textContent = Math.ceil(wc / 200);
+
+  document.getElementById('metaTitle').textContent = blog.metaTitle;
+  document.getElementById('metaDesc').textContent = blog.metaDescription;
+  document.getElementById('urlSlug').textContent = blog.urlSlug;
+  document.getElementById('seoScore').textContent = blog.seoScore || 88;
+
+  const kwContainer = document.getElementById('seoKeywords');
+  kwContainer.innerHTML = (blog.keywordsUsed || []).map(k =>
+    `<span class="kw-tag">${k}</span>`).join('');
+
+  document.getElementById('seoTips').textContent = blog.tips || '';
+
+  const outputArea = document.getElementById('output-area');
+  outputArea.style.display = 'block';
+  setTimeout(() => outputArea.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+// ─── UTILITIES ───────────────────────────────────────────────────────────────
+function countWords(text) {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function copyText() {
+  if (!lastBlogData) return;
+  const plain = lastBlogData.body.replace(/<[^>]+>/g, '').trim();
+  navigator.clipboard.writeText(`${lastBlogData.seoTitle}\n\n${plain}`);
+  showToast('✓ Plain text copied!');
+}
+
+function copyMarkdown() {
+  if (!lastBlogData) return;
+  let md = lastBlogData.body
+    .replace(/<h2>(.*?)<\/h2>/gi, '\n## $1\n')
+    .replace(/<h3>(.*?)<\/h3>/gi, '\n### $1\n')
+    .replace(/<p>(.*?)<\/p>/gi, '$1\n\n')
+    .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+    .replace(/<blockquote>(.*?)<\/blockquote>/gi, '> $1\n')
+    .replace(/<li>(.*?)<\/li>/gi, '- $1\n')
+    .replace(/<[^>]+>/g, '').trim();
+  navigator.clipboard.writeText(`# ${lastBlogData.seoTitle}\n\n${md}`);
+  showToast('✓ Markdown copied!');
+}
+
+function downloadBlog() {
+  if (!lastBlogData) return;
+  const plain = lastBlogData.body.replace(/<[^>]+>/g, '');
+  const content = [
+    `TITLE: ${lastBlogData.seoTitle}`,
+    `META TITLE: ${lastBlogData.metaTitle}`,
+    `META DESC: ${lastBlogData.metaDescription}`,
+    `URL SLUG: ${lastBlogData.urlSlug}`,
+    `KEYWORDS: ${(lastBlogData.keywordsUsed || []).join(', ')}`,
+    `\n─────────────────────────────────\n`,
+    plain
+  ].join('\n');
+  const blob = new Blob([content], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${lastBlogData.urlSlug || 'blog-post'}.txt`;
+  a.click();
+  showToast('✓ Downloaded!');
+}
+</script>
+</body>
+</html>

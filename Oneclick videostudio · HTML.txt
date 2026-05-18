@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>🎬 One Click Video Studio</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Satoshi:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#05050d;color:#eeeeff;font-family:'Satoshi','Plus Jakarta Sans',sans-serif;min-height:100vh;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:#05050d;}
+::-webkit-scrollbar-thumb{background:#1a1a30;border-radius:2px;}
+
+input,select,textarea{
+  background:rgba(255,255,255,0.05)!important;
+  border:1px solid rgba(255,255,255,0.1)!important;
+  border-radius:12px;color:#eeeeff!important;
+  padding:12px 16px;font-family:'Satoshi',sans-serif;
+  font-size:14px;outline:none;width:100%;transition:all 0.2s;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:rgba(255,100,50,0.6)!important;
+  box-shadow:0 0 0 3px rgba(255,100,50,0.08)!important;
+}
+select option{background:#0d0d1e;color:#eeeeff;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes glow{0%,100%{box-shadow:0 0 30px rgba(255,100,50,0.3)}50%{box-shadow:0 0 60px rgba(255,100,50,0.7)}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes slideRight{from{width:0}to{width:100%}}
+@keyframes pop{0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.big-btn{
+  background:linear-gradient(135deg,#ff6432,#ff9500,#ff6432);
+  background-size:200% 200%;
+  animation:shimmer 3s linear infinite;
+  border:none;border-radius:18px;color:white;
+  font-family:'Satoshi',sans-serif;font-weight:900;
+  cursor:pointer;transition:all 0.3s;letter-spacing:0.3px;
+  position:relative;overflow:hidden;
+}
+.big-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent);
+  opacity:0;transition:opacity 0.2s;
+}
+.big-btn:hover::before{opacity:1;}
+.big-btn:hover:not(:disabled){transform:translateY(-4px) scale(1.02);box-shadow:0 20px 60px rgba(255,100,50,0.5);}
+.big-btn:disabled{animation:none;background:rgba(255,100,50,0.2);cursor:not-allowed;transform:none!important;}
+
+.section-card{
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:18px;overflow:hidden;
+  transition:all 0.3s;
+  animation:fadeUp 0.5s ease both;
+}
+.section-card:hover{border-color:rgba(255,255,255,0.12);}
+
+.section-header{
+  padding:16px 20px;display:flex;align-items:center;gap:12px;
+  cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);
+  transition:background 0.2s;user-select:none;
+}
+.section-header:hover{background:rgba(255,255,255,0.02);}
+
+.progress-track{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin:4px 0;}
+.progress-fill{height:100%;border-radius:3px;transition:width 0.4s ease;}
+
+.tag-pill{
+  display:inline-block;padding:4px 12px;border-radius:20px;
+  font-size:11px;font-weight:700;letter-spacing:0.3px;margin:2px;
+}
+.copy-btn{
+  padding:6px 14px;border-radius:8px;border:1.5px solid;
+  font-size:11px;font-weight:700;cursor:pointer;
+  font-family:'Satoshi',sans-serif;transition:all 0.15s;
+  background:rgba(255,255,255,0.04);color:#888;border-color:rgba(255,255,255,0.1);
+}
+.copy-btn:hover{background:rgba(255,255,255,0.08);color:#ccc;transform:translateY(-1px);}
+.copy-btn.copied{background:rgba(104,211,145,0.12);border-color:rgba(104,211,145,0.35);color:#68d391;}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(16px);}
+.modal-box{background:#0d0d1e;border:1px solid rgba(255,100,50,0.25);border-radius:24px;padding:36px;max-width:460px;width:92%;animation:pop 0.3s ease;}
+
+.stat-box{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;padding:16px;text-align:center;
+}
+.output-text{
+  white-space:pre-wrap;font-family:'JetBrains Mono',monospace;
+  font-size:12px;line-height:1.9;color:#b0b0cc;
+}
+label{display:block;font-size:10px;font-weight:800;color:#383858;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useRef,useEffect,useCallback}=React;
+
+// ── SECTIONS ──────────────────────────────────────────────────────
+const SECTIONS=[
+  {id:"titles",   icon:"🏆", label:"Viral Titles + SEO",      color:"#f6c90e", short:"titles"},
+  {id:"script",   icon:"📝", label:"Full Video Script",        color:"#63b3ed", short:"script"},
+  {id:"hook",     icon:"🎯", label:"10 Power Hooks",           color:"#fc8181", short:"hooks"},
+  {id:"storyboard",icon:"🎬",label:"Scene Storyboard",         color:"#68d391", short:"storyboard"},
+  {id:"voiceover",icon:"🎙️", label:"Voiceover Narration",      color:"#b794f4", short:"voice"},
+  {id:"thumbnail",icon:"🖼️", label:"Thumbnail Concepts",       color:"#76e4f7", short:"thumb"},
+  {id:"chapters", icon:"⏱️", label:"Chapter Timestamps",       color:"#9ae6b4", short:"chapters"},
+  {id:"cta",      icon:"📣", label:"CTA Scripts",              color:"#feb2b2", short:"cta"},
+  {id:"shorts",   icon:"⚡", label:"Shorts / Reels Scripts",   color:"#fbb6ce", short:"shorts"},
+  {id:"repurpose",icon:"♻️", label:"7-Platform Repurpose Kit", color:"#90cdf4", short:"repurpose"},
+  {id:"checklist",icon:"✅", label:"Production Checklist",     color:"#68d391", short:"checklist"},
+  {id:"caption",  icon:"💬", label:"Captions & Subtitles",     color:"#f6ad55", short:"captions"},
+];
+
+const NICHES=["Finance & CA","Tech & AI","Education","Health","Business","Lifestyle","Motivation","Cooking","Travel","Gaming"];
+const DURATIONS=["3 min","5 min","8 min","10 min","15 min","20 min","30 min"];
+const LANGS=["Hinglish","Hindi","English","Tamil","Telugu","Marathi"];
+const TONES=["Educational","Conversational","Motivational","Storytelling","Professional","Funny"];
+
+function buildMegaPrompt({topic,niche,duration,lang,tone,audience,keywords}){
+  return `You are an expert YouTube video producer. Generate a COMPLETE video production package in ${lang} for:
+
+Topic: ${topic}
+Niche: ${niche}
+Duration: ${duration}
+Language: ${lang}
+Tone: ${tone}
+Audience: ${audience||"General Indian viewers"}
+Keywords: ${keywords||"auto-select relevant"}
+
+Generate ALL sections below. Use exact section headers as shown.
+
+---
+## 🏆 SECTION 1: VIRAL TITLES + SEO PACKAGE
+- 8 viral title options (numbered, with emojis, SEO-optimized)
+- Full YouTube Description (400+ words with timestamps placeholder)
+- 25 SEO Tags (comma separated)
+- 5 Trending Hashtags
+- Thumbnail text suggestions (5 options, max 5 words each)
+
+---
+## 📝 SECTION 2: FULL VIDEO SCRIPT
+Complete word-by-word script for ${duration} video.
+Include: [TIMESTAMP] [B-ROLL: description] [PAUSE] markers.
+Sections: Hook → Intro → Main Part 1 → Main Part 2 → Main Part 3 → Case Study → Tips → Outro+CTA
+
+---
+## 🎯 SECTION 3: 10 POWER HOOKS
+10 different hook styles (curiosity/shock/story/question/list/controversy).
+Each: Hook type label + exact 3-sentence hook text + why it works.
+
+---
+## 🎬 SECTION 4: SCENE-BY-SCENE STORYBOARD
+12-15 scenes. Each scene:
+Scene # | Timestamp | VISUAL (what viewer sees) | VOICEOVER (exact words) | ON-SCREEN TEXT | STOCK FOOTAGE KEYWORD | MUSIC MOOD | Duration (sec)
+
+---
+## 🎙️ SECTION 5: VOICEOVER NARRATION SCRIPT
+Complete narration ready for ElevenLabs/Murf.ai.
+Natural spoken language. Add [PAUSE 1s] [PAUSE 2s] [EMPHASIS] [SLOW] [FAST] markers.
+Include [FOOTAGE: keyword] cues throughout.
+
+---
+## 🖼️ SECTION 6: THUMBNAIL CONCEPTS
+5 thumbnail concepts. Each:
+- Concept name
+- Background style + colors
+- Text overlay (max 5 words)
+- Human element / emotion
+- Canva creation tip
+- Why it gets clicks
+
+---
+## ⏱️ SECTION 7: CHAPTER TIMESTAMPS
+YouTube chapters (copy-paste ready format):
+0:00 Intro
+...
+Also: Best clip for Shorts + Best hook moment
+
+---
+## 📣 SECTION 8: CTA SCRIPTS
+15 natural CTAs:
+- 3 Subscribe CTAs
+- 3 Like CTAs  
+- 5 Comment questions (engagement-driving)
+- 2 End screen CTAs
+- 2 Next video CTAs
+
+---
+## ⚡ SECTION 9: SHORTS & REELS SCRIPTS
+3 complete 60-second scripts for YouTube Shorts/Instagram Reels.
+Each: Hook (3 sec) + Body + CTA + Caption + Hashtags
+
+---
+## ♻️ SECTION 10: 7-PLATFORM REPURPOSE KIT
+1. Instagram Reel caption + hook
+2. Twitter/X thread (8 tweets)
+3. LinkedIn post
+4. Pinterest pin description
+5. Blog post H2 outline (8 headings)
+6. WhatsApp status (3 options)
+7. Email newsletter (subject + 150-word body)
+
+---
+## ✅ SECTION 11: PRODUCTION CHECKLIST
+Pre-Production checklist (10 items)
+Production Day checklist (10 items)
+Post-Production / Editing checklist (10 items)
+Upload & Publish checklist (8 items)
+Free tools list with links
+
+---
+## 💬 SECTION 12: CAPTIONS & SUBTITLES
+- Opening caption (first 5 seconds on-screen text)
+- 10 key on-screen text overlays for main points
+- End screen text layout
+- Lower third suggestions (name/title bars)
+- 5 motivational quote overlays for engagement`;
+}
+
+// ── API STREAM ─────────────────────────────────────────────────────
+async function streamAPI(apiKey,prompt,onChunk,onDone,onError){
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:8000,stream:true,messages:[{role:"user",content:prompt}]}),
+    });
+    if(!res.ok){const e=await res.json();throw new Error(e.error?.message||"API Error");}
+    const reader=res.body.getReader();const dec=new TextDecoder();
+    while(true){
+      const{done,value}=await reader.read();if(done)break;
+      for(const line of dec.decode(value).split("\n")){
+        if(line.startsWith("data: ")){
+          try{const d=JSON.parse(line.slice(6));if(d.type==="content_block_delta"&&d.delta?.text)onChunk(d.delta.text);}catch{}
+        }
+      }
+    }
+    onDone();
+  }catch(e){onError(e.message);}
+}
+
+// ── MODAL ──────────────────────────────────────────────────────────
+function ApiModal({onSave}){
+  const[k,setK]=useState("");
+  return(
+    <div className="modal-bg">
+      <div className="modal-box">
+        <div style={{textAlign:"center",marginBottom:24}}>
+          <div style={{fontSize:56,animation:"float 3s ease infinite"}}>🔑</div>
+          <div style={{fontSize:24,fontWeight:900,marginTop:8,letterSpacing:"-0.5px"}}>API Key Setup</div>
+          <div style={{fontSize:13,color:"#555",marginTop:8,lineHeight:1.8}}>
+            एक बार set करें — हमेशा के लिए काम करेगा<br/>
+            <a href="https://console.anthropic.com" target="_blank" style={{color:"#ff6432",textDecoration:"none",fontWeight:700}}>console.anthropic.com</a> → Sign Up → API Keys → Create
+          </div>
+        </div>
+        <label>ANTHROPIC API KEY</label>
+        <input type="password" placeholder="sk-ant-api03-xxxxxxxxxxxx" value={k} onChange={e=>setK(e.target.value)} onKeyDown={e=>e.key==="Enter"&&k.startsWith("sk-")&&(localStorage.setItem("ocvs_key",k),onSave(k))} style={{marginBottom:16,fontSize:15}}/>
+        <button onClick={()=>{if(k.trim()){localStorage.setItem("ocvs_key",k.trim());onSave(k.trim());}}}
+          style={{width:"100%",padding:"15px",background:"linear-gradient(135deg,#ff6432,#ff9500)",border:"none",borderRadius:14,color:"white",fontWeight:900,fontSize:16,cursor:"pointer",fontFamily:"'Satoshi',sans-serif",opacity:k.trim()?1:0.5,transition:"all 0.2s"}}>
+          🚀 Start Creating — Free!
+        </button>
+        <div style={{marginTop:16,padding:"12px",background:"rgba(246,201,14,0.06)",border:"1px solid rgba(246,201,14,0.15)",borderRadius:10,fontSize:11,color:"#888",lineHeight:1.7}}>
+          💡 New account पर <strong style={{color:"#f6c90e"}}>$5 free credits</strong> मिलते हैं।<br/>
+          इससे <strong style={{color:"#f6c90e"}}>100+ packages</strong> बन सकते हैं।<br/>
+          Key सिर्फ आपके browser में save होती है।
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── SECTION CARD ───────────────────────────────────────────────────
+function SectionCard({section,content,index,isGenerating,currentSection}){
+  const[open,setOpen]=useState(true);
+  const[copied,setCopied]=useState(false);
+  const isActive=currentSection===section.id&&isGenerating;
+  const hasContent=content&&content.length>0;
+  const words=hasContent?content.split(/\s+/).filter(Boolean).length:0;
+
+  const copy=()=>{
+    navigator.clipboard.writeText(content||"");
+    setCopied(true);setTimeout(()=>setCopied(false),2000);
+  };
+  const dl=()=>{
+    const b=new Blob([content||""],{type:"text/plain;charset=utf-8"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(b);
+    a.download=`${section.short}.txt`;a.click();
+  };
+
+  return(
+    <div className="section-card" style={{animationDelay:`${index*0.05}s`,border:isActive?`1px solid ${section.color}55`:"1px solid rgba(255,255,255,0.07)"}}>
+      <div className="section-header" onClick={()=>setOpen(o=>!o)}
+        style={{background:isActive?`${section.color}08`:"transparent"}}>
+        <div style={{width:38,height:38,borderRadius:11,background:`${section.color}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>
+          {isActive?<span style={{animation:"spin 1s linear infinite",display:"inline-block",fontSize:16}}>⚙️</span>:section.icon}
+        </div>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:800,fontSize:14,color:isActive?section.color:hasContent?"#ddd":"#555"}}>
+            {section.label}
+            {isActive&&<span style={{fontSize:10,color:section.color,marginLeft:8,animation:"pulse 1s infinite"}}>● Writing...</span>}
+            {!isActive&&!hasContent&&<span style={{fontSize:10,color:"#333",marginLeft:8}}>● Pending</span>}
+            {!isActive&&hasContent&&<span style={{fontSize:10,color:"#3a5a3a",marginLeft:8}}>✓ Done</span>}
+          </div>
+          {hasContent&&<div style={{fontSize:10,color:"#444",marginTop:2}}>{words} words generated</div>}
+        </div>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          {hasContent&&<>
+            <button className={`copy-btn ${copied?"copied":""}`} onClick={e=>{e.stopPropagation();copy();}}>
+              {copied?"✅":"📋"} {copied?"Copied!":"Copy"}
+            </button>
+            <button className="copy-btn" onClick={e=>{e.stopPropagation();dl();}} style={{color:"#888"}}>⬇️</button>
+          </>}
+          <span style={{color:"#333",fontSize:12,transform:open?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+        </div>
+      </div>
+
+      {open&&(
+        <div style={{padding:"16px 20px",maxHeight:400,overflowY:"auto"}}>
+          {isActive&&!hasContent&&(
+            <div style={{display:"flex",gap:12,alignItems:"center",padding:"20px 0",opacity:0.5}}>
+              <div style={{width:16,height:16,border:`2px solid ${section.color}`,borderTopColor:"transparent",borderRadius:"50%",animation:"spin 0.8s linear infinite",flexShrink:0}}/>
+              <span style={{fontSize:13,color:"#666"}}>AI लिख रहा है...</span>
+            </div>
+          )}
+          {hasContent&&(
+            <div className="output-text">{content}{isActive&&<span style={{color:section.color,animation:"pulse 0.8s infinite"}}>▌</span>}</div>
+          )}
+          {!hasContent&&!isActive&&(
+            <div style={{padding:"20px 0",textAlign:"center",opacity:0.3}}>
+              <div style={{fontSize:32,marginBottom:8}}>{section.icon}</div>
+              <div style={{fontSize:12,color:"#555"}}>Generate करने के बाद यहाँ दिखेगा</div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── MAIN APP ───────────────────────────────────────────────────────
+function App(){
+  const[apiKey,setApiKey]=useState(()=>localStorage.getItem("ocvs_key")||"");
+  const[showModal,setShowModal]=useState(false);
+  const[topic,setTopic]=useState("");
+  const[niche,setNiche]=useState("Finance & CA");
+  const[duration,setDuration]=useState("10 min");
+  const[lang,setLang]=useState("Hinglish");
+  const[tone,setTone]=useState("Educational");
+  const[audience,setAudience]=useState("");
+  const[keywords,setKeywords]=useState("");
+  const[sections,setSections]=useState({});
+  const[generating,setGenerating]=useState(false);
+  const[currentSec,setCurrentSec]=useState("");
+  const[progress,setProgress]=useState(0);
+  const[done,setDone]=useState(false);
+  const[error,setError]=useState("");
+  const[totalWords,setTotalWords]=useState(0);
+  const outputRef=useRef(null);
+
+  const updateSection=(id,text)=>{
+    setSections(s=>({...s,[id]:(s[id]||"")+text}));
+  };
+
+  const parseSections=(fullText)=>{
+    const map={
+      "SECTION 1":"titles","SECTION 2":"script","SECTION 3":"hook",
+      "SECTION 4":"storyboard","SECTION 5":"voiceover","SECTION 6":"thumbnail",
+      "SECTION 7":"chapters","SECTION 8":"cta","SECTION 9":"shorts",
+      "SECTION 10":"repurpose","SECTION 11":"checklist","SECTION 12":"caption",
+    };
+    const result={};
+    let currentId=null;let currentText="";
+    const lines=fullText.split("\n");
+    for(const line of lines){
+      let matched=false;
+      for(const[key,id] of Object.entries(map)){
+        if(line.includes(key)&&line.includes("##")){
+          if(currentId)result[currentId]=(result[currentId]||"")+currentText.trim();
+          currentId=id;currentText="";matched=true;break;
+        }
+      }
+      if(!matched&&currentId)currentText+=line+"\n";
+    }
+    if(currentId)result[currentId]=(result[currentId]||"")+currentText.trim();
+    return result;
+  };
+
+  const handleGenerate=async()=>{
+    if(!topic.trim()){alert("Topic ज़रूरी है!");return;}
+    if(!apiKey){setShowModal(true);return;}
+    setGenerating(true);setDone(false);setError("");
+    setSections({});setProgress(0);setCurrentSec("");setTotalWords(0);
+
+    const prompt=buildMegaPrompt({topic,niche,duration,lang,tone,audience,keywords});
+    let fullText="";
+    let charCount=0;
+
+    // Determine current section from streaming text
+    const sectionMarkers=[
+      {marker:"SECTION 1",id:"titles"},{marker:"SECTION 2",id:"script"},
+      {marker:"SECTION 3",id:"hook"},{marker:"SECTION 4",id:"storyboard"},
+      {marker:"SECTION 5",id:"voiceover"},{marker:"SECTION 6",id:"thumbnail"},
+      {marker:"SECTION 7",id:"chapters"},{marker:"SECTION 8",id:"cta"},
+      {marker:"SECTION 9",id:"shorts"},{marker:"SECTION 10",id:"repurpose"},
+      {marker:"SECTION 11",id:"checklist"},{marker:"SECTION 12",id:"caption"},
+    ];
+
+    streamAPI(
+      apiKey,prompt,
+      (chunk)=>{
+        fullText+=chunk;charCount+=chunk.length;
+        // Detect current section
+        for(const{marker,id} of sectionMarkers){
+          if(fullText.includes(marker))setCurrentSec(id);
+        }
+        // Update progress (~40000 chars total estimated)
+        setProgress(Math.min(Math.round((charCount/38000)*100),97));
+        // Parse and update sections live
+        const parsed=parseSections(fullText);
+        setSections(parsed);
+        // Word count
+        setTotalWords(fullText.split(/\s+/).filter(Boolean).length);
+      },
+      ()=>{
+        setProgress(100);setCurrentSec("");setGenerating(false);setDone(true);
+        const parsed=parseSections(fullText);setSections(parsed);
+        setTotalWords(fullText.split(/\s+/).filter(Boolean).length);
+      },
+      (err)=>{setError(err);setGenerating(false);}
+    );
+  };
+
+  const downloadAll=()=>{
+    let all=`🎬 VIDEO PRODUCTION PACKAGE\nTopic: ${topic}\nGenerated: ${new Date().toLocaleString('hi-IN')}\n\n`;
+    SECTIONS.forEach(s=>{if(sections[s.id])all+=`\n${"=".repeat(60)}\n${s.icon} ${s.label.toUpperCase()}\n${"=".repeat(60)}\n${sections[s.id]}\n`;});
+    const b=new Blob([all],{type:"text/plain;charset=utf-8"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(b);
+    a.download=`VideoPackage_${topic.slice(0,25).replace(/\s/g,"_")}.txt`;a.click();
+  };
+
+  const completedCount=SECTIONS.filter(s=>sections[s.id]&&sections[s.id].length>100).length;
+
+  return(
+    <div style={{minHeight:"100vh"}}>
+      {showModal&&<ApiModal onSave={k=>{setApiKey(k);setShowModal(false);handleGenerate();}}/>}
+
+      {/* HERO HEADER */}
+      <div style={{background:"linear-gradient(180deg,#0d0d1e 0%,#05050d 100%)",borderBottom:"1px solid rgba(255,255,255,0.05)",padding:"28px 24px 24px"}}>
+        <div style={{maxWidth:900,margin:"0 auto"}}>
+
+          {/* Title */}
+          <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:24}}>
+            <div style={{width:52,height:52,background:"linear-gradient(135deg,#ff6432,#ff9500)",borderRadius:16,display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,animation:"float 3s ease infinite",flexShrink:0}}>🎬</div>
+            <div>
+              <div style={{fontSize:26,fontWeight:900,letterSpacing:"-0.5px",lineHeight:1.1}}>One Click Video Studio</div>
+              <div style={{fontSize:12,color:"#555",marginTop:3,letterSpacing:"0.5px"}}>Topic डालो → एक click → 12 sections में पूरा package तैयार</div>
+            </div>
+            <div style={{marginLeft:"auto",display:"flex",gap:8}}>
+              {done&&<button onClick={downloadAll} style={{padding:"10px 20px",background:"linear-gradient(135deg,#68d391,#38a169)",border:"none",borderRadius:11,color:"white",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Satoshi',sans-serif"}}>⬇️ Download All</button>}
+              <button onClick={()=>setShowModal(true)} style={{padding:"9px 18px",background:apiKey?"rgba(99,179,237,0.1)":"rgba(255,100,50,0.15)",border:`1.5px solid ${apiKey?"rgba(99,179,237,0.3)":"rgba(255,100,50,0.4)"}`,borderRadius:11,color:apiKey?"#63b3ed":"#ff6432",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Satoshi',sans-serif"}}>
+                {apiKey?"🔑 Key Set ✓":"🔑 API Key"}
+              </button>
+            </div>
+          </div>
+
+          {/* INPUT FORM */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:10}}>
+            <div style={{gridColumn:"1/-1"}}>
+              <label>Video Topic *</label>
+              <input
+                placeholder="e.g. GST filing mistakes जो small business करते हैं — या — 5 ways to grow YouTube channel fast"
+                value={topic}
+                onChange={e=>setTopic(e.target.value)}
+                onKeyDown={e=>e.key==="Enter"&&!generating&&handleGenerate()}
+                style={{fontSize:15,padding:"14px 18px"}}
+              />
+            </div>
+            <div>
+              <label>Niche</label>
+              <select value={niche} onChange={e=>setNiche(e.target.value)}>
+                {NICHES.map(n=><option key={n}>{n}</option>)}
+              </select>
+            </div>
+            <div>
+              <label>Duration</label>
+              <select value={duration} onChange={e=>setDuration(e.target.value)}>
+                {DURATIONS.map(d=><option key={d}>{d}</option>)}
+              </select>
+            </div>
+            <div>
+              <label>Language</label>
+              <select value={lang} onChange={e=>setLang(e.target.value)}>
+                {LANGS.map(l=><option key={l}>{l}</option>)}
+              </select>
+            </div>
+            <div>
+              <label>Tone</label>
+              <select value={tone} onChange={e=>setTone(e.target.value)}>
+                {TONES.map(t=><option key={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <label>Target Audience</label>
+              <input placeholder="e.g. Small business owners" value={audience} onChange={e=>setAudience(e.target.value)}/>
+            </div>
+            <div>
+              <label>SEO Keywords</label>
+              <input placeholder="e.g. GST, tax filing, 2025" value={keywords} onChange={e=>setKeywords(e.target.value)}/>
+            </div>
+          </div>
+
+          {/* BIG GENERATE BUTTON */}
+          <button className="big-btn" onClick={handleGenerate} disabled={generating||!topic.trim()}
+            style={{width:"100%",padding:"18px",fontSize:18}}>
+            {generating?(
+              <span style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12}}>
+                <span style={{width:20,height:20,border:"3px solid white",borderTopColor:"transparent",borderRadius:"50%",display:"inline-block",animation:"spin 0.7s linear infinite"}}/>
+                Package बन रहा है... {progress}% ({completedCount}/12 sections)
+              </span>
+            ):"🚀 ONE CLICK — पूरा Package Generate करो"}
+          </button>
+
+          {/* PROGRESS BAR */}
+          {generating&&(
+            <div style={{marginTop:12}}>
+              <div className="progress-track">
+                <div className="progress-fill" style={{width:`${progress}%`,background:"linear-gradient(90deg,#ff6432,#ff9500,#f6c90e)"}}/>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",marginTop:6,fontSize:11}}>
+                <span style={{color:"#ff6432",animation:"pulse 1.5s infinite"}}>
+                  {currentSec&&SECTIONS.find(s=>s.id===currentSec)?`${SECTIONS.find(s=>s.id===currentSec).icon} ${SECTIONS.find(s=>s.id===currentSec).label} लिख रहे हैं...`:"शुरू हो रहा है..."}
+                </span>
+                <span style={{color:"#444"}}>{totalWords.toLocaleString()} words generated</span>
+              </div>
+              {/* Section Pills */}
+              <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:10}}>
+                {SECTIONS.map(s=>{
+                  const isDone=sections[s.id]&&sections[s.id].length>100;
+                  const isActive=currentSec===s.id;
+                  return(
+                    <span key={s.id} className="tag-pill" style={{
+                      background:isDone?`${s.color}20`:isActive?`${s.color}12`:"rgba(255,255,255,0.03)",
+                      border:`1px solid ${isDone?s.color+"55":isActive?s.color+"33":"rgba(255,255,255,0.06)"}`,
+                      color:isDone?s.color:isActive?s.color+"aa":"#333",
+                      animation:isActive?"pulse 1s infinite":"none",
+                    }}>
+                      {isDone?"✓ ":isActive?"⚡ ":""}{s.short}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* DONE STATS */}
+          {done&&(
+            <div style={{marginTop:14,display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,animation:"fadeUp 0.4s ease"}}>
+              {[
+                ["📦","12 Sections","Complete Package"],
+                ["📝",`${totalWords.toLocaleString()}`,"Total Words"],
+                ["⚡","Instant","Ready to Use"],
+                ["💾","Download","All as .txt"],
+              ].map(([icon,val,label])=>(
+                <div key={label} className="stat-box">
+                  <div style={{fontSize:20,marginBottom:4}}>{icon}</div>
+                  <div style={{fontSize:18,fontWeight:900,color:"#ff6432"}}>{val}</div>
+                  <div style={{fontSize:10,color:"#444",marginTop:2}}>{label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {error&&<div style={{marginTop:12,padding:"12px 16px",background:"rgba(252,129,129,0.08)",border:"1px solid rgba(252,129,129,0.2)",borderRadius:10,fontSize:12,color:"#fc8181"}}>❌ {error}</div>}
+        </div>
+      </div>
+
+      {/* SECTIONS OUTPUT */}
+      <div style={{maxWidth:900,margin:"0 auto",padding:"24px"}}>
+        {(generating||done)&&(
+          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            {SECTIONS.map((s,i)=>(
+              <SectionCard
+                key={s.id}
+                section={s}
+                content={sections[s.id]||""}
+                index={i}
+                isGenerating={generating}
+                currentSection={currentSec}
+              />
+            ))}
+          </div>
+        )}
+
+        {!generating&&!done&&(
+          <div style={{textAlign:"center",padding:"60px 20px",opacity:0.4}}>
+            <div style={{fontSize:80,marginBottom:16,animation:"float 3s ease infinite"}}>🎬</div>
+            <div style={{fontSize:22,fontWeight:900,color:"#666",marginBottom:8}}>Ready to Create!</div>
+            <div style={{fontSize:14,color:"#444",marginBottom:24}}>Topic डालें और One Click में 12 sections का पूरा package पाएं</div>
+            <div style={{display:"flex",justifyContent:"center",flexWrap:"wrap",gap:8}}>
+              {SECTIONS.map(s=>(
+                <span key={s.id} style={{fontSize:12,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",padding:"5px 12px",borderRadius:20,color:"#444"}}>
+                  {s.icon} {s.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

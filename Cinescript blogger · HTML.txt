@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineScript AI | Professional Video Scripting</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; color: #0f172a; padding: 20px 16px; }
+  .wrap { max-width: 960px; margin: 0 auto; }
+
+  /* HEADER */
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; flex-wrap: wrap; gap: 12px; }
+  .logo { font-size: 20px; font-weight: 800; color: #4f46e5; display: flex; align-items: center; gap: 8px; }
+  .studio-badge { background: #0f172a; color: #fbbf24; font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 20px; }
+
+  /* API ROW */
+  .api-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px 20px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .api-card label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
+  .api-card input { flex: 1; min-width: 200px; padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 12px; font-family: inherit; outline: none; color: #334155; }
+  .api-card input:focus { border-color: #4f46e5; }
+  .api-link { font-size: 11px; color: #4f46e5; text-decoration: none; white-space: nowrap; }
+  .api-link:hover { text-decoration: underline; }
+  .api-status { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 8px; white-space: nowrap; }
+  .api-status.demo { background: #fffbeb; color: #b45309; }
+  .api-status.live { background: #f0fdf4; color: #15803d; }
+
+  /* MAIN GRID */
+  .grid { display: flex; gap: 18px; align-items: flex-start; }
+  .form-col { flex: 0 0 280px; }
+  .output-col { flex: 1; min-width: 0; }
+
+  /* FORM CARD */
+  .form-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 22px; position: sticky; top: 16px; }
+  .form-card h3 { font-size: 11px; font-weight: 800; color: #4f46e5; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 18px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+    font-size: 13px; font-family: inherit; color: #334155; background: #f8fafc;
+    outline: none; transition: border-color 0.2s; appearance: none; -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: #4f46e5; background: #fff; }
+  .field textarea { resize: vertical; min-height: 70px; }
+
+  .gen-btn { width: 100%; padding: 14px; background: #4f46e5; color: #fff; border: none; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s, transform 0.15s; margin-top: 6px; }
+  .gen-btn:hover:not(:disabled) { background: #4338ca; transform: translateY(-2px); }
+  .gen-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+
+  .copy-btn { width: 100%; padding: 10px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; margin-top: 10px; transition: background 0.15s; }
+  .copy-btn:hover { background: #e2e8f0; }
+
+  /* OUTPUT */
+  .output-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 28px; min-height: 500px; }
+  .output-empty { text-align: center; padding: 80px 20px; color: #cbd5e1; }
+  .output-empty div { font-size: 48px; margin-bottom: 14px; }
+  .output-empty p  { font-size: 14px; line-height: 1.7; }
+
+  /* SCRIPT TITLE */
+  .script-title { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e2e8f0; }
+  .script-title h2 { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+  .script-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+  .meta-tag { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+  .meta-tag.blue  { background: #eff0fe; color: #4f46e5; }
+  .meta-tag.green { background: #f0fdf4; color: #15803d; }
+  .meta-tag.amber { background: #fffbeb; color: #b45309; }
+
+  /* SCENE BLOCKS */
+  .scene-block { margin-bottom: 24px; padding: 18px; background: #f8fafc; border-radius: 14px; border-left: 3px solid #4f46e5; }
+  .scene-header { font-family: 'Courier New', monospace; color: #4f46e5; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .visual-desc { color: #64748b; font-style: italic; font-size: 13px; margin-bottom: 10px; padding-left: 12px; border-left: 2px solid #c7d2fe; line-height: 1.6; }
+  .dialogue { color: #0f172a; font-size: 14px; line-height: 1.7; font-weight: 500; }
+
+  /* LOADING */
+  .loading { text-align: center; padding: 60px 20px; }
+  .loading-icon { font-size: 36px; animation: bounce 1s infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+  .loading p { color: #64748b; font-size: 13px; margin-top: 14px; }
+
+  /* RAW AI OUTPUT */
+  .raw-output { white-space: pre-wrap; font-size: 14px; line-height: 1.8; color: #334155; font-family: 'Courier New', monospace; }
+
+  /* SPIN */
+  .spin { display: inline-block; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 640px) {
+    .grid { flex-direction: column; }
+    .form-col { flex: 0 0 auto; width: 100%; position: static; }
+    .form-card { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">🎬 CineScript AI</div>
+    <div class="studio-badge">🎥 Studio Pass Active</div>
+  </div>
+
+  <!-- API KEY -->
+  <div class="api-card">
+    <label>Anthropic API Key</label>
+    <input type="password" id="apiKey" placeholder="sk-ant-... (Paste your Anthropic API Key)">
+    <span class="api-status demo" id="apiStatus">Demo Mode</span>
+    <a class="api-link" href="https://console.anthropic.com" target="_blank">Get Free Key →</a>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid">
+
+    <!-- FORM -->
+    <div class="form-col">
+      <div class="form-card">
+        <h3>🎞️ Script Parameters</h3>
+
+        <div class="field">
+          <label>Video Topic / Title</label>
+          <input type="text" id="topic" placeholder="e.g. Benefits of GST Filing">
+        </div>
+
+        <div class="field">
+          <label>Target Platform</label>
+          <select id="platform">
+            <option value="YouTube (16:9 landscape)">📺 YouTube (16:9)</option>
+            <option value="TikTok / Instagram Reels (9:16 vertical)">📱 TikTok / Reels (9:16)</option>
+            <option value="LinkedIn Professional Ad">💼 LinkedIn Ad</option>
+            <option value="Facebook Video Ad">📘 Facebook Video</option>
+            <option value="Website Explainer Video">🌐 Website Explainer</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Video Tone</label>
+          <select id="tone">
+            <option value="Energetic and fast-paced">⚡ Energetic &amp; Fast</option>
+            <option value="Professional and calm">🎩 Professional &amp; Calm</option>
+            <option value="Cinematic and narrative">🎭 Cinematic &amp; Narrative</option>
+            <option value="Educational and friendly">📚 Educational &amp; Friendly</option>
+            <option value="Humorous and casual">😄 Humorous &amp; Casual</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Target Audience</label>
+          <input type="text" id="audience" placeholder="e.g. Small business owners in India">
+        </div>
+
+        <div class="field">
+          <label>Duration (seconds)</label>
+          <input type="number" id="duration" value="60" min="15" max="600">
+        </div>
+
+        <div class="field">
+          <label>Key Message / CTA</label>
+          <textarea id="keyMessage" placeholder="e.g. Download our free GST guide at the end"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Language</label>
+          <select id="lang">
+            <option value="English">🇬🇧 English</option>
+            <option value="Hindi">🇮🇳 Hindi</option>
+            <option value="Hinglish (mix of Hindi and English)">🇮🇳 Hinglish</option>
+          </select>
+        </div>
+
+        <button class="gen-btn" id="genBtn" onclick="generateScript()">
+          ✨ Generate Script
+        </button>
+        <button class="copy-btn" id="copyBtn" onclick="copyScript()" style="display:none">
+          📋 Copy Full Script
+        </button>
+      </div>
+    </div>
+
+    <!-- OUTPUT -->
+    <div class="output-col">
+      <div class="output-card" id="outputCard">
+        <div class="output-empty" id="emptyState">
+          <div>🎬</div>
+          <p>Fill in the parameters on the left<br>and click <strong>Generate Script</strong><br>to create a production-ready video script.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Sample mock script for demo mode
+  function getMockScript(topic, platform, tone, duration) {
+    var scenes = Math.max(3, Math.round(duration / 15));
+    var sceneTime = Math.round(duration / scenes);
+    return [
+      {
+        header: 'SCENE 1: THE HOOK [00:00 – 00:' + String(sceneTime).padStart(2,'0') + ']',
+        visual: 'High-energy opening shot. Quick cuts, vibrant visuals. Platform: ' + platform + '.',
+        dialogue: '"Are you leaving money on the table every single month? Most people don\'t even realise it — until it\'s too late."'
+      },
+      {
+        header: 'SCENE 2: THE PROBLEM [00:' + String(sceneTime).padStart(2,'0') + ' – 00:' + String(sceneTime*2).padStart(2,'0') + ']',
+        visual: 'Split screen: stressed person vs. relaxed professional. ' + tone + ' mood.',
+        dialogue: '"The truth about ' + topic + ' is that most people are doing it wrong. Without the right approach, you\'re losing time, money, and opportunity every day."'
+      },
+      {
+        header: 'SCENE 3: THE SOLUTION [00:' + String(sceneTime*2).padStart(2,'0') + ' – 00:' + String(sceneTime*3).padStart(2,'0') + ']',
+        visual: 'Text overlays with 3 key points pop on screen. Background music builds.',
+        dialogue: '"Here\'s what works: First, understand the fundamentals. Second, apply a proven system. Third, track your results. That\'s the ' + topic + ' formula that actually delivers."'
+      },
+      {
+        header: 'SCENE 4: CALL TO ACTION [00:' + String(duration - sceneTime).padStart(2,'0') + ' – 00:' + String(duration).padStart(2,'0') + ']',
+        visual: 'Host on camera, confident smile. Logo and CTA button appears on screen.',
+        dialogue: '"Ready to master ' + topic + '? Click the link below and get started today. Don\'t wait — the best time to act is right now."'
+      }
+    ];
+  }
+
+  function buildScriptHTML(topic, platform, tone, lang, scenes) {
+    var html = '<div class="script-title">'
+      + '<h2>' + escHtml(topic) + '</h2>'
+      + '<div class="script-meta">'
+      + '<span class="meta-tag blue">' + escHtml(platform) + '</span>'
+      + '<span class="meta-tag green">' + escHtml(tone) + '</span>'
+      + '<span class="meta-tag amber">' + escHtml(lang) + '</span>'
+      + '</div></div>';
+
+    scenes.forEach(function(s) {
+      html += '<div class="scene-block">'
+        + '<div class="scene-header">' + escHtml(s.header) + '</div>'
+        + '<div class="visual-desc">📷 ' + escHtml(s.visual) + '</div>'
+        + '<div class="dialogue">🎙️ ' + escHtml(s.dialogue) + '</div>'
+        + '</div>';
+    });
+    return html;
+  }
+
+  function generateScript() {
+    var topic      = document.getElementById('topic').value.trim();
+    var platform   = document.getElementById('platform').value;
+    var tone       = document.getElementById('tone').value;
+    var audience   = document.getElementById('audience').value.trim();
+    var duration   = parseInt(document.getElementById('duration').value) || 60;
+    var keyMsg     = document.getElementById('keyMessage').value.trim();
+    var lang       = document.getElementById('lang').value;
+    var apiKey     = document.getElementById('apiKey').value.trim();
+    var outputCard = document.getElementById('outputCard');
+    var genBtn     = document.getElementById('genBtn');
+    var copyBtn    = document.getElementById('copyBtn');
+
+    if (!topic) { alert('Please enter a video topic!'); return; }
+
+    // Loading state
+    outputCard.innerHTML = '<div class="loading"><div class="loading-icon">🎬</div><p>CineScript AI is composing your scenes...</p></div>';
+    genBtn.disabled = true;
+    genBtn.innerHTML = '<span class="spin">⏳</span> Generating...';
+    copyBtn.style.display = 'none';
+
+    if (!apiKey || !apiKey.startsWith('sk-ant-')) {
+      // Demo mode
+      setTimeout(function() {
+        var scenes = getMockScript(topic, platform, tone, duration);
+        outputCard.innerHTML = buildScriptHTML(topic, platform, tone, lang, scenes);
+        finishGen(false);
+      }, 1600);
+      return;
+    }
+
+    // Build prompt
+    var prompt = 'You are a professional video scriptwriter. Write a complete, production-ready video script with the following parameters:\n\n'
+      + '- Topic: ' + topic + '\n'
+      + '- Platform: ' + platform + '\n'
+      + '- Tone: ' + tone + '\n'
+      + '- Target Audience: ' + (audience || 'General audience') + '\n'
+      + '- Duration: ' + duration + ' seconds\n'
+      + '- Key Message / CTA: ' + (keyMsg || 'Engage the viewer') + '\n'
+      + '- Language: ' + lang + '\n\n'
+      + 'Format each scene exactly like this:\n'
+      + 'SCENE [N]: [SCENE NAME] [[TIMECODE]]\n'
+      + 'VISUAL: [Camera direction and visual description]\n'
+      + 'DIALOGUE: "[Spoken words]"\n\n'
+      + 'Write ' + Math.max(3, Math.round(duration/15)) + ' scenes. Be specific, creative, and actionable.';
+
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data.content && data.content[0]) {
+        var raw = data.content[0].text || '';
+        // Parse scenes from raw text
+        var scenes = parseScenes(raw);
+        if (scenes.length > 0) {
+          outputCard.innerHTML = buildScriptHTML(topic, platform, tone, lang, scenes);
+        } else {
+          // Fallback: show raw output in readable format
+          outputCard.innerHTML =
+            '<div class="script-title"><h2>' + escHtml(topic) + '</h2>'
+            + '<div class="script-meta"><span class="meta-tag blue">' + escHtml(platform) + '</span>'
+            + '<span class="meta-tag green">' + escHtml(lang) + '</span></div></div>'
+            + '<div class="raw-output">' + escHtml(raw) + '</div>';
+        }
+        document.getElementById('apiStatus').className = 'api-status live';
+        document.getElementById('apiStatus').innerText = '✅ Live AI';
+        finishGen(true);
+      } else {
+        outputCard.innerHTML = '<div class="output-empty"><div>⚠️</div><p>' + (data.error ? data.error.message : 'API error. Try again.') + '</p></div>';
+        finishGen(false);
+      }
+    })
+    .catch(function() {
+      outputCard.innerHTML = '<div class="output-empty"><div>❌</div><p>Network error. Check API key.</p></div>';
+      finishGen(false);
+    });
+  }
+
+  function parseScenes(text) {
+    var scenes = [];
+    var blocks = text.split(/SCENE\s+\d+/i).filter(function(b){ return b.trim(); });
+    blocks.forEach(function(block, i) {
+      var headerMatch = block.match(/^[:\s]*([^\n]+)/);
+      var visualMatch = block.match(/VISUAL[:\s]+([^\n]+(?:\n(?!DIALOGUE)[^\n]+)*)/i);
+      var dialogueMatch = block.match(/DIALOGUE[:\s]+"?([^"]+)"?/i);
+      if (dialogueMatch || visualMatch) {
+        scenes.push({
+          header: 'SCENE ' + (i+1) + ': ' + (headerMatch ? headerMatch[1].trim() : 'Scene ' + (i+1)),
+          visual: visualMatch  ? visualMatch[1].trim()  : 'Visual direction not specified.',
+          dialogue: dialogueMatch ? dialogueMatch[1].trim() : block.trim().substring(0, 200)
+        });
+      }
+    });
+    return scenes;
+  }
+
+  function finishGen(success) {
+    var genBtn = document.getElementById('genBtn');
+    genBtn.disabled = false;
+    genBtn.innerHTML = '✨ Generate Script';
+    document.getElementById('copyBtn').style.display = 'block';
+    document.getElementById('emptyState') && (document.getElementById('emptyState').style.display = 'none');
+  }
+
+  function copyScript() {
+    var content = document.getElementById('outputCard').innerText;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(content).then(function(){ alert('Script copied! ✅'); });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = content; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      alert('Script copied! ✅');
+    }
+  }
+
+  function escHtml(t) {
+    return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>

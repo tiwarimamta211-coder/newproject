@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capital Structure & WACC Analyzer - Pro Suite</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; padding: 16px; }
+  .wrap { max-width: 960px; margin: 0 auto; }
+
+  /* HEADER */
+  .header { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .logo { font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+  .logo span { font-size: 22px; }
+  .print-btn { background: #4f46e5; color: #fff; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 14px; font-family: inherit; }
+  .print-btn:hover { background: #4338ca; }
+
+  /* LAYOUT */
+  .grid { display: flex; gap: 20px; flex-wrap: wrap; }
+  .sidebar { flex: 0 0 300px; display: flex; flex-direction: column; gap: 16px; }
+  .main { flex: 1; min-width: 280px; }
+
+  /* CARDS */
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; }
+  .card-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; }
+  .card-title.indigo { color: #4f46e5; }
+  .card-title.rose   { color: #f43f5e; }
+
+  /* INPUTS */
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px; }
+  .field input { width: 100%; padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-weight: 600; outline: none; font-family: inherit; transition: border 0.2s; }
+  .field input:focus { border-color: #4f46e5; }
+
+  /* RESULT PANEL */
+  .result-panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; overflow: hidden; }
+
+  /* DARK HEADER */
+  .result-header { background: #0f172a; color: #fff; padding: 28px; }
+  .rh-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+  .rh-top h2 { font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; }
+  .rh-top .sub { color: #94a3b8; font-size: 13px; margin-top: 4px; }
+  .total-label { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; text-align: right; }
+  .total-amount { font-size: 28px; font-weight: 900; color: #818cf8; text-align: right; margin-top: 4px; }
+
+  /* DARK STATS ROW */
+  .dark-stats { border-top: 1px solid #1e293b; padding-top: 20px; display: flex; gap: 32px; flex-wrap: wrap; }
+  .dark-stat p { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .dark-stat h3 { font-size: 26px; font-weight: 800; color: #fff; }
+  .status-badge { font-weight: 700; font-size: 15px; }
+  .status-optimal  { color: #34d399; }
+  .status-high     { color: #fb7185; }
+  .status-under    { color: #fbbf24; }
+
+  /* TABLE SECTION */
+  .table-wrap { padding: 24px 28px 8px; }
+  .section-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 4px; }
+  .section-head span { font-weight: 700; color: #0f172a; font-size: 14px; }
+  .section-head small { font-size: 11px; color: #94a3b8; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { padding: 10px 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; color: #94a3b8; border-bottom: 1px solid #e2e8f0; text-align: left; letter-spacing: 0.5px; }
+  thead th:last-child { text-align: right; }
+  tbody tr { border-bottom: 1px solid #f1f5f9; }
+  td { padding: 13px 4px; color: #475569; vertical-align: middle; }
+  td.name { font-weight: 600; color: #334155; }
+  td.right { text-align: right; font-weight: 700; }
+  td.indigo { color: #4f46e5; }
+  td.rose   { color: #f43f5e; }
+  .total-row td { background: #f8fafc; font-weight: 700; color: #0f172a; font-size: 12px; text-transform: uppercase; padding: 13px 8px; }
+  .total-row td.right { color: #4f46e5; font-size: 11px; font-weight: 800; }
+
+  /* INFO BOX */
+  .info-box { margin: 16px 28px 24px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; }
+  .info-box h5 { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; letter-spacing: 1px; }
+  .info-box p { font-size: 12px; color: #64748b; line-height: 1.7; }
+
+  /* FOOTER */
+  .result-footer { border-top: 1px solid #e2e8f0; background: #fafafa; padding: 16px 28px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .footer-note { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; line-height: 2; }
+  .sig-block { text-align: center; width: 160px; border-top: 1px solid #cbd5e1; padding-top: 6px; }
+  .sig-block span { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* PRINT */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .header, .sidebar { display: none !important; }
+    .grid { display: block; }
+    .main { width: 100%; }
+    .result-panel { border: 1px solid #e2e8f0; box-shadow: none; }
+  }
+
+  @media (max-width: 640px) {
+    .sidebar { flex: 0 0 100%; }
+    .rh-top { flex-direction: column; gap: 12px; }
+    .total-label, .total-amount { text-align: left; }
+    .dark-stats { gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo"><span>🏗️</span> CapStructure Pro</div>
+    <button class="print-btn" onclick="window.print()">🖨️ Print Structure Report</button>
+  </div>
+
+  <div class="grid">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="card">
+        <div class="card-title indigo">1. Equity Details</div>
+        <div class="field">
+          <label>Total Equity Capital (₹)</label>
+          <input type="number" id="equityAmt" value="6000000" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>Cost of Equity – Ke (%)</label>
+          <input type="number" id="costEquity" value="15" oninput="calc()">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title rose">2. Debt Details</div>
+        <div class="field">
+          <label>Total Debt (₹)</label>
+          <input type="number" id="debtAmt" value="4000000" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>Pre-Tax Interest Rate (%)</label>
+          <input type="number" id="costDebt" value="10" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>Corporate Tax Rate (%)</label>
+          <input type="number" id="taxRate" value="25" oninput="calc()">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="field">
+          <label>Business Entity Name</label>
+          <input type="text" id="bizName" placeholder="e.g. Acme Industries Ltd." oninput="sync()">
+        </div>
+        <div class="field">
+          <label>Reference</label>
+          <input type="text" id="bizRef" placeholder="e.g. FY 2026 Audit" oninput="sync()">
+        </div>
+      </div>
+    </aside>
+
+    <!-- RESULT PANEL -->
+    <main class="main">
+      <div class="result-panel">
+
+        <div class="result-header">
+          <div class="rh-top">
+            <div>
+              <h2>Capital Structure Report</h2>
+              <div class="sub" id="dr_bizName">Enterprise Name</div>
+            </div>
+            <div>
+              <div class="total-label">Total Capital Employed</div>
+              <div class="total-amount" id="resTotalCap">₹0</div>
+            </div>
+          </div>
+          <div class="dark-stats">
+            <div class="dark-stat">
+              <p>WACC (%)</p>
+              <h3 id="resWACC">0.00%</h3>
+            </div>
+            <div class="dark-stat">
+              <p>Debt-to-Equity</p>
+              <h3 id="resDERatio">0.00</h3>
+            </div>
+            <div class="dark-stat">
+              <p>Leverage Status</p>
+              <div class="status-badge status-optimal" id="resStatus">Optimal Mix</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="section-head">
+            <span>Capital Component Breakdown</span>
+            <small id="dr_bizRef">Ref: FY 2026 Audit</small>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Source of Funds</th>
+                <th>Amount (₹)</th>
+                <th>Weight (%)</th>
+                <th style="text-align:right">Specific Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="name">Shareholders' Equity</td>
+                <td id="tabEqAmt">₹0</td>
+                <td id="tabEqWeight">0%</td>
+                <td class="right indigo" id="tabEqCost">0%</td>
+              </tr>
+              <tr>
+                <td class="name">Total Borrowed Debt</td>
+                <td id="tabDebtAmt">₹0</td>
+                <td id="tabDebtWeight">0%</td>
+                <td class="right rose" id="tabDebtCost">0%</td>
+              </tr>
+              <tr class="total-row">
+                <td>Total Capital Mix</td>
+                <td id="tabTotalAmt">₹0</td>
+                <td>100.0%</td>
+                <td class="right">Calculated WACC</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-box">
+          <h5>📌 Valuation Methodology</h5>
+          <p>The <strong>Weighted Average Cost of Capital (WACC)</strong> represents the minimum return a company must earn on its asset base to satisfy its creditors and owners. Cost of Debt is calculated on an after-tax basis: <strong>Kd × (1 − Tax Rate)</strong>, reflecting the tax-shield benefit of interest payments.</p>
+        </div>
+
+        <div class="result-footer">
+          <div class="footer-note">
+            Confidential Corporate Finance Document<br>
+            Report Generated: <span id="reportDate"></span>
+          </div>
+          <div class="sig-block">
+            <span>Certified By</span>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  var d = new Date();
+  document.getElementById('reportDate').innerText = d.toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' });
+
+  function fmt(v) {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
+  }
+
+  function sync() {
+    var b = document.getElementById('bizName').value.trim();
+    var r = document.getElementById('bizRef').value.trim();
+    document.getElementById('dr_bizName').innerText = b || 'Enterprise Name';
+    document.getElementById('dr_bizRef').innerText  = r ? 'Ref: ' + r : 'Ref: FY 2026 Audit';
+  }
+
+  function calc() {
+    var eqAmt   = parseFloat(document.getElementById('equityAmt').value)  || 0;
+    var ke      = parseFloat(document.getElementById('costEquity').value) || 0;
+    var debtAmt = parseFloat(document.getElementById('debtAmt').value)    || 0;
+    var kdPre   = parseFloat(document.getElementById('costDebt').value)   || 0;
+    var tax     = parseFloat(document.getElementById('taxRate').value)    || 0;
+
+    var totalCap = eqAmt + debtAmt;
+    if (totalCap === 0) return;
+
+    var wEq   = eqAmt   / totalCap;
+    var wDebt = debtAmt / totalCap;
+    var kdAfter = kdPre * (1 - (tax / 100));
+    var wacc    = (wEq * ke) + (wDebt * kdAfter);
+    var deRatio = eqAmt > 0 ? (debtAmt / eqAmt) : debtAmt;
+
+    // Header
+    document.getElementById('resTotalCap').innerText = fmt(totalCap);
+    document.getElementById('resWACC').innerText     = wacc.toFixed(2) + '%';
+    document.getElementById('resDERatio').innerText  = deRatio.toFixed(2);
+
+    // Leverage status
+    var el = document.getElementById('resStatus');
+    if (deRatio > 2) {
+      el.innerText   = '⚠ High Leverage';
+      el.className   = 'status-badge status-high';
+    } else if (deRatio < 0.5) {
+      el.innerText   = '↓ Under Leveraged';
+      el.className   = 'status-badge status-under';
+    } else {
+      el.innerText   = '✔ Optimal Mix';
+      el.className   = 'status-badge status-optimal';
+    }
+
+    // Table
+    document.getElementById('tabEqAmt').innerText     = fmt(eqAmt);
+    document.getElementById('tabDebtAmt').innerText   = fmt(debtAmt);
+    document.getElementById('tabTotalAmt').innerText  = fmt(totalCap);
+    document.getElementById('tabEqWeight').innerText  = (wEq   * 100).toFixed(1) + '%';
+    document.getElementById('tabDebtWeight').innerText= (wDebt * 100).toFixed(1) + '%';
+    document.getElementById('tabEqCost').innerText    = ke.toFixed(2) + '%';
+    document.getElementById('tabDebtCost').innerText  = kdAfter.toFixed(2) + '%';
+  }
+
+  calc();
+</script>
+</body>
+</html>

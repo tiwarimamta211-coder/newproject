@@ -1,0 +1,2073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CA Suite — Chartered Accountant Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Karla:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f1117;
+    --ink-soft: #3a3f50;
+    --ink-muted: #8a8fa8;
+    --paper: #f7f6f2;
+    --paper-dark: #eeede8;
+    --paper-darker: #e2e0d8;
+    --gold: #c8a45a;
+    --gold-light: #e8c87a;
+    --gold-pale: #f5e9cc;
+    --emerald: #1a6b4a;
+    --emerald-light: #2a8f62;
+    --emerald-pale: #d4ede4;
+    --ruby: #9b2335;
+    --ruby-pale: #f5d8dc;
+    --sky: #1a4a7a;
+    --sky-pale: #d4e4f5;
+    --shadow-sm: 0 1px 3px rgba(15,17,23,0.08);
+    --shadow-md: 0 4px 16px rgba(15,17,23,0.10);
+    --shadow-lg: 0 12px 40px rgba(15,17,23,0.14);
+    --radius: 4px;
+    --radius-lg: 8px;
+    --border: 1px solid rgba(15,17,23,0.1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Karla', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--ink);
+    color: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 58px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(15,17,23,0.3);
+  }
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-logo {
+    width: 34px; height: 34px;
+    background: var(--gold);
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--ink);
+    font-weight: 400;
+    flex-shrink: 0;
+  }
+  .brand-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    color: var(--paper);
+  }
+  .brand-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 300;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 1px solid var(--gold);
+    padding: 1px 6px;
+    border-radius: 2px;
+    margin-left: 4px;
+  }
+  .topbar-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.06em;
+    display: flex; gap: 20px; align-items: center;
+  }
+  .topbar-meta span { color: var(--gold-light); }
+
+  /* ── MAIN LAYOUT ── */
+  .shell {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: calc(100vh - 58px);
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    background: #1a1d27;
+    padding: 20px 0;
+    position: sticky;
+    top: 58px;
+    height: calc(100vh - 58px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #555a70;
+    padding: 16px 20px 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    color: #8a8fa8;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+    letter-spacing: 0.01em;
+  }
+  .nav-item:hover { color: var(--paper); background: rgba(255,255,255,0.04); }
+  .nav-item.active {
+    color: var(--gold-light);
+    background: rgba(200,164,90,0.08);
+    border-left-color: var(--gold);
+  }
+  .nav-icon { width: 16px; text-align: center; font-size: 14px; }
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .fy-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--gold);
+    background: rgba(200,164,90,0.1);
+    border: 1px solid rgba(200,164,90,0.2);
+    padding: 4px 10px;
+    border-radius: 2px;
+    letter-spacing: 0.06em;
+    text-align: center;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    padding: 32px 36px;
+    overflow-x: hidden;
+  }
+
+  /* ── PANEL ── */
+  .panel { display: none; animation: fadeIn 0.2s ease; }
+  .panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .panel-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--paper-darker);
+  }
+  .panel-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--ink);
+  }
+  .panel-subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.06em;
+  }
+
+  /* ── KPI CARDS ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .kpi-card {
+    background: white;
+    border: var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .kpi-card.gold::before { background: var(--gold); }
+  .kpi-card.emerald::before { background: var(--emerald); }
+  .kpi-card.ruby::before { background: var(--ruby); }
+  .kpi-card.sky::before { background: var(--sky); }
+  .kpi-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+  }
+  .kpi-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-top: 4px;
+  }
+  .kpi-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 2px;
+    margin-top: 6px;
+  }
+  .kpi-change.up { color: var(--emerald); background: var(--emerald-pale); }
+  .kpi-change.dn { color: var(--ruby); background: var(--ruby-pale); }
+
+  /* ── FORM CARD ── */
+  .card {
+    background: white;
+    border: var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .card-head {
+    padding: 16px 22px;
+    border-bottom: var(--border);
+    background: #fafaf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-head-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-body { padding: 22px; }
+
+  /* ── FORM ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .form-grid.two { grid-template-columns: repeat(2, 1fr); }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .form-control {
+    padding: 9px 12px;
+    border: 1px solid var(--paper-darker);
+    border-radius: var(--radius);
+    font-family: 'Karla', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--paper);
+    transition: all 0.15s;
+    outline: none;
+    width: 100%;
+  }
+  .form-control:focus {
+    border-color: var(--gold);
+    background: white;
+    box-shadow: 0 0 0 3px var(--gold-pale);
+  }
+  select.form-control { cursor: pointer; }
+  .form-hint {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-top: 2px;
+  }
+
+  /* ── TAX BREAKDOWN ── */
+  .tax-box {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+    margin-top: 12px;
+  }
+  .tax-box-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+  .tax-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 13px;
+  }
+  .tax-row:last-child { border-bottom: none; }
+  .tax-row.total {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--gold-light);
+    margin-top: 6px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(200,164,90,0.3);
+  }
+  .tax-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: rgba(247,246,242,0.8);
+  }
+  .tax-row.total .tax-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--gold-light);
+  }
+  .tax-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    background: rgba(200,164,90,0.15);
+    color: var(--gold);
+    letter-spacing: 0.08em;
+    margin-left: 8px;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    font-family: 'Karla', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--gold-light);
+  }
+  .btn-primary:hover { background: #2a2d3a; }
+  .btn-gold {
+    background: var(--gold);
+    color: var(--ink);
+  }
+  .btn-gold:hover { background: var(--gold-light); }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--paper-darker);
+    color: var(--ink-soft);
+  }
+  .btn-outline:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .btn-emerald {
+    background: var(--emerald);
+    color: white;
+  }
+  .btn-emerald:hover { background: var(--emerald-light); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead tr {
+    background: #f2f1ec;
+    border-bottom: 2px solid var(--paper-darker);
+  }
+  th {
+    padding: 10px 14px;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--paper-dark);
+    color: var(--ink-soft);
+    vertical-align: middle;
+  }
+  tbody tr:hover { background: #faf9f5; }
+  tbody tr:last-child td { border-bottom: none; }
+  .mono { font-family: 'DM Mono', monospace; font-size: 12px; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    font-family: 'DM Mono', monospace;
+  }
+  .badge-igst { background: var(--sky-pale); color: var(--sky); }
+  .badge-cgst { background: var(--emerald-pale); color: var(--emerald); }
+  .badge-sgst { background: var(--gold-pale); color: #8a6020; }
+  .badge-b2b { background: #e8e4f5; color: #4a2a8a; }
+  .badge-b2c { background: var(--ruby-pale); color: var(--ruby); }
+  .action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 3px 7px;
+    border-radius: 2px;
+    font-size: 12px;
+    color: var(--ink-muted);
+    transition: all 0.1s;
+  }
+  .action-btn:hover { background: var(--paper-dark); color: var(--ink); }
+  .action-btn.del:hover { background: var(--ruby-pale); color: var(--ruby); }
+
+  /* ── SEARCH & FILTER ── */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+  }
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink-muted);
+    font-size: 13px;
+  }
+  .search-wrap .form-control {
+    padding-left: 32px;
+  }
+
+  /* ── SUMMARY REPORT ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .chart-placeholder {
+    background: linear-gradient(135deg, #f7f6f2 0%, #eeede8 100%);
+    border: var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .chart-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 16px;
+  }
+
+  /* SVG BAR CHART */
+  .bar-chart { width: 100%; height: 180px; }
+  .pie-area { display: flex; align-items: center; gap: 24px; }
+  .pie-chart { flex-shrink: 0; }
+  .pie-legend { flex: 1; }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-val {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* ── GST REPORT TABLE ── */
+  .report-section-head {
+    background: var(--ink);
+    color: var(--gold-light);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+  }
+  .report-total-row td {
+    background: var(--gold-pale);
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--ink);
+    color: var(--gold-light);
+    padding: 12px 20px;
+    border-radius: var(--radius-lg);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    box-shadow: var(--shadow-lg);
+    z-index: 999;
+    display: none;
+    border-left: 3px solid var(--gold);
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+
+  /* ── SETTINGS ── */
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--paper-dark);
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-label { font-weight: 500; font-size: 13px; }
+  .settings-desc { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+  .toggle {
+    position: relative;
+    width: 42px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--paper-darker);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    left: 3px; top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle input:checked + .toggle-slider { background: var(--gold); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+  /* ── MODAL ── */
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,17,23,0.6);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    max-width: 540px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-head {
+    padding: 18px 22px;
+    border-bottom: var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 20px; }
+  .modal-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 18px; color: var(--ink-muted);
+    padding: 4px 8px; border-radius: 2px;
+  }
+  .modal-close:hover { background: var(--paper-dark); color: var(--ink); }
+  .modal-body { padding: 22px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-grid { grid-template-columns: repeat(2, 1fr); }
+    .summary-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 860px) {
+    .shell { grid-template-columns: 1fr; }
+    .sidebar {
+      position: fixed;
+      left: -220px;
+      top: 58px;
+      width: 220px;
+      height: calc(100vh - 58px);
+      z-index: 99;
+      transition: left 0.25s ease;
+    }
+    .sidebar.open { left: 0; box-shadow: 4px 0 30px rgba(0,0,0,0.3); }
+    .main { padding: 20px 16px; }
+    .topbar { padding: 0 16px; }
+    .brand-tag { display: none; }
+    .topbar-meta { display: none; }
+    .hamburger {
+      display: flex !important;
+      background: none; border: none; cursor: pointer;
+      color: var(--paper); font-size: 20px; padding: 4px;
+    }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 540px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+  }
+  .hamburger { display: none; }
+  .overlay-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 98;
+    background: rgba(0,0,0,0.4);
+  }
+  .overlay-bg.open { display: block; }
+
+  /* Scroll */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--paper-darker); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink-muted); }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--ink-muted);
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 10px; }
+  .empty-label { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink-soft); margin-bottom: 6px; }
+  .empty-desc { font-size: 13px; }
+
+  .alert {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .alert-warn { background: var(--gold-pale); color: #7a5a10; border: 1px solid #e8c87a; }
+  .alert-ok { background: var(--emerald-pale); color: var(--emerald); border: 1px solid #a0d8be; }
+
+  .stat-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px dashed var(--paper-dark);
+  }
+  .stat-line:last-child { border-bottom: none; }
+  .stat-val { font-family: 'DM Mono', monospace; font-weight: 500; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <div class="topbar-brand">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+    <div class="brand-logo">CA</div>
+    <span class="brand-name">CA Suite</span>
+    <span class="brand-tag">Pro</span>
+  </div>
+  <div class="topbar-meta">
+    <span>FY <span>2024–25</span></span>
+    <span>GSTIN: <span>07AABCU9603R1ZP</span></span>
+    <span id="clock"></span>
+  </div>
+</nav>
+
+<div class="overlay-bg" id="overlayBg" onclick="closeSidebar()"></div>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section-label">Overview</div>
+    <div class="nav-item active" onclick="showPanel('dashboard', this)">
+      <span class="nav-icon">◈</span> Dashboard
+    </div>
+    <div class="sidebar-section-label">Transactions</div>
+    <div class="nav-item" onclick="showPanel('sales-entry', this)">
+      <span class="nav-icon">✦</span> Sales Entry
+    </div>
+    <div class="nav-item" onclick="showPanel('sales-register', this)">
+      <span class="nav-icon">≡</span> Sales Register
+    </div>
+    <div class="sidebar-section-label">Taxation</div>
+    <div class="nav-item" onclick="showPanel('tax-breakdown', this)">
+      <span class="nav-icon">◐</span> Tax Breakdown
+    </div>
+    <div class="nav-item" onclick="showPanel('gst-report', this)">
+      <span class="nav-icon">⊞</span> GSTR-1 Report
+    </div>
+    <div class="sidebar-section-label">Reports</div>
+    <div class="nav-item" onclick="showPanel('summary-report', this)">
+      <span class="nav-icon">▤</span> Summary Report
+    </div>
+    <div class="nav-item" onclick="showPanel('download', this)">
+      <span class="nav-icon">↧</span> Download Reports
+    </div>
+    <div class="sidebar-section-label">Setup</div>
+    <div class="nav-item" onclick="showPanel('settings', this)">
+      <span class="nav-icon">⚙</span> Settings
+    </div>
+    <div class="sidebar-footer">
+      <div class="fy-badge">FINANCIAL YEAR 2024–25</div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="panel-header">
+        <h1 class="panel-title">Dashboard</h1>
+        <span class="panel-subtitle">Real-time overview · FY 2024–25</span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card gold">
+          <div class="kpi-label">Total Sales</div>
+          <div class="kpi-value" id="kpi-sales">₹0</div>
+          <div class="kpi-sub">Taxable value</div>
+          <div class="kpi-change up" id="kpi-sales-chg">↑ 0 entries</div>
+        </div>
+        <div class="kpi-card emerald">
+          <div class="kpi-label">Total GST Collected</div>
+          <div class="kpi-value" id="kpi-gst">₹0</div>
+          <div class="kpi-sub">CGST + SGST + IGST</div>
+          <div class="kpi-change up" id="kpi-gst-chg">—</div>
+        </div>
+        <div class="kpi-card ruby">
+          <div class="kpi-label">B2B Invoices</div>
+          <div class="kpi-value" id="kpi-b2b">0</div>
+          <div class="kpi-sub">Registered buyers</div>
+          <div class="kpi-change up" id="kpi-b2b-chg">—</div>
+        </div>
+        <div class="kpi-card sky">
+          <div class="kpi-label">Invoice Total</div>
+          <div class="kpi-value" id="kpi-inv">₹0</div>
+          <div class="kpi-sub">Taxable + Tax</div>
+          <div class="kpi-change up" id="kpi-inv-chg">—</div>
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="chart-placeholder">
+          <div class="chart-title">Monthly Sales — Taxable Value (₹)</div>
+          <svg class="bar-chart" id="barChart" viewBox="0 0 460 180" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <div class="chart-placeholder">
+          <div class="chart-title">GST Type Distribution</div>
+          <div class="pie-area">
+            <svg class="pie-chart" id="pieChart" width="130" height="130" viewBox="0 0 130 130"></svg>
+            <div class="pie-legend" id="pieLegend"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-title">⚡ Recent Transactions</div>
+          <button class="btn btn-outline btn-sm" onclick="showPanel('sales-register', document.querySelector('[onclick*=sales-register]'))">View All</button>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table id="recentTable">
+              <thead>
+                <tr>
+                  <th>Invoice No</th>
+                  <th>Party</th>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Taxable (₹)</th>
+                  <th>Tax (₹)</th>
+                  <th>Total (₹)</th>
+                </tr>
+              </thead>
+              <tbody id="recentTbody">
+                <tr>
+                  <td colspan="7">
+                    <div class="empty-state">
+                      <div class="empty-icon">📋</div>
+                      <div class="empty-label">No transactions yet</div>
+                      <div class="empty-desc">Add a sale entry to get started</div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SALES ENTRY ── -->
+    <div class="panel" id="panel-sales-entry">
+      <div class="panel-header">
+        <h1 class="panel-title">Sales Entry</h1>
+        <span class="panel-subtitle">New invoice recording</span>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-title">🧾 Invoice Details</div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink-muted);">
+            Next: <span id="nextInvNo">INV-001</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Invoice Number</label>
+              <input type="text" class="form-control" id="invNo" placeholder="INV-001">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Invoice Date</label>
+              <input type="date" class="form-control" id="invDate">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Transaction Type</label>
+              <select class="form-control" id="txnType" onchange="onTxnTypeChange()">
+                <option value="B2B">B2B — Registered</option>
+                <option value="B2C">B2C — Unregistered</option>
+                <option value="Export">Export (Zero Rated)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Party / Customer Name</label>
+              <input type="text" class="form-control" id="partyName" placeholder="ABC Pvt. Ltd.">
+            </div>
+            <div class="form-group" id="gstinGroup">
+              <label class="form-label">Buyer GSTIN</label>
+              <input type="text" class="form-control" id="buyerGstin" placeholder="07AABCU9603R1ZP" maxlength="15" oninput="this.value=this.value.toUpperCase()">
+              <div class="form-hint">Required for B2B transactions</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">State (Place of Supply)</label>
+              <select class="form-control" id="posState" onchange="recalcTax()">
+                <option value="same">Same State (Intra-state)</option>
+                <option value="diff">Different State (Inter-state)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Item / Service Description</label>
+              <input type="text" class="form-control" id="itemDesc" placeholder="Software Services / Goods...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">HSN / SAC Code</label>
+              <input type="text" class="form-control" id="hsnCode" placeholder="998314">
+            </div>
+            <div class="form-group">
+              <label class="form-label">GST Rate</label>
+              <select class="form-control" id="gstRate" onchange="recalcTax()">
+                <option value="0">0% — Exempt</option>
+                <option value="5">5%</option>
+                <option value="12">12%</option>
+                <option value="18" selected>18%</option>
+                <option value="28">28%</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Taxable Value (₹)</label>
+              <input type="number" class="form-control" id="taxableVal" placeholder="0.00" oninput="recalcTax()" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Discount (₹)</label>
+              <input type="number" class="form-control" id="discountVal" placeholder="0.00" oninput="recalcTax()" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Payment Mode</label>
+              <select class="form-control" id="payMode">
+                <option>Cash</option>
+                <option>Bank Transfer</option>
+                <option>Cheque</option>
+                <option>UPI</option>
+                <option>Credit</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- TAX BREAKDOWN BOX -->
+          <div class="tax-box" id="taxCalcBox">
+            <div class="tax-box-title">⚡ Live Tax Computation</div>
+            <div class="tax-row">
+              <span>Gross Value</span>
+              <span class="tax-val" id="tc-gross">₹0.00</span>
+            </div>
+            <div class="tax-row">
+              <span>Discount</span>
+              <span class="tax-val" id="tc-disc">— ₹0.00</span>
+            </div>
+            <div class="tax-row">
+              <span>Taxable Amount</span>
+              <span class="tax-val" id="tc-taxable">₹0.00</span>
+            </div>
+            <div class="tax-row" id="cgst-row">
+              <span>CGST <span class="tax-badge" id="cgst-rate-lbl">9%</span></span>
+              <span class="tax-val" id="tc-cgst">₹0.00</span>
+            </div>
+            <div class="tax-row" id="sgst-row">
+              <span>SGST <span class="tax-badge" id="sgst-rate-lbl">9%</span></span>
+              <span class="tax-val" id="tc-sgst">₹0.00</span>
+            </div>
+            <div class="tax-row" id="igst-row" style="display:none">
+              <span>IGST <span class="tax-badge" id="igst-rate-lbl">18%</span></span>
+              <span class="tax-val" id="tc-igst">₹0.00</span>
+            </div>
+            <div class="tax-row total">
+              <span>Invoice Total</span>
+              <span class="tax-val" id="tc-total">₹0.00</span>
+            </div>
+          </div>
+
+          <div class="btn-row" style="margin-top:20px">
+            <button class="btn btn-primary" onclick="saveSale()">✦ Save Invoice</button>
+            <button class="btn btn-outline" onclick="clearForm()">↺ Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SALES REGISTER ── -->
+    <div class="panel" id="panel-sales-register">
+      <div class="panel-header">
+        <h1 class="panel-title">Sales Register</h1>
+        <span class="panel-subtitle">All recorded invoices</span>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-title">📒 Invoice Ledger</div>
+          <div class="toolbar">
+            <div class="search-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" class="form-control" id="searchInput" placeholder="Search party, invoice..." oninput="filterTable()">
+            </div>
+            <select class="form-control" style="width:auto" id="filterType" onchange="filterTable()">
+              <option value="">All Types</option>
+              <option value="B2B">B2B</option>
+              <option value="B2C">B2C</option>
+              <option value="Export">Export</option>
+            </select>
+            <select class="form-control" style="width:auto" id="filterRate" onchange="filterTable()">
+              <option value="">All Rates</option>
+              <option value="0">0%</option>
+              <option value="5">5%</option>
+              <option value="12">12%</option>
+              <option value="18">18%</option>
+              <option value="28">28%</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Inv No</th>
+                  <th>Date</th>
+                  <th>Party</th>
+                  <th>GSTIN</th>
+                  <th>Type</th>
+                  <th>HSN</th>
+                  <th>Rate</th>
+                  <th>Taxable</th>
+                  <th>CGST</th>
+                  <th>SGST</th>
+                  <th>IGST</th>
+                  <th>Total</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="registerTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAX BREAKDOWN ── -->
+    <div class="panel" id="panel-tax-breakdown">
+      <div class="panel-header">
+        <h1 class="panel-title">Tax Breakdown</h1>
+        <span class="panel-subtitle">Detailed GST analysis by rate slab</span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card gold">
+          <div class="kpi-label">Total CGST</div>
+          <div class="kpi-value" id="tb-cgst">₹0</div>
+          <div class="kpi-sub">Central GST</div>
+        </div>
+        <div class="kpi-card emerald">
+          <div class="kpi-label">Total SGST</div>
+          <div class="kpi-value" id="tb-sgst">₹0</div>
+          <div class="kpi-sub">State GST</div>
+        </div>
+        <div class="kpi-card sky">
+          <div class="kpi-label">Total IGST</div>
+          <div class="kpi-value" id="tb-igst">₹0</div>
+          <div class="kpi-sub">Integrated GST</div>
+        </div>
+        <div class="kpi-card ruby">
+          <div class="kpi-label">Net Liability</div>
+          <div class="kpi-value" id="tb-net">₹0</div>
+          <div class="kpi-sub">Total tax payable</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-title">Rate-Slab Wise Breakdown</div>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Rate Slab</th>
+                  <th>Txns</th>
+                  <th>Taxable Value</th>
+                  <th>CGST</th>
+                  <th>SGST</th>
+                  <th>IGST</th>
+                  <th>Total Tax</th>
+                  <th>Invoice Total</th>
+                </tr>
+              </thead>
+              <tbody id="slabTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-title">B2B vs B2C Comparison</div>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Count</th>
+                  <th>Taxable Value</th>
+                  <th>Total Tax</th>
+                  <th>Invoice Total</th>
+                  <th>% Share</th>
+                </tr>
+              </thead>
+              <tbody id="catTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── GSTR-1 REPORT ── -->
+    <div class="panel" id="panel-gst-report">
+      <div class="panel-header">
+        <h1 class="panel-title">GSTR-1 Report</h1>
+        <span class="panel-subtitle">Outward supplies summary</span>
+      </div>
+      <div class="alert alert-warn">
+        ⚠ This is a summary view. Please verify figures before filing on the GST portal.
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-title">GSTR-1 Statement</div>
+          <button class="btn btn-emerald btn-sm" onclick="exportGSTR1()">↧ Export CSV</button>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table id="gstr1Table">
+              <thead>
+                <tr class="report-section-head">
+                  <td colspan="10" class="report-section-head">4A — B2B Supplies (Registered)</td>
+                </tr>
+                <tr>
+                  <th>Inv No</th>
+                  <th>Inv Date</th>
+                  <th>Buyer GSTIN</th>
+                  <th>Buyer Name</th>
+                  <th>POS</th>
+                  <th>HSN</th>
+                  <th>Rate%</th>
+                  <th>Taxable</th>
+                  <th>IGST</th>
+                  <th>CGST+SGST</th>
+                </tr>
+              </thead>
+              <tbody id="gstr1B2bTbody"></tbody>
+              <thead>
+                <tr class="report-section-head">
+                  <td colspan="10" class="report-section-head">7 — B2C Supplies (Unregistered)</td>
+                </tr>
+                <tr>
+                  <th>Inv No</th>
+                  <th>Inv Date</th>
+                  <th>Party</th>
+                  <th>POS</th>
+                  <th>HSN</th>
+                  <th>Rate%</th>
+                  <th>Taxable</th>
+                  <th>IGST</th>
+                  <th>CGST+SGST</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="gstr1B2cTbody"></tbody>
+              <tfoot id="gstr1Foot"></tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SUMMARY REPORT ── -->
+    <div class="panel" id="panel-summary-report">
+      <div class="panel-header">
+        <h1 class="panel-title">Summary Report</h1>
+        <span class="panel-subtitle">Financial overview · FY 2024–25</span>
+      </div>
+
+      <div class="summary-grid">
+        <div class="card">
+          <div class="card-head"><div class="card-head-title">📊 Sales Summary</div></div>
+          <div class="card-body" id="summSales"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-head-title">🏦 Tax Summary</div></div>
+          <div class="card-body" id="summTax"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-title">📅 Month-wise Sales</div>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Invoices</th>
+                  <th>Taxable Value</th>
+                  <th>CGST</th>
+                  <th>SGST</th>
+                  <th>IGST</th>
+                  <th>Total Tax</th>
+                  <th>Invoice Total</th>
+                </tr>
+              </thead>
+              <tbody id="monthTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DOWNLOAD ── -->
+    <div class="panel" id="panel-download">
+      <div class="panel-header">
+        <h1 class="panel-title">Download Reports</h1>
+        <span class="panel-subtitle">Export data in various formats</span>
+      </div>
+
+      <div class="summary-grid">
+        <div class="card">
+          <div class="card-head"><div class="card-head-title">📄 Sales Register CSV</div></div>
+          <div class="card-body">
+            <p style="font-size:13px; color:var(--ink-soft); margin-bottom:16px;">
+              Download the complete sales register with all invoice details including tax breakup.
+            </p>
+            <button class="btn btn-primary" onclick="downloadCSV()">↧ Download CSV</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-head-title">📊 GSTR-1 CSV</div></div>
+          <div class="card-body">
+            <p style="font-size:13px; color:var(--ink-soft); margin-bottom:16px;">
+              Download GSTR-1 format CSV for uploading on the GST portal.
+            </p>
+            <button class="btn btn-emerald" onclick="exportGSTR1()">↧ Download GSTR-1 CSV</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-head-title">📋 Summary Report (TXT)</div></div>
+          <div class="card-body">
+            <p style="font-size:13px; color:var(--ink-soft); margin-bottom:16px;">
+              Download a human-readable text summary of all sales and tax figures.
+            </p>
+            <button class="btn btn-gold" onclick="downloadSummaryTxt()">↧ Download TXT</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-head-title">🖨 Print Register</div></div>
+          <div class="card-body">
+            <p style="font-size:13px; color:var(--ink-soft); margin-bottom:16px;">
+              Open a print-friendly view of the full sales register.
+            </p>
+            <button class="btn btn-outline" onclick="printRegister()">🖨 Print</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div class="panel" id="panel-settings">
+      <div class="panel-header">
+        <h1 class="panel-title">Settings</h1>
+        <span class="panel-subtitle">Configure your CA Suite</span>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-head"><div class="card-head-title">🏢 Firm Details</div></div>
+        <div class="card-body">
+          <div class="form-grid two">
+            <div class="form-group">
+              <label class="form-label">Firm Name</label>
+              <input type="text" class="form-control" id="cfg-firm" value="CA Suite Demo Firm" oninput="saveConfig()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">GSTIN</label>
+              <input type="text" class="form-control" id="cfg-gstin" value="07AABCU9603R1ZP" oninput="saveConfig()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Address</label>
+              <input type="text" class="form-control" id="cfg-addr" value="New Delhi, India" oninput="saveConfig()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Financial Year</label>
+              <select class="form-control" id="cfg-fy" onchange="saveConfig()">
+                <option selected>2024–25</option>
+                <option>2023–24</option>
+                <option>2022–23</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-head-title">⚙ Preferences</div></div>
+        <div class="card-body">
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Auto Invoice Numbering</div>
+              <div class="settings-desc">Automatically generate sequential invoice numbers</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked id="cfg-autoinv"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Intra-state Default</div>
+              <div class="settings-desc">Default to intra-state (CGST+SGST) for new entries</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked id="cfg-intra"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Show Tax Computation Box</div>
+              <div class="settings-desc">Display live tax breakdown while entering sales</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked id="cfg-taxbox"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="settings-row" style="border-bottom:none; padding-top:20px">
+            <div>
+              <div class="settings-label" style="color:var(--ruby)">Clear All Data</div>
+              <div class="settings-desc">Permanently delete all sales entries from this session</div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="border-color:var(--ruby); color:var(--ruby)" onclick="clearAllData()">Clear Data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DATA STORE
+// ══════════════════════════════════════════════
+let sales = JSON.parse(localStorage.getItem('caSales') || '[]');
+let invCounter = parseInt(localStorage.getItem('caInvCounter') || '1');
+
+function persist() {
+  localStorage.setItem('caSales', JSON.stringify(sales));
+  localStorage.setItem('caInvCounter', String(invCounter));
+}
+
+// ══════════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════════
+const fmt = n => '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtN = n => Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct = (a, t) => t ? ((a/t)*100).toFixed(1) + '%' : '0%';
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 2500);
+}
+
+function showPanel(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  closeSidebar();
+
+  // Refresh panels
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'sales-register') renderRegister();
+  if (id === 'tax-breakdown') renderTaxBreakdown();
+  if (id === 'gst-report') renderGSTR1();
+  if (id === 'summary-report') renderSummary();
+}
+
+// Clock
+function updateClock() {
+  const d = new Date();
+  document.getElementById('clock').textContent =
+    d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+}
+updateClock(); setInterval(updateClock, 30000);
+
+// Sidebar mobile
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlayBg').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlayBg').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════
+//  SALES ENTRY
+// ══════════════════════════════════════════════
+// Set today's date on load
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('invDate').value = new Date().toISOString().slice(0, 10);
+  updateInvNumber();
+  recalcTax();
+  renderDashboard();
+  renderRegister();
+});
+
+function updateInvNumber() {
+  const n = 'INV-' + String(invCounter).padStart(3, '0');
+  document.getElementById('invNo').value = n;
+  document.getElementById('nextInvNo').textContent = n;
+}
+
+function onTxnTypeChange() {
+  const t = document.getElementById('txnType').value;
+  document.getElementById('gstinGroup').style.opacity = t === 'B2B' ? '1' : '0.4';
+}
+
+function recalcTax() {
+  const gross = parseFloat(document.getElementById('taxableVal').value) || 0;
+  const disc = parseFloat(document.getElementById('discountVal').value) || 0;
+  const rate = parseInt(document.getElementById('gstRate').value);
+  const pos = document.getElementById('posState').value;
+  const txnType = document.getElementById('txnType').value;
+
+  const taxable = Math.max(gross - disc, 0);
+  const isIGST = (pos === 'diff') || (txnType === 'Export');
+  const totalTax = taxable * rate / 100;
+  const half = totalTax / 2;
+  const total = taxable + totalTax;
+
+  document.getElementById('tc-gross').textContent = fmt(gross);
+  document.getElementById('tc-disc').textContent = '— ' + fmt(disc);
+  document.getElementById('tc-taxable').textContent = fmt(taxable);
+  document.getElementById('tc-total').textContent = fmt(total);
+
+  if (isIGST) {
+    document.getElementById('cgst-row').style.display = 'none';
+    document.getElementById('sgst-row').style.display = 'none';
+    document.getElementById('igst-row').style.display = '';
+    document.getElementById('tc-igst').textContent = fmt(totalTax);
+    document.getElementById('igst-rate-lbl').textContent = rate + '%';
+  } else {
+    document.getElementById('cgst-row').style.display = '';
+    document.getElementById('sgst-row').style.display = '';
+    document.getElementById('igst-row').style.display = 'none';
+    document.getElementById('tc-cgst').textContent = fmt(half);
+    document.getElementById('tc-sgst').textContent = fmt(half);
+    document.getElementById('cgst-rate-lbl').textContent = (rate/2) + '%';
+    document.getElementById('sgst-rate-lbl').textContent = (rate/2) + '%';
+  }
+}
+
+function saveSale() {
+  const invNo = document.getElementById('invNo').value.trim();
+  const invDate = document.getElementById('invDate').value;
+  const txnType = document.getElementById('txnType').value;
+  const partyName = document.getElementById('partyName').value.trim();
+  const buyerGstin = document.getElementById('buyerGstin').value.trim();
+  const posState = document.getElementById('posState').value;
+  const itemDesc = document.getElementById('itemDesc').value.trim();
+  const hsnCode = document.getElementById('hsnCode').value.trim();
+  const gstRate = parseInt(document.getElementById('gstRate').value);
+  const gross = parseFloat(document.getElementById('taxableVal').value) || 0;
+  const disc = parseFloat(document.getElementById('discountVal').value) || 0;
+  const payMode = document.getElementById('payMode').value;
+
+  if (!partyName) { toast('⚠ Enter party name'); return; }
+  if (!invDate) { toast('⚠ Select invoice date'); return; }
+  if (gross <= 0) { toast('⚠ Enter taxable value'); return; }
+
+  const taxable = Math.max(gross - disc, 0);
+  const isIGST = posState === 'diff' || txnType === 'Export';
+  const totalTax = taxable * gstRate / 100;
+  const cgst = isIGST ? 0 : totalTax / 2;
+  const sgst = isIGST ? 0 : totalTax / 2;
+  const igst = isIGST ? totalTax : 0;
+  const total = taxable + totalTax;
+
+  const sale = {
+    id: Date.now(),
+    invNo, invDate, txnType, partyName, buyerGstin,
+    posState, itemDesc, hsnCode, gstRate,
+    gross, disc, taxable, cgst, sgst, igst, totalTax, total,
+    payMode
+  };
+
+  // Check for duplicate invoice number
+  if (sales.find(s => s.invNo === invNo)) {
+    toast('⚠ Invoice number already exists');
+    return;
+  }
+
+  sales.push(sale);
+  invCounter++;
+  persist();
+  updateInvNumber();
+  clearForm();
+  toast('✦ Invoice ' + invNo + ' saved successfully');
+  renderDashboard();
+}
+
+function clearForm() {
+  document.getElementById('partyName').value = '';
+  document.getElementById('buyerGstin').value = '';
+  document.getElementById('itemDesc').value = '';
+  document.getElementById('hsnCode').value = '';
+  document.getElementById('taxableVal').value = '';
+  document.getElementById('discountVal').value = '';
+  document.getElementById('gstRate').value = '18';
+  document.getElementById('posState').value = 'same';
+  document.getElementById('txnType').value = 'B2B';
+  document.getElementById('payMode').value = 'Cash';
+  document.getElementById('invDate').value = new Date().toISOString().slice(0,10);
+  recalcTax();
+  updateInvNumber();
+}
+
+// ══════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════
+function renderDashboard() {
+  const totalTaxable = sales.reduce((s, r) => s + r.taxable, 0);
+  const totalGST = sales.reduce((s, r) => s + r.totalTax, 0);
+  const totalInv = sales.reduce((s, r) => s + r.total, 0);
+  const b2bCount = sales.filter(r => r.txnType === 'B2B').length;
+
+  document.getElementById('kpi-sales').textContent = fmt(totalTaxable);
+  document.getElementById('kpi-gst').textContent = fmt(totalGST);
+  document.getElementById('kpi-b2b').textContent = b2bCount;
+  document.getElementById('kpi-inv').textContent = fmt(totalInv);
+  document.getElementById('kpi-sales-chg').textContent = '↑ ' + sales.length + ' entries';
+  document.getElementById('kpi-gst-chg').textContent = pct(totalGST, totalInv) + ' of total';
+  document.getElementById('kpi-b2b-chg').textContent = pct(b2bCount, sales.length) + ' of invoices';
+  document.getElementById('kpi-inv-chg').textContent = sales.length ? (fmt(totalInv / sales.length) + ' avg') : '—';
+
+  renderBarChart();
+  renderPieChart();
+  renderRecentTable();
+}
+
+function renderBarChart() {
+  const months = ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+  const monthData = new Array(12).fill(0);
+  sales.forEach(s => {
+    const d = new Date(s.invDate);
+    let m = d.getMonth(); // 0=Jan
+    // FY starts April (month index 3)
+    let fyIdx = (m - 3 + 12) % 12;
+    monthData[fyIdx] += s.taxable;
+  });
+  const maxVal = Math.max(...monthData, 1);
+  const W = 460, H = 180, padL = 10, padR = 10, padT = 10, padB = 30;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const bw = chartW / 12;
+  const gap = 4;
+
+  let rects = '', labels = '', ylines = '';
+  // Y grid lines
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + chartH - (i/4) * chartH;
+    ylines += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#e2e0d8" stroke-width="1"/>`;
+  }
+  months.forEach((m, i) => {
+    const val = monthData[i];
+    const bh = val ? (val / maxVal) * chartH : 2;
+    const x = padL + i * bw + gap;
+    const y = padT + chartH - bh;
+    const w = bw - gap * 2;
+    const hue = i === new Date().getMonth() ? '#c8a45a' : '#1a1d27';
+    rects += `<rect x="${x}" y="${y}" width="${w}" height="${bh}" fill="${hue}" rx="2" opacity="0.85">
+      <title>${m}: ${fmt(val)}</title></rect>`;
+    labels += `<text x="${x + w/2}" y="${H - 8}" text-anchor="middle" font-size="9" fill="#8a8fa8" font-family="'DM Mono',monospace">${m}</text>`;
+  });
+  document.getElementById('barChart').innerHTML = ylines + rects + labels;
+}
+
+function renderPieChart() {
+  const igstTotal = sales.reduce((s,r) => s + r.igst, 0);
+  const cgstTotal = sales.reduce((s,r) => s + r.cgst, 0);
+  const sgstTotal = sales.reduce((s,r) => s + r.sgst, 0);
+  const total = igstTotal + cgstTotal + sgstTotal || 1;
+
+  const slices = [
+    { label: 'CGST', val: cgstTotal, color: '#1a6b4a' },
+    { label: 'SGST', val: sgstTotal, color: '#c8a45a' },
+    { label: 'IGST', val: igstTotal, color: '#1a4a7a' },
+  ];
+
+  let paths = '';
+  let angle = -Math.PI / 2;
+  const cx = 65, cy = 65, r = 52, ir = 30;
+
+  slices.forEach(sl => {
+    const frac = sl.val / total;
+    const a2 = angle + frac * 2 * Math.PI;
+    if (frac === 0) { angle = a2; return; }
+    const x1 = cx + r * Math.cos(angle), y1 = cy + r * Math.sin(angle);
+    const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+    const ix1 = cx + ir * Math.cos(angle), iy1 = cy + ir * Math.sin(angle);
+    const ix2 = cx + ir * Math.cos(a2), iy2 = cy + ir * Math.sin(a2);
+    const large = frac > 0.5 ? 1 : 0;
+    paths += `<path d="M${ix1},${iy1} L${x1},${y1} A${r},${r},0,${large},1,${x2},${y2} L${ix2},${iy2} A${ir},${ir},0,${large},0,${ix1},${iy1} Z"
+      fill="${sl.color}" opacity="0.9"><title>${sl.label}: ${fmt(sl.val)}</title></path>`;
+    angle = a2;
+  });
+
+  document.getElementById('pieChart').innerHTML = paths +
+    `<text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="10" fill="#3a3f50" font-family="'DM Mono',monospace">GST</text>`;
+
+  const legend = document.getElementById('pieLegend');
+  legend.innerHTML = slices.map(sl => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${sl.color}"></div>
+      <span>${sl.label}</span>
+      <span class="legend-val">${fmt(sl.val)}</span>
+    </div>`).join('');
+}
+
+function renderRecentTable() {
+  const recent = [...sales].reverse().slice(0, 6);
+  const tbody = document.getElementById('recentTbody');
+  if (!recent.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-label">No transactions yet</div><div class="empty-desc">Add a sale entry to get started</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = recent.map(r => `
+    <tr>
+      <td class="mono">${r.invNo}</td>
+      <td>${r.partyName}</td>
+      <td class="mono">${r.invDate}</td>
+      <td><span class="badge badge-${r.txnType.toLowerCase()}">${r.txnType}</span></td>
+      <td class="mono">${fmtN(r.taxable)}</td>
+      <td class="mono">${fmtN(r.totalTax)}</td>
+      <td class="mono" style="color:var(--ink); font-weight:600">${fmtN(r.total)}</td>
+    </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════
+//  SALES REGISTER
+// ══════════════════════════════════════════════
+function renderRegister(data) {
+  const list = data || sales;
+  const tbody = document.getElementById('registerTbody');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="13"><div class="empty-state"><div class="empty-icon">📒</div><div class="empty-label">No entries found</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(r => `
+    <tr>
+      <td class="mono">${r.invNo}</td>
+      <td class="mono">${r.invDate}</td>
+      <td>${r.partyName}</td>
+      <td class="mono" style="font-size:11px">${r.buyerGstin || '—'}</td>
+      <td><span class="badge badge-${r.txnType.toLowerCase()}">${r.txnType}</span></td>
+      <td class="mono">${r.hsnCode || '—'}</td>
+      <td class="mono">${r.gstRate}%</td>
+      <td class="mono">${fmtN(r.taxable)}</td>
+      <td class="mono">${r.cgst ? fmtN(r.cgst) : '—'}</td>
+      <td class="mono">${r.sgst ? fmtN(r.sgst) : '—'}</td>
+      <td class="mono">${r.igst ? fmtN(r.igst) : '—'}</td>
+      <td class="mono" style="font-weight:600">${fmtN(r.total)}</td>
+      <td>
+        <button class="action-btn del" onclick="deleteSale(${r.id})" title="Delete">✕</button>
+      </td>
+    </tr>`).join('');
+}
+
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const type = document.getElementById('filterType').value;
+  const rate = document.getElementById('filterRate').value;
+  const filtered = sales.filter(r => {
+    const matchQ = !q || r.invNo.toLowerCase().includes(q) || r.partyName.toLowerCase().includes(q) || (r.buyerGstin||'').toLowerCase().includes(q);
+    const matchType = !type || r.txnType === type;
+    const matchRate = !rate || String(r.gstRate) === rate;
+    return matchQ && matchType && matchRate;
+  });
+  renderRegister(filtered);
+}
+
+function deleteSale(id) {
+  if (!confirm('Delete this invoice?')) return;
+  sales = sales.filter(s => s.id !== id);
+  persist();
+  renderRegister();
+  renderDashboard();
+  toast('Invoice deleted');
+}
+
+// ══════════════════════════════════════════════
+//  TAX BREAKDOWN
+// ══════════════════════════════════════════════
+function renderTaxBreakdown() {
+  const totalCGST = sales.reduce((s,r) => s + r.cgst, 0);
+  const totalSGST = sales.reduce((s,r) => s + r.sgst, 0);
+  const totalIGST = sales.reduce((s,r) => s + r.igst, 0);
+  const totalNet = totalCGST + totalSGST + totalIGST;
+
+  document.getElementById('tb-cgst').textContent = fmt(totalCGST);
+  document.getElementById('tb-sgst').textContent = fmt(totalSGST);
+  document.getElementById('tb-igst').textContent = fmt(totalIGST);
+  document.getElementById('tb-net').textContent = fmt(totalNet);
+
+  // Slab-wise
+  const slabs = [0, 5, 12, 18, 28];
+  const slabData = {};
+  slabs.forEach(s => slabData[s] = { txns:0, taxable:0, cgst:0, sgst:0, igst:0, tax:0, total:0 });
+
+  sales.forEach(r => {
+    const d = slabData[r.gstRate];
+    if (!d) return;
+    d.txns++; d.taxable += r.taxable; d.cgst += r.cgst; d.sgst += r.sgst;
+    d.igst += r.igst; d.tax += r.totalTax; d.total += r.total;
+  });
+
+  const slabBody = document.getElementById('slabTbody');
+  slabBody.innerHTML = slabs.map(s => {
+    const d = slabData[s];
+    if (!d.txns) return '';
+    return `<tr>
+      <td><strong>${s}%</strong></td>
+      <td>${d.txns}</td>
+      <td class="mono">${fmtN(d.taxable)}</td>
+      <td class="mono">${d.cgst ? fmtN(d.cgst) : '—'}</td>
+      <td class="mono">${d.sgst ? fmtN(d.sgst) : '—'}</td>
+      <td class="mono">${d.igst ? fmtN(d.igst) : '—'}</td>
+      <td class="mono" style="color:var(--ruby);font-weight:600">${fmtN(d.tax)}</td>
+      <td class="mono" style="font-weight:600">${fmtN(d.total)}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📊</div><div class="empty-label">No data</div></div></td></tr>`;
+
+  // Category comparison
+  const cats = { B2B: {count:0,taxable:0,tax:0,total:0}, B2C: {count:0,taxable:0,tax:0,total:0}, Export: {count:0,taxable:0,tax:0,total:0} };
+  sales.forEach(r => {
+    const c = cats[r.txnType] || cats.B2C;
+    c.count++; c.taxable += r.taxable; c.tax += r.totalTax; c.total += r.total;
+  });
+  const grandTotal = Object.values(cats).reduce((s,c) => s + c.total, 0);
+
+  document.getElementById('catTbody').innerHTML = Object.entries(cats).map(([name, c]) => `
+    <tr>
+      <td><span class="badge badge-${name.toLowerCase()}">${name}</span></td>
+      <td>${c.count}</td>
+      <td class="mono">${fmtN(c.taxable)}</td>
+      <td class="mono">${fmtN(c.tax)}</td>
+      <td class="mono" style="font-weight:600">${fmtN(c.total)}</td>
+      <td class="mono">${pct(c.total, grandTotal)}</td>
+    </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════
+//  GSTR-1
+// ══════════════════════════════════════════════
+function renderGSTR1() {
+  const b2b = sales.filter(s => s.txnType === 'B2B');
+  const b2c = sales.filter(s => s.txnType !== 'B2B');
+
+  document.getElementById('gstr1B2bTbody').innerHTML = b2b.length ?
+    b2b.map(r => `<tr>
+      <td class="mono">${r.invNo}</td>
+      <td class="mono">${r.invDate}</td>
+      <td class="mono" style="font-size:11px">${r.buyerGstin || '—'}</td>
+      <td>${r.partyName}</td>
+      <td>${r.posState === 'diff' ? 'Inter' : 'Intra'}</td>
+      <td class="mono">${r.hsnCode || '—'}</td>
+      <td>${r.gstRate}%</td>
+      <td class="mono">${fmtN(r.taxable)}</td>
+      <td class="mono">${r.igst ? fmtN(r.igst) : '—'}</td>
+      <td class="mono">${r.cgst ? fmtN(r.cgst + r.sgst) : '—'}</td>
+    </tr>`).join('') :
+    `<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--ink-muted)">No B2B entries</td></tr>`;
+
+  document.getElementById('gstr1B2cTbody').innerHTML = b2c.length ?
+    b2c.map(r => `<tr>
+      <td class="mono">${r.invNo}</td>
+      <td class="mono">${r.invDate}</td>
+      <td>${r.partyName}</td>
+      <td>${r.posState === 'diff' ? 'Inter' : 'Intra'}</td>
+      <td class="mono">${r.hsnCode || '—'}</td>
+      <td>${r.gstRate}%</td>
+      <td class="mono">${fmtN(r.taxable)}</td>
+      <td class="mono">${r.igst ? fmtN(r.igst) : '—'}</td>
+      <td class="mono">${r.cgst ? fmtN(r.cgst + r.sgst) : '—'}</td>
+      <td class="mono" style="font-weight:600">${fmtN(r.total)}</td>
+    </tr>`).join('') :
+    `<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--ink-muted)">No B2C entries</td></tr>`;
+
+  // Grand total row
+  const gt = sales.reduce((s,r) => ({ taxable: s.taxable+r.taxable, igst: s.igst+r.igst, cgst: s.cgst+r.cgst, sgst: s.sgst+r.sgst, total: s.total+r.total }), {taxable:0,igst:0,cgst:0,sgst:0,total:0});
+  document.getElementById('gstr1Foot').innerHTML = `
+    <tr class="report-total-row">
+      <td colspan="7"><strong>GRAND TOTAL</strong></td>
+      <td class="mono"><strong>${fmtN(gt.taxable)}</strong></td>
+      <td class="mono"><strong>${fmtN(gt.igst)}</strong></td>
+      <td class="mono"><strong>${fmtN(gt.cgst + gt.sgst)}</strong></td>
+    </tr>`;
+}
+
+// ══════════════════════════════════════════════
+//  SUMMARY REPORT
+// ══════════════════════════════════════════════
+function renderSummary() {
+  const totalTaxable = sales.reduce((s,r) => s+r.taxable, 0);
+  const totalTax = sales.reduce((s,r) => s+r.totalTax, 0);
+  const totalCGST = sales.reduce((s,r) => s+r.cgst, 0);
+  const totalSGST = sales.reduce((s,r) => s+r.sgst, 0);
+  const totalIGST = sales.reduce((s,r) => s+r.igst, 0);
+  const totalInv = sales.reduce((s,r) => s+r.total, 0);
+
+  document.getElementById('summSales').innerHTML = [
+    ['Total Invoices', sales.length],
+    ['Gross Taxable Value', fmt(totalTaxable)],
+    ['Total Invoice Value', fmt(totalInv)],
+    ['B2B Count', sales.filter(r=>r.txnType==='B2B').length],
+    ['B2C Count', sales.filter(r=>r.txnType==='B2C').length],
+    ['Export Count', sales.filter(r=>r.txnType==='Export').length],
+    ['Average Invoice', fmt(sales.length ? totalInv/sales.length : 0)],
+  ].map(([l,v]) => `<div class="stat-line"><span>${l}</span><span class="stat-val">${v}</span></div>`).join('');
+
+  document.getElementById('summTax').innerHTML = [
+    ['Total CGST', fmt(totalCGST)],
+    ['Total SGST', fmt(totalSGST)],
+    ['Total IGST', fmt(totalIGST)],
+    ['Total Tax (CGST+SGST+IGST)', fmt(totalTax)],
+    ['Effective Tax Rate', pct(totalTax, totalTaxable)],
+  ].map(([l,v]) => `<div class="stat-line"><span>${l}</span><span class="stat-val">${v}</span></div>`).join('');
+
+  // Month-wise
+  const months = ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+  const mData = {};
+  sales.forEach(r => {
+    const d = new Date(r.invDate);
+    let fyIdx = (d.getMonth() - 3 + 12) % 12;
+    const key = months[fyIdx];
+    if (!mData[key]) mData[key] = { invs:0, taxable:0, cgst:0, sgst:0, igst:0, tax:0, total:0 };
+    mData[key].invs++; mData[key].taxable+=r.taxable; mData[key].cgst+=r.cgst;
+    mData[key].sgst+=r.sgst; mData[key].igst+=r.igst; mData[key].tax+=r.totalTax; mData[key].total+=r.total;
+  });
+
+  const rows = months.filter(m => mData[m]).map(m => {
+    const d = mData[m];
+    return `<tr>
+      <td><strong>${m}</strong></td>
+      <td>${d.invs}</td>
+      <td class="mono">${fmtN(d.taxable)}</td>
+      <td class="mono">${fmtN(d.cgst)}</td>
+      <td class="mono">${fmtN(d.sgst)}</td>
+      <td class="mono">${fmtN(d.igst)}</td>
+      <td class="mono" style="color:var(--ruby)">${fmtN(d.tax)}</td>
+      <td class="mono" style="font-weight:600">${fmtN(d.total)}</td>
+    </tr>`;
+  });
+
+  document.getElementById('monthTbody').innerHTML = rows.length ? rows.join('') :
+    `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📅</div><div class="empty-label">No monthly data</div></div></td></tr>`;
+}
+
+// ══════════════════════════════════════════════
+//  DOWNLOAD / EXPORT
+// ══════════════════════════════════════════════
+function downloadCSV() {
+  if (!sales.length) { toast('No data to export'); return; }
+  const headers = ['Invoice No','Date','Party','GSTIN','Type','HSN','GST Rate%','Taxable','CGST','SGST','IGST','Total Tax','Invoice Total','Payment'];
+  const rows = sales.map(r => [
+    r.invNo, r.invDate, r.partyName, r.buyerGstin||'', r.txnType, r.hsnCode||'', r.gstRate,
+    r.taxable.toFixed(2), r.cgst.toFixed(2), r.sgst.toFixed(2), r.igst.toFixed(2),
+    r.totalTax.toFixed(2), r.total.toFixed(2), r.payMode
+  ]);
+  downloadFile([headers, ...rows].map(r => r.join(',')).join('\n'), 'sales-register.csv', 'text/csv');
+  toast('↧ Sales Register CSV downloaded');
+}
+
+function exportGSTR1() {
+  if (!sales.length) { toast('No data to export'); return; }
+  const headers = ['Invoice No','Date','Party','GSTIN','Type','POS','HSN','Rate%','Taxable','IGST','CGST','SGST','Total'];
+  const rows = sales.map(r => [
+    r.invNo, r.invDate, r.partyName, r.buyerGstin||'', r.txnType,
+    r.posState==='diff'?'Inter-State':'Intra-State', r.hsnCode||'', r.gstRate,
+    r.taxable.toFixed(2), r.igst.toFixed(2), r.cgst.toFixed(2), r.sgst.toFixed(2), r.total.toFixed(2)
+  ]);
+  downloadFile([headers, ...rows].map(r => r.join(',')).join('\n'), 'GSTR1.csv', 'text/csv');
+  toast('↧ GSTR-1 CSV downloaded');
+}
+
+function downloadSummaryTxt() {
+  const firm = document.getElementById('cfg-firm')?.value || 'CA Suite Firm';
+  const gstin = document.getElementById('cfg-gstin')?.value || '';
+  const totalTaxable = sales.reduce((s,r) => s+r.taxable, 0);
+  const totalTax = sales.reduce((s,r) => s+r.totalTax, 0);
+  const totalInv = sales.reduce((s,r) => s+r.total, 0);
+  const cgst = sales.reduce((s,r) => s+r.cgst, 0);
+  const sgst = sales.reduce((s,r) => s+r.sgst, 0);
+  const igst = sales.reduce((s,r) => s+r.igst, 0);
+
+  const txt = `
+=====================================
+  CA SUITE — FINANCIAL SUMMARY
+  ${firm}
+  GSTIN: ${gstin}
+  FY: 2024-25
+  Generated: ${new Date().toLocaleString('en-IN')}
+=====================================
+
+SALES SUMMARY
+─────────────────────────────────────
+Total Invoices      : ${sales.length}
+Total Taxable Value : ${fmt(totalTaxable)}
+Total Invoice Value : ${fmt(totalInv)}
+Average Invoice     : ${fmt(sales.length ? totalInv/sales.length : 0)}
+
+TRANSACTION TYPES
+─────────────────────────────────────
+B2B (Registered)    : ${sales.filter(r=>r.txnType==='B2B').length}
+B2C (Unregistered)  : ${sales.filter(r=>r.txnType==='B2C').length}
+Export              : ${sales.filter(r=>r.txnType==='Export').length}
+
+TAX SUMMARY
+─────────────────────────────────────
+Total CGST          : ${fmt(cgst)}
+Total SGST          : ${fmt(sgst)}
+Total IGST          : ${fmt(igst)}
+Total GST           : ${fmt(totalTax)}
+Effective Tax Rate  : ${pct(totalTax, totalTaxable)}
+
+INVOICES
+─────────────────────────────────────
+${sales.map(r => `${r.invNo}  ${r.invDate}  ${r.partyName.padEnd(20)}  ${r.txnType}  ${fmt(r.total)}`).join('\n')}
+
+=====================================
+  This is a system-generated report.
+  Please verify before tax filing.
+=====================================
+  `.trim();
+
+  downloadFile(txt, 'summary-report.txt', 'text/plain');
+  toast('↧ Summary TXT downloaded');
+}
+
+function downloadFile(content, filename, type) {
+  const blob = new Blob([content], { type });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function printRegister() {
+  if (!sales.length) { toast('No data to print'); return; }
+  const headers = ['Inv No','Date','Party','Type','HSN','Rate%','Taxable','CGST','SGST','IGST','Total'];
+  const rows = sales.map(r => `
+    <tr>
+      <td>${r.invNo}</td><td>${r.invDate}</td><td>${r.partyName}</td>
+      <td>${r.txnType}</td><td>${r.hsnCode||'—'}</td><td>${r.gstRate}%</td>
+      <td>${fmtN(r.taxable)}</td><td>${fmtN(r.cgst)}</td><td>${fmtN(r.sgst)}</td>
+      <td>${fmtN(r.igst)}</td><td><strong>${fmtN(r.total)}</strong></td>
+    </tr>`).join('');
+
+  const firm = document.getElementById('cfg-firm')?.value || 'CA Suite';
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Sales Register</title>
+  <style>body{font-family:Arial,sans-serif;font-size:12px}
+  h2{margin-bottom:4px}table{border-collapse:collapse;width:100%}
+  th,td{border:1px solid #ccc;padding:5px 8px}th{background:#f5f5f5;font-size:10px}
+  @media print{body{-webkit-print-color-adjust:exact}}</style></head>
+  <body><h2>${firm} — Sales Register</h2><p style="font-size:10px;color:#888">FY 2024-25 | Generated: ${new Date().toLocaleString('en-IN')}</p>
+  <table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+  <tbody>${rows}</tbody></table></body></html>`);
+  win.document.close();
+  win.print();
+}
+
+// ══════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════
+function saveConfig() { /* config persists in DOM inputs */ }
+
+function clearAllData() {
+  if (!confirm('This will permanently delete all sales data. Are you sure?')) return;
+  sales = [];
+  invCounter = 1;
+  persist();
+  renderDashboard();
+  updateInvNumber();
+  toast('All data cleared');
+}
+
+// ══════════════════════════════════════════════
+//  DEMO DATA — pre-load some sample entries
+// ══════════════════════════════════════════════
+if (!sales.length) {
+  const demo = [
+    { invNo:'INV-001', invDate:'2024-04-05', txnType:'B2B', partyName:'Infosys Ltd.', buyerGstin:'29AABCI1082H1ZE', posState:'diff', itemDesc:'IT Services', hsnCode:'998314', gstRate:18, gross:150000, disc:0 },
+    { invNo:'INV-002', invDate:'2024-04-18', txnType:'B2C', partyName:'Rahul Sharma', buyerGstin:'', posState:'same', itemDesc:'Audit Fees', hsnCode:'998221', gstRate:18, gross:25000, disc:500 },
+    { invNo:'INV-003', invDate:'2024-05-10', txnType:'B2B', partyName:'Tata Motors', buyerGstin:'27AAACT2727Q1ZW', posState:'diff', itemDesc:'Consulting', hsnCode:'998311', gstRate:18, gross:300000, disc:0 },
+    { invNo:'INV-004', invDate:'2024-05-22', txnType:'B2B', partyName:'Reliance Industries', buyerGstin:'27AAACR4849R1Z3', posState:'same', itemDesc:'GST Consulting', hsnCode:'998221', gstRate:18, gross:50000, disc:0 },
+    { invNo:'INV-005', invDate:'2024-06-14', txnType:'B2C', partyName:'Priya Mehta', buyerGstin:'', posState:'same', itemDesc:'Tax Filing', hsnCode:'998221', gstRate:18, gross:8000, disc:0 },
+    { invNo:'INV-006', invDate:'2024-07-02', txnType:'Export', partyName:'Acme Corp USA', buyerGstin:'', posState:'diff', itemDesc:'Software Export', hsnCode:'998314', gstRate:0, gross:500000, disc:0 },
+    { invNo:'INV-007', invDate:'2024-08-15', txnType:'B2B', partyName:'HDFC Bank', buyerGstin:'22AAAAH1705E1Z7', posState:'same', itemDesc:'Statutory Audit', hsnCode:'998221', gstRate:18, gross:200000, disc:5000 },
+    { invNo:'INV-008', invDate:'2024-09-20', txnType:'B2C', partyName:'Amit Kumar', buyerGstin:'', posState:'same', itemDesc:'ITR Filing', hsnCode:'998221', gstRate:18, gross:3500, disc:0 },
+  ];
+
+  demo.forEach(d => {
+    const taxable = Math.max(d.gross - d.disc, 0);
+    const isIGST = d.posState === 'diff' || d.txnType === 'Export';
+    const totalTax = taxable * d.gstRate / 100;
+    const cgst = isIGST ? 0 : totalTax / 2;
+    const sgst = isIGST ? 0 : totalTax / 2;
+    const igst = isIGST ? totalTax : 0;
+    sales.push({ id: Date.now() + Math.random(), ...d, taxable, cgst, sgst, igst, totalTax, total: taxable + totalTax, payMode: 'Bank Transfer' });
+  });
+  invCounter = 9;
+  persist();
+}
+
+// Initial render
+renderDashboard();
+renderRegister();
+</script>
+</body>
+</html>

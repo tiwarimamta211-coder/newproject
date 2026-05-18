@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevGenius AI | SaaS Code Suite</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0d1117; color: #e2e8f0; padding: 16px; min-height: 100vh; }
+  .wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+
+  /* HEADER BAR */
+  .top-bar { background: #161b22; border: 1px solid #30363d; border-radius: 14px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .logo { font-size: 18px; font-weight: 800; color: #818cf8; display: flex; align-items: center; gap: 8px; }
+  .top-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* API ROW */
+  .api-bar { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .api-bar label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+  .api-bar input { flex: 1; min-width: 180px; padding: 8px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; font-size: 12px; font-family: inherit; color: #e2e8f0; outline: none; }
+  .api-bar input:focus { border-color: #818cf8; }
+  .api-bar input::placeholder { color: #475569; }
+  .api-status { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 8px; white-space: nowrap; }
+  .api-status.demo { background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2); }
+  .api-status.live { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+  .api-link { font-size: 11px; color: #818cf8; text-decoration: none; white-space: nowrap; }
+  .api-link:hover { text-decoration: underline; }
+
+  /* MAIN GRID */
+  .main-grid { display: flex; gap: 14px; align-items: flex-start; }
+
+  /* SIDEBAR */
+  .sidebar { flex: 0 0 210px; background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; max-height: 580px; }
+  .sidebar-title { font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1.2px; }
+  .snippets-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+  .snippet-item { padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s; border-left: 3px solid transparent; }
+  .snippet-item:hover { background: #1e2d3d; color: #e2e8f0; }
+  .snippet-item.active { background: rgba(129,140,248,0.1); color: #818cf8; border-left-color: #818cf8; }
+  .snippet-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .snip-del { color: #ef4444; opacity: 0; font-size: 13px; cursor: pointer; padding: 0 2px; flex-shrink: 0; }
+  .snippet-item:hover .snip-del { opacity: 1; }
+  .empty-snippets { text-align: center; color: #334155; font-size: 12px; padding: 16px 8px; }
+  .pro-badge { background: rgba(16,185,129,0.06); border: 1px dashed rgba(16,185,129,0.3); border-radius: 10px; padding: 12px; }
+  .pro-badge p:first-child { font-size: 10px; font-weight: 800; color: #10b981; }
+  .pro-badge p:last-child  { font-size: 10px; color: #475569; margin-top: 3px; }
+
+  /* WORKSPACE */
+  .workspace { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+
+  /* CONTROLS ROW */
+  .controls-row { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 12px 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .ctrl-select { background: #0d1117; border: 1px solid #30363d; color: #e2e8f0; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; appearance: none; -webkit-appearance: none; }
+  .ctrl-select:focus { border-color: #818cf8; }
+  .name-input { background: transparent; border: none; color: #94a3b8; font-weight: 600; font-size: 13px; outline: none; font-family: inherit; flex: 1; min-width: 120px; }
+  .name-input::placeholder { color: #334155; }
+
+  /* BUTTONS */
+  .btn { padding: 9px 18px; border-radius: 9px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s, transform 0.1s; white-space: nowrap; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn-primary { background: #4f46e5; color: #fff; }
+  .btn-primary:hover { background: #4338ca; }
+  .btn-green  { background: #059669; color: #fff; }
+  .btn-green:hover  { background: #047857; }
+  .btn-outline { background: transparent; border: 1px solid #30363d; color: #94a3b8; }
+  .btn-outline:hover { background: #1e2d3d; color: #e2e8f0; }
+  .btn:disabled { background: #334155; cursor: not-allowed; transform: none; color: #64748b; }
+
+  /* EDITOR GRID */
+  .editor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* PROMPT PANEL */
+  .prompt-panel { background: #161b22; border: 1px solid #30363d; border-radius: 14px; overflow: hidden; }
+  .panel-header { padding: 10px 16px; background: #0d1117; border-bottom: 1px solid #30363d; font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
+  .prompt-panel textarea { width: 100%; min-height: 280px; background: #161b22; border: none; color: #e2e8f0; font-size: 13px; font-family: inherit; padding: 16px; outline: none; resize: vertical; line-height: 1.6; }
+  .prompt-panel textarea::placeholder { color: #334155; }
+
+  /* CODE PANEL */
+  .code-panel { background: #0d1117; border: 1px solid #30363d; border-radius: 14px; overflow: hidden; }
+  .code-output { width: 100%; min-height: 280px; background: transparent; border: none; color: #a5b4fc; font-size: 12.5px; font-family: 'Courier New', Consolas, monospace; padding: 16px; outline: none; resize: vertical; line-height: 1.7; white-space: pre; overflow: auto; }
+
+  /* QUICK PROMPTS */
+  .quick-wrap { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 14px 16px; }
+  .quick-title { font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .quick-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+  .chip { background: #0d1117; border: 1px solid #30363d; color: #64748b; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 20px; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .chip:hover { border-color: #818cf8; color: #818cf8; background: rgba(129,140,248,0.06); }
+
+  /* SPIN */
+  .spin { display: inline-block; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 640px) {
+    .main-grid { flex-direction: column; }
+    .sidebar { flex: 0 0 auto; width: 100%; max-height: 200px; }
+    .editor-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="logo">💻 DevGenius AI</div>
+    <div class="top-right">
+      <span style="font-size:11px;color:#475569">Powered by Claude AI</span>
+    </div>
+  </div>
+
+  <!-- API BAR -->
+  <div class="api-bar">
+    <label>Anthropic API Key</label>
+    <input type="password" id="apiKey" placeholder="sk-ant-... (Paste your Anthropic API Key for real AI code)">
+    <span class="api-status demo" id="apiStatus">Demo Mode</span>
+    <a class="api-link" href="https://console.anthropic.com" target="_blank">Get Free Key →</a>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- SIDEBAR: SAVED SNIPPETS -->
+    <aside class="sidebar">
+      <div class="sidebar-title">Saved Snippets</div>
+      <div class="snippets-list" id="snippetsList">
+        <div class="empty-snippets">No snippets yet.<br>Save a generated code to see it here.</div>
+      </div>
+      <div class="pro-badge">
+        <p>SESSION STORAGE</p>
+        <p>Snippets saved for this session.</p>
+      </div>
+    </aside>
+
+    <!-- WORKSPACE -->
+    <div class="workspace">
+
+      <!-- CONTROLS -->
+      <div class="controls-row">
+        <select class="ctrl-select" id="langSelect">
+          <option value="JavaScript">JavaScript</option>
+          <option value="Python">Python</option>
+          <option value="HTML/CSS">HTML / CSS</option>
+          <option value="SQL">SQL Query</option>
+          <option value="React JSX">React JSX</option>
+          <option value="PHP">PHP</option>
+          <option value="Java">Java</option>
+          <option value="C++">C++</option>
+          <option value="TypeScript">TypeScript</option>
+          <option value="Bash/Shell">Bash / Shell</option>
+        </select>
+        <input type="text" class="name-input" id="projectName" placeholder="Snippet name...">
+        <button class="btn btn-outline" onclick="saveSnippet()">💾 Save</button>
+        <button class="btn btn-green"   onclick="copyCode()">📋 Copy</button>
+        <button class="btn btn-primary" id="genBtn" onclick="generateCode()">⚡ Generate</button>
+      </div>
+
+      <!-- EDITOR -->
+      <div class="editor-grid">
+        <div class="prompt-panel">
+          <div class="panel-header">
+            <span>📝 Prompt Instruction</span>
+            <span style="color:#334155">Describe what you need</span>
+          </div>
+          <textarea id="promptInput" placeholder="e.g. Write a Python function to calculate GST on an invoice amount with 5%, 12%, and 18% slabs..."></textarea>
+        </div>
+        <div class="code-panel">
+          <div class="panel-header">
+            <span>⌨️ Generated Code</span>
+            <span id="langLabel" style="color:#818cf8">JavaScript</span>
+          </div>
+          <textarea class="code-output" id="codeOutput" readonly placeholder="// AI generated code will appear here...&#10;// Enter a prompt and click ⚡ Generate"></textarea>
+        </div>
+      </div>
+
+      <!-- QUICK PROMPTS -->
+      <div class="quick-wrap">
+        <div class="quick-title">⚡ Quick Prompts</div>
+        <div class="quick-chips">
+          <button class="chip" onclick="setPrompt('Write a function to calculate GST for 5%, 12%, and 18% slabs on a given amount')">GST Calculator</button>
+          <button class="chip" onclick="setPrompt('Create a form validation function that checks name, email, and phone number')">Form Validation</button>
+          <button class="chip" onclick="setPrompt('Write a function to fetch data from an API with error handling and loading state')">API Fetch</button>
+          <button class="chip" onclick="setPrompt('Write a SQL query to get top 10 customers by total invoice amount in the last 30 days')">SQL Top Customers</button>
+          <button class="chip" onclick="setPrompt('Create a responsive navigation bar in HTML and CSS with mobile hamburger menu')">Nav Bar</button>
+          <button class="chip" onclick="setPrompt('Write a Python script to read a CSV file and calculate sum, average, min, max of a column')">CSV Analysis</button>
+          <button class="chip" onclick="setPrompt('Create a JavaScript function to convert numbers to Indian currency format (lakhs/crores)')">INR Formatter</button>
+          <button class="chip" onclick="setPrompt('Write a function to validate Indian PAN card number format')">PAN Validator</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  var snippets = [];   // in-memory only
+  var currentId = null;
+
+  // Mock code responses for demo mode
+  var mockCode = {
+    'JavaScript': 'async function fetchData(url) {\n  try {\n    const response = await fetch(url);\n    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);\n    const data = await response.json();\n    return data;\n  } catch (err) {\n    console.error("Fetch failed:", err.message);\n    return null;\n  }\n}\n\n// Usage\nfetchData("https://api.example.com/data")\n  .then(data => console.log(data));',
+    'Python':     'def calculate_gst(amount, slab):\n    """\n    Calculate GST for given amount and slab.\n    slab: 5, 12, or 18\n    Returns: dict with base, gst, total\n    """\n    gst_rates = {5: 0.05, 12: 0.12, 18: 0.18}\n    if slab not in gst_rates:\n        raise ValueError(f"Invalid slab: {slab}. Use 5, 12, or 18.")\n    gst_amount = amount * gst_rates[slab]\n    return {\n        "base_amount": round(amount, 2),\n        "gst_rate": f"{slab}%",\n        "gst_amount": round(gst_amount, 2),\n        "total": round(amount + gst_amount, 2)\n    }\n\n# Usage\nresult = calculate_gst(1000, 18)\nprint(result)',
+    'HTML/CSS':   '<div class="card">\n  <div class="card-header">Card Title</div>\n  <div class="card-body">\n    <p>Card content goes here.</p>\n    <button class="btn-primary">Click Me</button>\n  </div>\n</div>\n\n<style>\n.card {\n  background: #fff;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n  overflow: hidden;\n  max-width: 360px;\n}\n.card-header {\n  background: #4f46e5;\n  color: #fff;\n  padding: 14px 20px;\n  font-weight: 700;\n}\n.card-body { padding: 20px; }\n.btn-primary {\n  background: #4f46e5;\n  color: #fff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 8px;\n  cursor: pointer;\n  font-weight: 600;\n}\n</style>',
+    'SQL':        'SELECT \n    c.customer_name,\n    c.email,\n    COUNT(i.invoice_id) AS total_invoices,\n    SUM(i.amount) AS total_amount,\n    MAX(i.invoice_date) AS last_invoice_date\nFROM customers c\nINNER JOIN invoices i ON c.customer_id = i.customer_id\nWHERE i.invoice_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)\n  AND i.status = "paid"\nGROUP BY c.customer_id, c.customer_name, c.email\nORDER BY total_amount DESC\nLIMIT 10;'
+  };
+
+  function setPrompt(text) {
+    document.getElementById('promptInput').value = text;
+    document.getElementById('promptInput').focus();
+  }
+
+  document.getElementById('langSelect').addEventListener('change', function() {
+    document.getElementById('langLabel').innerText = this.value;
+  });
+
+  function generateCode() {
+    var prompt  = document.getElementById('promptInput').value.trim();
+    var lang    = document.getElementById('langSelect').value;
+    var apiKey  = document.getElementById('apiKey').value.trim();
+    var genBtn  = document.getElementById('genBtn');
+    var output  = document.getElementById('codeOutput');
+
+    if (!prompt) { alert('Please enter a prompt!'); return; }
+
+    genBtn.disabled = true;
+    genBtn.innerHTML = '<span class="spin">⏳</span> Generating...';
+    output.value = '// Generating ' + lang + ' code...\n// Please wait...';
+
+    if (!apiKey || !apiKey.startsWith('sk-ant-')) {
+      // Demo mode
+      setTimeout(function() {
+        var demo = mockCode[lang] || '// Demo code for ' + lang + '\n// Add your Anthropic API key for real AI-generated code\nconsole.log("Hello from DevGenius!");';
+        output.value = demo;
+        finishGen(false);
+      }, 1400);
+      return;
+    }
+
+    // Real Claude API
+    var systemPrompt = 'You are an expert ' + lang + ' developer. Generate clean, well-commented, production-ready code. Return ONLY the code — no markdown fences, no explanation before or after. Add brief inline comments where helpful.';
+
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: 'Language: ' + lang + '\n\nTask: ' + prompt }]
+      })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data.content && data.content[0]) {
+        var code = data.content[0].text || '';
+        // Strip markdown fences if present
+        code = code.replace(/^```[\w]*\n?/,'').replace(/\n?```$/,'').trim();
+        output.value = code;
+        document.getElementById('apiStatus').className = 'api-status live';
+        document.getElementById('apiStatus').innerText = '✅ Live AI';
+        finishGen(true);
+      } else {
+        output.value = '// Error: ' + (data.error ? data.error.message : 'Unexpected response');
+        finishGen(false);
+      }
+    })
+    .catch(function() {
+      output.value = '// Network error. Check your API key and internet connection.';
+      finishGen(false);
+    });
+  }
+
+  function finishGen(success) {
+    var btn = document.getElementById('genBtn');
+    btn.disabled = false;
+    btn.innerHTML = '⚡ Generate';
+  }
+
+  function saveSnippet() {
+    var name = document.getElementById('projectName').value.trim() || 'Untitled Snippet';
+    var code = document.getElementById('codeOutput').value;
+    var lang = document.getElementById('langSelect').value;
+    var prompt = document.getElementById('promptInput').value;
+
+    if (!code || code.startsWith('// AI generated')) { alert('Generate code first!'); return; }
+
+    if (currentId) {
+      var idx = snippets.findIndex(function(s){ return s.id === currentId; });
+      if (idx > -1) snippets[idx] = { id: currentId, name: name, code: code, lang: lang, prompt: prompt };
+    } else {
+      var newSnip = { id: Date.now(), name: name, code: code, lang: lang, prompt: prompt };
+      snippets.unshift(newSnip);
+      currentId = newSnip.id;
+    }
+    renderSnippets();
+    alert('Snippet saved! ✅');
+  }
+
+  function loadSnippet(id) {
+    currentId = id;
+    var s = snippets.find(function(x){ return x.id === id; });
+    if (!s) return;
+    document.getElementById('projectName').value  = s.name;
+    document.getElementById('codeOutput').value   = s.code;
+    document.getElementById('langSelect').value   = s.lang;
+    document.getElementById('langLabel').innerText = s.lang;
+    document.getElementById('promptInput').value  = s.prompt;
+    renderSnippets();
+  }
+
+  function deleteSnippet(id) {
+    snippets = snippets.filter(function(s){ return s.id !== id; });
+    if (currentId === id) {
+      currentId = null;
+      document.getElementById('projectName').value = '';
+      document.getElementById('promptInput').value = '';
+      document.getElementById('codeOutput').value  = '';
+    }
+    renderSnippets();
+  }
+
+  function renderSnippets() {
+    var list = document.getElementById('snippetsList');
+    if (snippets.length === 0) {
+      list.innerHTML = '<div class="empty-snippets">No snippets yet.<br>Save a generated code to see it here.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    snippets.forEach(function(s) {
+      var item = document.createElement('div');
+      item.className = 'snippet-item' + (s.id === currentId ? ' active' : '');
+      item.innerHTML =
+        '<span class="snippet-name" onclick="loadSnippet(' + s.id + ')" title="' + escHtml(s.name) + '">' +
+        '💾 ' + escHtml(s.name) + '</span>' +
+        '<span class="snip-del" onclick="deleteSnippet(' + s.id + ')" title="Delete">✕</span>';
+      list.appendChild(item);
+    });
+  }
+
+  function copyCode() {
+    var code = document.getElementById('codeOutput').value;
+    if (!code || code.startsWith('// AI generated')) { alert('Nothing to copy yet!'); return; }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(code).then(function(){ alert('Code copied! ✅'); });
+    } else {
+      document.getElementById('codeOutput').select();
+      document.execCommand('copy');
+      alert('Code copied! ✅');
+    }
+  }
+
+  function escHtml(t) {
+    return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Enter key in prompt
+  document.getElementById('promptInput').addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter') generateCode();
+  });
+</script>
+</body>
+</html>

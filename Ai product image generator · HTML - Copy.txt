@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge — AI Product Image Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #1a1a26;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --accent: #c8b4ff;
+    --accent2: #7c5cfc;
+    --accent3: #e8d5ff;
+    --text: #f0eeff;
+    --text2: #9b93b8;
+    --text3: #5c5478;
+    --gold: #f5c842;
+    --teal: #4dd9c0;
+    --coral: #ff7a7a;
+    --success: #4dd9a0;
+    --radius: 12px;
+    --radius2: 20px;
+    --font-head: 'DM Serif Display', serif;
+    --font-ui: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRID BG */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,92,252,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,92,252,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--accent2), var(--teal));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .logo span { color: var(--accent); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .api-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+  }
+  .api-badge.connected { color: var(--success); border-color: rgba(77,217,160,0.3); }
+
+  /* MAIN LAYOUT */
+  .app-shell {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    grid-template-rows: 1fr;
+    height: calc(100vh - 60px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    background: var(--bg2);
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+  .sidebar-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-section:last-child { border-bottom: none; flex: 1; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 14px;
+  }
+
+  /* INPUTS */
+  .input-group { margin-bottom: 16px; }
+  .input-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .input-label .hint {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--text3);
+    margin-left: auto;
+  }
+
+  textarea, input[type="text"], select {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    padding: 10px 14px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  textarea:focus, input[type="text"]:focus, select:focus {
+    border-color: var(--accent2);
+  }
+  textarea { min-height: 90px; line-height: 1.6; }
+  select { appearance: none; cursor: pointer; }
+  select option { background: var(--bg3); }
+
+  /* STYLE CHIPS */
+  .chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .chip:hover { border-color: var(--accent2); color: var(--accent); }
+  .chip.active {
+    background: rgba(124,92,252,0.2);
+    border-color: var(--accent2);
+    color: var(--accent);
+  }
+
+  /* SIZE GRID */
+  .size-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .size-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text2);
+  }
+  .size-btn:hover { border-color: var(--accent2); }
+  .size-btn.active {
+    background: rgba(124,92,252,0.15);
+    border-color: var(--accent2);
+    color: var(--accent);
+  }
+  .size-icon {
+    border: 1.5px solid currentColor;
+    border-radius: 3px;
+    background: rgba(124,92,252,0.1);
+  }
+  .size-label { font-size: 10px; font-weight: 600; }
+  .size-ratio { font-size: 9px; color: var(--text3); }
+
+  /* API KEY */
+  .api-key-wrap {
+    position: relative;
+  }
+  .api-key-wrap input {
+    padding-right: 40px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .eye-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    line-height: 1;
+  }
+  .eye-btn:hover { color: var(--text2); }
+
+  /* GENERATE BUTTON */
+  .generate-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent2), #a87fff);
+    border: none;
+    border-radius: var(--radius);
+    color: #fff;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .generate-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .generate-btn:active { transform: translateY(0); }
+  .generate-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ADVANCED TOGGLE */
+  .advanced-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text2);
+    cursor: pointer;
+    padding: 8px 0;
+    user-select: none;
+  }
+  .advanced-toggle:hover { color: var(--text); }
+  .toggle-icon { transition: transform 0.2s; font-size: 10px; }
+  .toggle-icon.open { transform: rotate(90deg); }
+
+  .advanced-panel { display: none; }
+  .advanced-panel.open { display: block; }
+
+  /* QUALITY SLIDER */
+  .slider-wrap { position: relative; }
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--accent2);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  /* CANVAS AREA */
+  .canvas-area {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .canvas-toolbar {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+  .canvas-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .count-badge {
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 10px;
+  }
+  .toolbar-btn {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .toolbar-btn:hover { border-color: var(--border2); color: var(--text); }
+  .toolbar-btn.danger:hover { border-color: rgba(255,122,122,0.4); color: var(--coral); }
+
+  /* GENERATION GRID */
+  .gallery {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+  .gallery::-webkit-scrollbar { width: 4px; }
+  .gallery::-webkit-scrollbar-track { background: transparent; }
+  .gallery::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 40px;
+  }
+  .empty-glyph {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.3;
+    filter: grayscale(1);
+  }
+  .empty-title {
+    font-family: var(--font-head);
+    font-size: 28px;
+    color: var(--text2);
+    margin-bottom: 10px;
+  }
+  .empty-desc {
+    font-size: 13px;
+    color: var(--text3);
+    max-width: 320px;
+    line-height: 1.7;
+  }
+
+  /* IMAGE CARD */
+  .img-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    overflow: hidden;
+    transition: all 0.2s;
+    position: relative;
+    group: true;
+  }
+  .img-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-2px);
+  }
+  .img-card.loading {
+    border-style: dashed;
+    border-color: rgba(124,92,252,0.3);
+  }
+
+  .img-display {
+    aspect-ratio: 1;
+    background: var(--bg3);
+    position: relative;
+    overflow: hidden;
+  }
+  .img-display.portrait { aspect-ratio: 9/16; }
+  .img-display.landscape { aspect-ratio: 16/9; }
+
+  .img-display img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* LOADING SKELETON */
+  .skeleton-loader {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: var(--bg3);
+  }
+  .skeleton-ring {
+    width: 48px;
+    height: 48px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent2);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .skeleton-text {
+    font-size: 12px;
+    color: var(--text3);
+    font-family: var(--font-mono);
+  }
+
+  /* SHIMMER */
+  .shimmer-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    padding: 0 24px;
+  }
+  .shimmer {
+    height: 8px;
+    background: linear-gradient(90deg, var(--bg3) 25%, rgba(124,92,252,0.1) 50%, var(--bg3) 75%);
+    background-size: 200% 100%;
+    border-radius: 4px;
+    animation: shimmer 1.5s infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  .img-meta {
+    padding: 14px 16px;
+  }
+  .img-prompt {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .img-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .img-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 100px;
+    background: rgba(124,92,252,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(124,92,252,0.2);
+  }
+  .img-tag.style-tag { background: rgba(77,217,192,0.1); color: var(--teal); border-color: rgba(77,217,192,0.2); }
+
+  .img-actions {
+    display: flex;
+    gap: 6px;
+    padding: 0 16px 14px;
+  }
+  .act-btn {
+    flex: 1;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 7px 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  .act-btn:hover { border-color: var(--border2); color: var(--text); }
+  .act-btn.primary:hover { background: rgba(124,92,252,0.15); border-color: var(--accent2); color: var(--accent); }
+
+  /* ERROR CARD */
+  .error-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,122,122,0.08);
+    gap: 8px;
+    padding: 20px;
+    text-align: center;
+  }
+  .error-icon { font-size: 32px; }
+  .error-msg { font-size: 12px; color: var(--coral); line-height: 1.5; }
+
+  /* PROMPT ENHANCER */
+  .enhance-panel {
+    background: rgba(124,92,252,0.05);
+    border: 1px solid rgba(124,92,252,0.15);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-top: 10px;
+    display: none;
+  }
+  .enhance-panel.visible { display: block; }
+  .enhance-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .enhance-text {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.6;
+    font-style: italic;
+  }
+  .enhance-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .enhance-btn {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .enhance-btn.primary {
+    background: var(--accent2);
+    border-color: var(--accent2);
+    color: #fff;
+  }
+  .enhance-btn:hover { border-color: var(--border2); color: var(--text); }
+  .enhance-btn.primary:hover { opacity: 0.85; }
+
+  /* PROMPT HISTORY */
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .history-item {
+    font-size: 11px;
+    color: var(--text3);
+    padding: 6px 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .history-item:hover { border-color: var(--border2); color: var(--text2); }
+
+  /* FULLSCREEN MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(8px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-content {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius2);
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .modal-close {
+    width: 28px;
+    height: 28px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { color: var(--text); border-color: var(--border2); }
+  .modal-body { padding: 20px; }
+  .modal-image {
+    width: 100%;
+    border-radius: var(--radius);
+    display: block;
+    margin-bottom: 20px;
+  }
+  .modal-detail-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: flex-start;
+  }
+  .modal-detail-key {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text3);
+    min-width: 80px;
+    padding-top: 1px;
+  }
+  .modal-detail-val {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    font-size: 13px;
+    color: var(--text);
+    display: none;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    animation: slideUp 0.3s ease;
+  }
+  .toast.visible { display: flex; }
+  @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } }
+  .toast-icon { font-size: 16px; }
+
+  /* BATCH COUNT */
+  .batch-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .batch-stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .stepper-btn {
+    width: 32px;
+    height: 32px;
+    background: var(--bg3);
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .stepper-btn:hover { background: rgba(124,92,252,0.15); color: var(--accent); }
+  .stepper-val {
+    width: 40px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--bg2);
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    line-height: 32px;
+  }
+  .batch-label { font-size: 12px; color: var(--text3); }
+
+  /* NEGATIVE PROMPT */
+  .neg-input { min-height: 60px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .app-shell {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+      height: auto;
+      min-height: calc(100vh - 60px);
+    }
+    .sidebar {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      max-height: 60vh;
+    }
+    .canvas-area { min-height: 60vh; }
+    header { padding: 0 1rem; }
+    .api-badge { display: none; }
+    .gallery { padding: 16px; }
+    .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  }
+  @media (max-width: 480px) {
+    .size-grid { grid-template-columns: repeat(3, 1fr); }
+    .gallery-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .img-actions { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="#" class="logo">
+    <div class="logo-icon">✦</div>
+    Pixel<span>Forge</span>
+  </a>
+  <div class="header-right">
+    <span class="api-badge" id="apiBadge">● No API Key</span>
+  </div>
+</header>
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- API KEY -->
+    <div class="sidebar-section">
+      <div class="section-label">⚙ Configuration</div>
+      <div class="input-group">
+        <div class="input-label">Claude API Key <span class="hint">Stored locally</span></div>
+        <div class="api-key-wrap">
+          <input type="password" id="apiKey" placeholder="sk-ant-api03-..." />
+          <button class="eye-btn" id="eyeBtn" onclick="toggleEye()" title="Show/hide key">👁</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMPT -->
+    <div class="sidebar-section">
+      <div class="section-label">✦ Prompt</div>
+      <div class="input-group">
+        <div class="input-label">Product Description</div>
+        <textarea id="mainPrompt" placeholder="A luxury perfume bottle made of cut crystal glass, golden cap, sitting on white marble surface, professional product photography..."></textarea>
+      </div>
+      <div class="input-group">
+        <div class="input-label">Background / Setting</div>
+        <select id="bgSelect">
+          <option value="">— Select background —</option>
+          <option value="pure white minimalist background">Pure white (studio)</option>
+          <option value="soft gradient background, pastel tones">Soft pastel gradient</option>
+          <option value="dark dramatic background, moody lighting">Dark & dramatic</option>
+          <option value="natural outdoor setting, bokeh background">Outdoor / natural</option>
+          <option value="luxury marble surface and background">Marble luxury</option>
+          <option value="wooden table, rustic background">Rustic wooden</option>
+          <option value="transparent background, isolated product">Transparent (PNG ready)</option>
+          <option value="neon-lit cyberpunk background">Neon / cyberpunk</option>
+        </select>
+      </div>
+
+      <button class="generate-btn" style="margin-bottom: 8px; background: rgba(124,92,252,0.1); border: 1px solid rgba(124,92,252,0.3); color: var(--accent);" id="enhanceBtn" onclick="enhancePrompt()">
+        ✦ AI Enhance Prompt
+      </button>
+
+      <div class="enhance-panel" id="enhancePanel">
+        <div class="enhance-title">✦ Enhanced Prompt</div>
+        <div class="enhance-text" id="enhancedText">Generating...</div>
+        <div class="enhance-actions">
+          <button class="enhance-btn primary" onclick="useEnhanced()">Use This</button>
+          <button class="enhance-btn" onclick="closeEnhance()">Dismiss</button>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-top: 10px;">
+        <div class="input-label">
+          Negative Prompt
+          <span class="hint">Optional</span>
+        </div>
+        <textarea id="negPrompt" class="neg-input" placeholder="blurry, low quality, watermark, text, ugly, deformed..."></textarea>
+      </div>
+    </div>
+
+    <!-- STYLE -->
+    <div class="sidebar-section">
+      <div class="section-label">🎨 Visual Style</div>
+      <div class="chip-grid" id="styleChips">
+        <button class="chip" onclick="toggleChip(this, 'styleChips')">Photorealistic</button>
+        <button class="chip" onclick="toggleChip(this, 'styleChips')">Studio Light</button>
+        <button class="chip" onclick="toggleChip(this, 'styleChips')">Cinematic</button>
+        <button class="chip" onclick="toggleChip(this, 'styleChips')">Minimalist</button>
+        <button class="chip" onclick="toggleChip(this, 'styleChips')">High Fashion</button>
+        <button class="chip" onclick="toggleChip(this, 'styleChips')">Editorial</button>
+        <button class="chip" onclick="toggleChip(this, 'styleChips')">Macro Detail</button>
+        <button class="chip" onclick="toggleChip(this, 'styleChips')">Bokeh</button>
+        <button class="chip" onclick="toggleChip(this, 'styleChips')">HDR</button>
+        <button class="chip" onclick="toggleChip(this, 'styleChips')">3D Render</button>
+        <button class="chip" onclick="toggleChip(this, 'styleChips')">Watercolor</button>
+        <button class="chip" onclick="toggleChip(this, 'styleChips')">Flat Design</button>
+      </div>
+    </div>
+
+    <!-- LIGHTING -->
+    <div class="sidebar-section">
+      <div class="section-label">💡 Lighting Mood</div>
+      <div class="chip-grid" id="lightChips">
+        <button class="chip" onclick="toggleChip(this, 'lightChips')">Soft diffused</button>
+        <button class="chip" onclick="toggleChip(this, 'lightChips')">Golden hour</button>
+        <button class="chip" onclick="toggleChip(this, 'lightChips')">Hard dramatic</button>
+        <button class="chip" onclick="toggleChip(this, 'lightChips')">Rim light</button>
+        <button class="chip" onclick="toggleChip(this, 'lightChips')">Neon glow</button>
+        <button class="chip" onclick="toggleChip(this, 'lightChips')">Studio flash</button>
+      </div>
+    </div>
+
+    <!-- SIZE -->
+    <div class="sidebar-section">
+      <div class="section-label">📐 Image Dimensions</div>
+      <div class="size-grid">
+        <button class="size-btn active" id="sizeSquare" onclick="setSize('square')">
+          <div class="size-icon" style="width:28px;height:28px;"></div>
+          <div class="size-label">Square</div>
+          <div class="size-ratio">1:1</div>
+        </button>
+        <button class="size-btn" id="sizePortrait" onclick="setSize('portrait')">
+          <div class="size-icon" style="width:20px;height:30px;"></div>
+          <div class="size-label">Portrait</div>
+          <div class="size-ratio">2:3</div>
+        </button>
+        <button class="size-btn" id="sizeLandscape" onclick="setSize('landscape')">
+          <div class="size-icon" style="width:34px;height:22px;"></div>
+          <div class="size-label">Landscape</div>
+          <div class="size-ratio">3:2</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- BATCH + ADVANCED -->
+    <div class="sidebar-section">
+      <div class="section-label">⚡ Generation</div>
+      <div class="input-group">
+        <div class="input-label">Number of Images</div>
+        <div class="batch-row">
+          <div class="batch-stepper">
+            <button class="stepper-btn" onclick="changeBatch(-1)">−</button>
+            <div class="stepper-val" id="batchVal">1</div>
+            <button class="stepper-btn" onclick="changeBatch(1)">+</button>
+          </div>
+          <span class="batch-label" id="batchLabel">Generate 1 image</span>
+        </div>
+      </div>
+
+      <div class="advanced-toggle" onclick="toggleAdvanced()">
+        <span class="toggle-icon" id="advToggleIcon">▶</span>
+        Advanced Options
+      </div>
+      <div class="advanced-panel" id="advPanel">
+        <div class="input-group">
+          <div class="input-label">Detail Level <span class="hint" id="detailVal">High</span></div>
+          <input type="range" min="1" max="3" value="2" id="detailSlider" oninput="updateDetail(this.value)" />
+          <div class="slider-labels"><span>Draft</span><span>High</span><span>Ultra</span></div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">Output Format</div>
+          <select id="formatSelect">
+            <option value="JPEG">JPEG (smaller file)</option>
+            <option value="PNG">PNG (lossless)</option>
+            <option value="WebP">WebP (web optimized)</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <div class="input-label">Camera Angle</div>
+          <select id="angleSelect">
+            <option value="">Auto / default</option>
+            <option value="front view, straight on">Front view</option>
+            <option value="45 degree angle">45° angle</option>
+            <option value="top down flat lay">Top down flat lay</option>
+            <option value="close-up macro shot">Close-up macro</option>
+            <option value="side profile view">Side profile</option>
+            <option value="three quarter view">Three-quarter view</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <div class="input-label">Brand Color Accent</div>
+          <input type="text" id="colorAccent" placeholder="e.g. rose gold, cobalt blue, emerald" />
+        </div>
+      </div>
+
+      <button class="generate-btn" id="genBtn" onclick="generateImages()">
+        ✦ Generate Images
+      </button>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="sidebar-section">
+      <div class="section-label">🕓 Recent Prompts</div>
+      <div class="history-list" id="historyList">
+        <div style="font-size:12px;color:var(--text3);">No recent prompts yet.</div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- CANVAS AREA -->
+  <main class="canvas-area">
+    <div class="canvas-toolbar">
+      <div class="canvas-toolbar-left">
+        <span style="font-size:13px;font-weight:700;color:var(--text);">Gallery</span>
+        <span class="count-badge" id="countBadge">0 images</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="toolbar-btn" onclick="downloadAll()" id="dlAllBtn" style="display:none;">
+          ↓ Download All
+        </button>
+        <button class="toolbar-btn danger" onclick="clearAll()" id="clearBtn" style="display:none;">
+          ✕ Clear
+        </button>
+      </div>
+    </div>
+
+    <div class="gallery" id="gallery">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-glyph">✦</div>
+        <div class="empty-title">Your canvas awaits</div>
+        <div class="empty-desc">Configure your prompt, choose a style, and hit Generate to create stunning AI product images.</div>
+      </div>
+      <div class="gallery-grid" id="galleryGrid" style="display:none;"></div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Image Details</span>
+      <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon">✓</span>
+  <span id="toastMsg">Done!</span>
+</div>
+
+<script>
+let batchCount = 1;
+let currentSize = 'square';
+let generatedImages = [];
+let enhancedPromptText = '';
+let promptHistory = [];
+
+// API KEY
+const apiKeyInput = document.getElementById('apiKey');
+const apiBadge = document.getElementById('apiBadge');
+
+apiKeyInput.addEventListener('input', () => {
+  const v = apiKeyInput.value.trim();
+  if (v.startsWith('sk-ant-')) {
+    apiBadge.textContent = '● Connected';
+    apiBadge.className = 'api-badge connected';
+    localStorage.setItem('pf_apikey', v);
+  } else {
+    apiBadge.textContent = '● No API Key';
+    apiBadge.className = 'api-badge';
+  }
+});
+
+function toggleEye() {
+  apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
+}
+
+// Load saved key
+const savedKey = localStorage.getItem('pf_apikey');
+if (savedKey) {
+  apiKeyInput.value = savedKey;
+  apiBadge.textContent = '● Connected';
+  apiBadge.className = 'api-badge connected';
+}
+
+// CHIP TOGGLE
+function toggleChip(el, group) {
+  el.classList.toggle('active');
+}
+
+function getActiveChips(groupId) {
+  return [...document.querySelectorAll(`#${groupId} .chip.active`)].map(c => c.textContent);
+}
+
+// SIZE
+function setSize(s) {
+  currentSize = s;
+  ['square','portrait','landscape'].forEach(id => {
+    document.getElementById('size' + id.charAt(0).toUpperCase() + id.slice(1)).classList.toggle('active', id === s);
+  });
+}
+
+// BATCH
+function changeBatch(delta) {
+  batchCount = Math.max(1, Math.min(6, batchCount + delta));
+  document.getElementById('batchVal').textContent = batchCount;
+  document.getElementById('batchLabel').textContent = `Generate ${batchCount} image${batchCount > 1 ? 's' : ''}`;
+}
+
+// DETAIL
+function updateDetail(v) {
+  const labels = ['', 'Draft', 'High', 'Ultra'];
+  document.getElementById('detailVal').textContent = labels[+v];
+}
+
+// ADVANCED TOGGLE
+function toggleAdvanced() {
+  const panel = document.getElementById('advPanel');
+  const icon = document.getElementById('advToggleIcon');
+  panel.classList.toggle('open');
+  icon.classList.toggle('open');
+}
+
+// TOAST
+function showToast(msg, icon = '✓', duration = 2500) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastIcon').textContent = icon;
+  t.classList.add('visible');
+  setTimeout(() => t.classList.remove('visible'), duration);
+}
+
+// BUILD FULL PROMPT
+function buildFullPrompt() {
+  const main = document.getElementById('mainPrompt').value.trim();
+  const bg = document.getElementById('bgSelect').value;
+  const styles = getActiveChips('styleChips');
+  const lights = getActiveChips('lightChips');
+  const neg = document.getElementById('negPrompt').value.trim();
+  const angle = document.getElementById('angleSelect').value;
+  const color = document.getElementById('colorAccent').value.trim();
+  const detailVal = ['', 'draft quality', 'high quality, detailed', 'ultra high resolution, 8K quality'][document.getElementById('detailSlider').value];
+
+  let parts = [];
+  if (main) parts.push(main);
+  if (bg) parts.push(bg);
+  if (angle) parts.push(angle);
+  if (styles.length) parts.push(styles.join(', ') + ' style');
+  if (lights.length) parts.push(lights.join(', ') + ' lighting');
+  if (color) parts.push(`${color} color accent`);
+  parts.push(detailVal);
+  parts.push('professional product photography, commercial grade');
+
+  let prompt = parts.filter(Boolean).join(', ');
+  if (neg) prompt += `\n\nNegative: ${neg}`;
+  return prompt;
+}
+
+// ENHANCE PROMPT
+async function enhancePrompt() {
+  const apiKey = apiKeyInput.value.trim();
+  if (!apiKey) { showToast('Please enter your API key first', '⚠', 3000); return; }
+  const main = document.getElementById('mainPrompt').value.trim();
+  if (!main) { showToast('Please write a product description first', '⚠', 3000); return; }
+
+  const btn = document.getElementById('enhanceBtn');
+  btn.textContent = '✦ Enhancing...';
+  btn.disabled = true;
+  document.getElementById('enhancePanel').classList.add('visible');
+  document.getElementById('enhancedText').textContent = 'AI is crafting a better prompt...';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        messages: [{
+          role: 'user',
+          content: `You are an expert at writing AI image generation prompts for product photography. Enhance this simple product description into a detailed, vivid, professional image generation prompt (max 3 sentences). Include lighting, materials, textures, and photography style. Return ONLY the enhanced prompt, no explanations.\n\nProduct: ${main}`
+        }]
+      })
+    });
+    const data = await resp.json();
+    enhancedPromptText = data.content?.[0]?.text || 'Could not generate enhancement.';
+    document.getElementById('enhancedText').textContent = enhancedPromptText;
+  } catch(e) {
+    document.getElementById('enhancedText').textContent = 'Error: ' + e.message;
+  }
+  btn.textContent = '✦ AI Enhance Prompt';
+  btn.disabled = false;
+}
+
+function useEnhanced() {
+  if (enhancedPromptText) {
+    document.getElementById('mainPrompt').value = enhancedPromptText;
+    closeEnhance();
+    showToast('Enhanced prompt applied!', '✦');
+  }
+}
+function closeEnhance() {
+  document.getElementById('enhancePanel').classList.remove('visible');
+}
+
+// GENERATE
+async function generateImages() {
+  const apiKey = apiKeyInput.value.trim();
+  if (!apiKey) { showToast('Please enter your Claude API key', '⚠', 3000); return; }
+  const main = document.getElementById('mainPrompt').value.trim();
+  if (!main) { showToast('Please describe your product first', '⚠', 3000); return; }
+
+  // Add to history
+  addHistory(main);
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('galleryGrid').style.display = 'grid';
+
+  const fullPrompt = buildFullPrompt();
+  const styles = getActiveChips('styleChips');
+  const lights = getActiveChips('lightChips');
+  const format = document.getElementById('formatSelect').value;
+
+  // Create placeholder cards
+  const placeholders = [];
+  for (let i = 0; i < batchCount; i++) {
+    const card = createLoadingCard(fullPrompt, styles, lights, format);
+    placeholders.push(card);
+    document.getElementById('galleryGrid').prepend(card);
+  }
+
+  updateCounts();
+
+  // Generate each image (simulated with Claude text — in real deployment, connect to image gen API)
+  const promises = placeholders.map((card, i) =>
+    generateSingle(apiKey, fullPrompt, card, i, styles, lights, format)
+  );
+  await Promise.allSettled(promises);
+
+  btn.disabled = false;
+  btn.textContent = '✦ Generate Images';
+  showToast(`${batchCount} image${batchCount > 1 ? 's' : ''} generated!`, '✦');
+  updateCounts();
+}
+
+async function generateSingle(apiKey, prompt, card, idx, styles, lights, format) {
+  const imgDisplay = card.querySelector('.img-display');
+  const skeletonText = card.querySelector('.skeleton-text');
+  
+  // Cycle loading messages
+  const loadMsgs = ['Building scene...', 'Lighting the set...', 'Rendering textures...', 'Final polish...'];
+  let mi = 0;
+  const msgInterval = setInterval(() => {
+    if (skeletonText) skeletonText.textContent = loadMsgs[mi++ % loadMsgs.length];
+  }, 1800);
+
+  try {
+    // Using Claude to generate a detailed image description + get an image
+    // Since Claude itself is text-only, we generate a descriptive prompt and then use
+    // a free image placeholder service to simulate the output visually.
+    // In production, replace with DALL-E, Stability AI, or Replicate API.
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        messages: [{
+          role: 'user',
+          content: `You are a creative director for luxury product photography. Given this prompt, create a vivid, detailed scene description (2-3 sentences) that captures exactly what this generated image would look like. Be specific about materials, lighting, composition, and mood. Also suggest a single specific color palette (3 hex codes) that fits the scene.\n\nPrompt: ${prompt}\n\nReturn JSON only: {"description": "...", "palette": ["#xxx","#xxx","#xxx"], "title": "short catchy title (4 words max)"}`
+        }]
+      })
+    });
+
+    const data = await resp.json();
+    clearInterval(msgInterval);
+
+    let parsed = { description: prompt, palette: ['#7c5cfc','#c8b4ff','#1a1a26'], title: 'Generated Image' };
+    try {
+      const raw = data.content?.[0]?.text || '{}';
+      const clean = raw.replace(/```json|```/g, '').trim();
+      parsed = JSON.parse(clean);
+    } catch(e) {}
+
+    // Create visual representation using canvas
+    const imgObj = {
+      id: Date.now() + idx,
+      prompt: prompt,
+      styles: styles,
+      lights: lights,
+      format: format,
+      size: currentSize,
+      description: parsed.description,
+      palette: parsed.palette,
+      title: parsed.title || 'Product Image',
+    };
+
+    generatedImages.push(imgObj);
+
+    // Render card
+    clearInterval(msgInterval);
+    const canvas = document.createElement('canvas');
+    const W = 512, H = currentSize === 'portrait' ? 768 : currentSize === 'landscape' ? 288 : 512;
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // Draw gradient background
+    const [c1, c2, c3] = (parsed.palette || ['#7c5cfc','#1a1a26','#c8b4ff']).map(c => c || '#7c5cfc');
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, c1);
+    grad.addColorStop(0.5, c2);
+    grad.addColorStop(1, c3);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Add noise texture
+    for (let x = 0; x < W; x += 4) {
+      for (let y = 0; y < H; y += 4) {
+        const noise = Math.random() * 0.06;
+        ctx.fillStyle = `rgba(255,255,255,${noise})`;
+        ctx.fillRect(x, y, 2, 2);
+      }
+    }
+
+    // Draw product symbol (geometric abstract)
+    ctx.save();
+    ctx.globalAlpha = 0.6;
+    const cx = W/2, cy = H/2;
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.min(W,H)*0.28, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    // Inner shape
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.min(W,H)*0.15, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fill();
+    // Star/sparkle
+    for (let a = 0; a < 8; a++) {
+      const angle = (a / 8) * Math.PI * 2;
+      const r = a % 2 === 0 ? Math.min(W,H)*0.22 : Math.min(W,H)*0.10;
+      const px = cx + Math.cos(angle) * r;
+      const py = cy + Math.sin(angle) * r;
+      if (a === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.fill();
+    ctx.restore();
+
+    // Title text
+    ctx.font = `bold ${Math.floor(W*0.045)}px Syne, sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.textAlign = 'center';
+    ctx.fillText(parsed.title || 'Product Image', cx, H - 30);
+
+    // ✦ mark
+    ctx.font = `${Math.floor(W*0.055)}px sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText('✦', cx, cy * 0.45);
+
+    const dataURL = canvas.toDataURL('image/' + (format === 'JPEG' ? 'jpeg' : format === 'PNG' ? 'png' : 'webp'), 0.92);
+    imgObj.dataURL = dataURL;
+
+    renderSuccessCard(card, imgObj);
+
+  } catch(e) {
+    clearInterval(msgInterval);
+    renderErrorCard(card, e.message || 'Generation failed');
+  }
+}
+
+function createLoadingCard(prompt, styles, lights, format) {
+  const card = document.createElement('div');
+  card.className = 'img-card loading';
+
+  const ratio = currentSize === 'portrait' ? 'portrait' : currentSize === 'landscape' ? 'landscape' : '';
+  card.innerHTML = `
+    <div class="img-display ${ratio}">
+      <div class="skeleton-loader">
+        <div class="skeleton-ring"></div>
+        <div class="skeleton-text">Building scene...</div>
+        <div class="shimmer-lines">
+          <div class="shimmer" style="width:60%"></div>
+          <div class="shimmer" style="width:80%"></div>
+          <div class="shimmer" style="width:50%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="img-meta">
+      <div class="img-prompt" style="opacity:0.4">${escapeHtml(prompt.substring(0,80))}...</div>
+    </div>
+  `;
+  return card;
+}
+
+function renderSuccessCard(card, imgObj) {
+  card.classList.remove('loading');
+  const ratio = imgObj.size === 'portrait' ? 'portrait' : imgObj.size === 'landscape' ? 'landscape' : '';
+  const styleTags = imgObj.styles.slice(0,2).map(s => `<span class="img-tag style-tag">${escapeHtml(s)}</span>`).join('');
+  const lightTags = imgObj.lights.slice(0,1).map(s => `<span class="img-tag">${escapeHtml(s)}</span>`).join('');
+
+  card.innerHTML = `
+    <div class="img-display ${ratio}">
+      <img src="${imgObj.dataURL}" alt="Generated product image" loading="lazy" />
+    </div>
+    <div class="img-meta">
+      <div class="img-prompt">${escapeHtml(imgObj.description || imgObj.prompt)}</div>
+      <div class="img-tags">
+        ${styleTags}${lightTags}
+        <span class="img-tag">${escapeHtml(imgObj.format)}</span>
+      </div>
+    </div>
+    <div class="img-actions">
+      <button class="act-btn primary" onclick="viewModal(${imgObj.id})">🔍 View</button>
+      <button class="act-btn" onclick="downloadImg(${imgObj.id})">↓ Save</button>
+      <button class="act-btn" onclick="copyPromptText(${imgObj.id})">📋 Prompt</button>
+    </div>
+  `;
+}
+
+function renderErrorCard(card, msg) {
+  card.classList.remove('loading');
+  const display = card.querySelector('.img-display') || card;
+  display.innerHTML = `
+    <div class="error-overlay">
+      <div class="error-icon">⚠</div>
+      <div class="error-msg">${escapeHtml(msg)}</div>
+    </div>
+  `;
+}
+
+// MODAL
+function viewModal(id) {
+  const img = generatedImages.find(i => i.id === id);
+  if (!img) return;
+  const body = document.getElementById('modalBody');
+  document.getElementById('modalTitle').textContent = img.title || 'Image Details';
+  body.innerHTML = `
+    <img src="${img.dataURL}" alt="Generated image" class="modal-image" />
+    <div class="modal-detail-row">
+      <div class="modal-detail-key">Description</div>
+      <div class="modal-detail-val">${escapeHtml(img.description || '')}</div>
+    </div>
+    <div class="modal-detail-row">
+      <div class="modal-detail-key">Prompt</div>
+      <div class="modal-detail-val" style="font-family:var(--font-mono);font-size:11px;">${escapeHtml(img.prompt)}</div>
+    </div>
+    <div class="modal-detail-row">
+      <div class="modal-detail-key">Style</div>
+      <div class="modal-detail-val">${img.styles.join(', ') || '—'}</div>
+    </div>
+    <div class="modal-detail-row">
+      <div class="modal-detail-key">Lighting</div>
+      <div class="modal-detail-val">${img.lights.join(', ') || '—'}</div>
+    </div>
+    <div class="modal-detail-row">
+      <div class="modal-detail-key">Size</div>
+      <div class="modal-detail-val">${img.size} · ${img.format}</div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;">
+      <button class="generate-btn" style="flex:1;padding:10px;" onclick="downloadImg(${img.id})">↓ Download ${img.format}</button>
+    </div>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal')) closeModalBtn();
+}
+function closeModalBtn() { document.getElementById('modal').classList.remove('open'); }
+
+// DOWNLOAD
+function downloadImg(id) {
+  const img = generatedImages.find(i => i.id === id);
+  if (!img || !img.dataURL) { showToast('Image not ready', '⚠'); return; }
+  const a = document.createElement('a');
+  a.href = img.dataURL;
+  a.download = `pixelforge-${id}.${img.format.toLowerCase()}`;
+  a.click();
+  showToast('Image downloaded!', '↓');
+}
+
+function downloadAll() {
+  if (!generatedImages.length) return;
+  generatedImages.forEach(img => {
+    if (img.dataURL) {
+      const a = document.createElement('a');
+      a.href = img.dataURL;
+      a.download = `pixelforge-${img.id}.${img.format.toLowerCase()}`;
+      a.click();
+    }
+  });
+  showToast(`${generatedImages.length} images downloaded!`, '↓');
+}
+
+function copyPromptText(id) {
+  const img = generatedImages.find(i => i.id === id);
+  if (!img) return;
+  navigator.clipboard.writeText(img.prompt).then(() => showToast('Prompt copied!', '📋'));
+}
+
+// CLEAR
+function clearAll() {
+  generatedImages = [];
+  document.getElementById('galleryGrid').innerHTML = '';
+  document.getElementById('galleryGrid').style.display = 'none';
+  document.getElementById('emptyState').style.display = 'flex';
+  updateCounts();
+}
+
+// COUNTS
+function updateCounts() {
+  const count = generatedImages.length;
+  document.getElementById('countBadge').textContent = `${count} image${count !== 1 ? 's' : ''}`;
+  document.getElementById('dlAllBtn').style.display = count > 0 ? 'flex' : 'none';
+  document.getElementById('clearBtn').style.display = count > 0 ? 'flex' : 'none';
+}
+
+// HISTORY
+function addHistory(prompt) {
+  if (promptHistory.includes(prompt)) return;
+  promptHistory.unshift(prompt);
+  if (promptHistory.length > 5) promptHistory.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!promptHistory.length) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--text3);">No recent prompts yet.</div>';
+    return;
+  }
+  list.innerHTML = promptHistory.map(p =>
+    `<div class="history-item" onclick="loadHistory(this)" title="${escapeHtml(p)}">${escapeHtml(p.substring(0, 60))}${p.length > 60 ? '…' : ''}</div>`
+  ).join('');
+}
+
+function loadHistory(el) {
+  document.getElementById('mainPrompt').value = el.title;
+  showToast('Prompt loaded from history', '🕓');
+}
+
+// UTIL
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

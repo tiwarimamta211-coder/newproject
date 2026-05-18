@@ -1,0 +1,2124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSTFlow — Smart GST Filing Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2236;
+    --surface3: #1f2d42;
+    --border: #2a3a52;
+    --border2: #334466;
+    --accent: #00e5a0;
+    --accent2: #00b8ff;
+    --accent3: #ff6b35;
+    --warn: #ffb700;
+    --danger: #ff4757;
+    --text: #e8f0fe;
+    --text2: #8fa8cc;
+    --text3: #4a6080;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'Instrument Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    --glow: 0 0 20px rgba(0,229,160,0.15);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,229,160,0.06) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -200px; right: -200px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(0,184,255,0.05) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,14,26,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    font-family: var(--font-head);
+    font-size: 22px; font-weight: 800;
+    letter-spacing: -0.5px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 900; color: #0a0e1a;
+  }
+  .logo span { color: var(--accent); }
+  .topbar-right {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .fy-badge {
+    font-family: var(--font-mono);
+    font-size: 11px; padding: 4px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--accent);
+  }
+  .user-avatar {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, #334466, #1a2236);
+    border: 1px solid var(--border2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+
+  /* LAYOUT */
+  .app-shell {
+    display: flex;
+    min-height: calc(100vh - 60px);
+    position: relative; z-index: 1;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 12px;
+    flex-shrink: 0;
+    display: flex; flex-direction: column; gap: 4px;
+    position: sticky; top: 60px;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+  }
+  .sidebar-section {
+    font-family: var(--font-mono);
+    font-size: 10px; letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 12px 10px 6px;
+    margin-top: 8px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13.5px; font-weight: 500;
+    color: var(--text2);
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  .nav-item:hover {
+    background: var(--surface2);
+    color: var(--text);
+  }
+  .nav-item.active {
+    background: rgba(0,229,160,0.08);
+    border-color: rgba(0,229,160,0.2);
+    color: var(--accent);
+  }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 10px; padding: 2px 6px;
+    background: rgba(0,229,160,0.15);
+    border-radius: 10px; color: var(--accent);
+  }
+
+  /* MAIN */
+  .main {
+    flex: 1; padding: 28px;
+    overflow-y: auto;
+    max-width: 100%;
+  }
+
+  /* PAGE SECTIONS */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* STATS GRID */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .stat-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-2px);
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .stat-card.green::before { background: var(--accent); }
+  .stat-card.blue::before { background: var(--accent2); }
+  .stat-card.orange::before { background: var(--accent3); }
+  .stat-card.yellow::before { background: var(--warn); }
+  .stat-label {
+    font-size: 11px; color: var(--text3);
+    font-family: var(--font-mono);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: var(--font-head);
+    font-size: 26px; font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .stat-value.green { color: var(--accent); }
+  .stat-value.blue { color: var(--accent2); }
+  .stat-value.orange { color: var(--accent3); }
+  .stat-value.yellow { color: var(--warn); }
+  .stat-sub {
+    font-size: 11px; color: var(--text3);
+    margin-top: 4px;
+  }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .section-title {
+    font-family: var(--font-head);
+    font-size: 20px; font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 18px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 13.5px; font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0e1a;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover {
+    background: #00ffb3;
+    box-shadow: 0 0 20px rgba(0,229,160,0.3);
+  }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .btn-secondary:hover {
+    background: var(--surface3);
+    border-color: var(--border2);
+  }
+  .btn-outline {
+    background: transparent;
+    color: var(--accent);
+    border-color: rgba(0,229,160,0.3);
+  }
+  .btn-outline:hover {
+    background: rgba(0,229,160,0.08);
+  }
+  .btn-danger {
+    background: rgba(255,71,87,0.1);
+    color: var(--danger);
+    border-color: rgba(255,71,87,0.3);
+  }
+  .btn-danger:hover { background: rgba(255,71,87,0.2); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-xs { padding: 4px 9px; font-size: 11px; }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    margin-bottom: 20px;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-title {
+    font-family: var(--font-head);
+    font-size: 15px; font-weight: 700;
+  }
+
+  /* FORM */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label {
+    font-size: 12px; font-weight: 600;
+    color: var(--text2);
+    font-family: var(--font-mono);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  input, select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,160,0.1);
+  }
+  select option { background: var(--surface2); }
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* TABLE */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+  table {
+    width: 100%; border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead tr {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    padding: 11px 14px;
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 10.5px; font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase; letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* TAGS */
+  .tag {
+    display: inline-flex; align-items: center;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+    font-family: var(--font-mono);
+  }
+  .tag-green { background: rgba(0,229,160,0.12); color: var(--accent); }
+  .tag-blue { background: rgba(0,184,255,0.12); color: var(--accent2); }
+  .tag-orange { background: rgba(255,107,53,0.12); color: var(--accent3); }
+  .tag-yellow { background: rgba(255,183,0,0.12); color: var(--warn); }
+  .tag-red { background: rgba(255,71,87,0.12); color: var(--danger); }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 4px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab.active {
+    background: var(--surface3);
+    color: var(--text);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  /* TOAST */
+  #toast-container {
+    position: fixed; bottom: 24px; right: 24px;
+    z-index: 999;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 12px 18px;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
+    animation: slideIn 0.3s ease;
+    box-shadow: var(--shadow);
+    max-width: 320px;
+  }
+  .toast.success { border-color: rgba(0,229,160,0.4); }
+  .toast.error { border-color: rgba(255,71,87,0.4); }
+  @keyframes slideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+    z-index: 200;
+    display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    width: 100%; max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    animation: modalIn 0.25s ease;
+  }
+  @keyframes modalIn {
+    from { transform: scale(0.95) translateY(20px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  .modal-header {
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title {
+    font-family: var(--font-head);
+    font-size: 18px; font-weight: 700;
+  }
+  .modal-close {
+    width: 32px; height: 32px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 18px; color: var(--text2);
+    transition: all 0.2s;
+  }
+  .modal-close:hover { background: var(--surface3); color: var(--text); }
+  .modal-body { padding: 24px; }
+  .modal-footer {
+    padding: 18px 24px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 10px; justify-content: flex-end;
+  }
+
+  /* PROGRESS */
+  .progress-bar {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  /* GSTR RETURN CARD */
+  .return-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .return-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .return-card:hover {
+    border-color: var(--border2);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    transform: translateY(-2px);
+  }
+  .return-type {
+    font-family: var(--font-head);
+    font-size: 18px; font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .return-desc { font-size: 12px; color: var(--text3); margin-bottom: 14px; }
+  .return-meta {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .return-due { font-size: 12px; color: var(--text2); }
+
+  /* SUMMARY ROW */
+  .summary-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .key { color: var(--text2); }
+  .summary-row .val {
+    font-family: var(--font-mono);
+    font-weight: 500;
+  }
+  .summary-row.total .key { font-weight: 700; color: var(--text); }
+  .summary-row.total .val {
+    font-size: 16px; color: var(--accent);
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text3);
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state h3 {
+    font-family: var(--font-head);
+    font-size: 16px; color: var(--text2);
+    margin-bottom: 6px;
+  }
+  .empty-state p { font-size: 13px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { padding: 16px; }
+  }
+  @media (max-width: 600px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .topbar { padding: 0 14px; }
+    .section-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  }
+
+  /* MOBILE NAV */
+  .mobile-nav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    padding: 8px 0 env(safe-area-inset-bottom);
+  }
+  .mobile-nav-inner {
+    display: flex; justify-content: space-around;
+  }
+  .mobile-nav-item {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 3px; padding: 6px 12px;
+    cursor: pointer; color: var(--text3);
+    font-size: 10px; transition: color 0.2s;
+    border-radius: 8px;
+  }
+  .mobile-nav-item .mn-icon { font-size: 20px; }
+  .mobile-nav-item.active { color: var(--accent); }
+  @media (max-width: 900px) {
+    .mobile-nav { display: block; }
+    .main { padding-bottom: 80px; }
+  }
+
+  /* PAGE HEADER */
+  .page-hero {
+    margin-bottom: 24px;
+  }
+  .page-hero h1 {
+    font-family: var(--font-head);
+    font-size: 28px; font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .page-hero p { font-size: 14px; color: var(--text2); }
+
+  /* GSTIN DISPLAY */
+  .gstin-display {
+    font-family: var(--font-mono);
+    font-size: 13px; color: var(--accent);
+    background: rgba(0,229,160,0.06);
+    border: 1px solid rgba(0,229,160,0.2);
+    padding: 4px 10px; border-radius: 20px;
+  }
+
+  /* AMOUNT FIELD */
+  .amount-input { position: relative; }
+  .amount-input::before {
+    content: '₹';
+    position: absolute;
+    left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--text3); font-size: 13px;
+    pointer-events: none;
+  }
+  .amount-input input { padding-left: 24px; }
+
+  /* CHECKBOX */
+  .checkbox-group {
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer;
+  }
+  .checkbox-group input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .checkbox-group span { font-size: 13px; color: var(--text2); }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px; background: var(--border);
+    margin: 20px 0;
+  }
+
+  /* FILING STATUS TRACKER */
+  .step-tracker {
+    display: flex; align-items: center;
+    gap: 0;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .step {
+    display: flex; align-items: center;
+    flex-shrink: 0;
+  }
+  .step-circle {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    border: 2px solid var(--border);
+    background: var(--surface2);
+    color: var(--text3);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .step.done .step-circle {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0a0e1a;
+  }
+  .step.current .step-circle {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 12px rgba(0,229,160,0.4);
+  }
+  .step-label {
+    font-size: 10px; color: var(--text3);
+    position: absolute;
+    top: 36px; left: 50%; transform: translateX(-50%);
+    white-space: nowrap;
+    font-family: var(--font-mono);
+  }
+  .step-connector {
+    height: 2px; flex: 1;
+    background: var(--border);
+    min-width: 24px; max-width: 60px;
+  }
+  .step.done + .step-connector { background: var(--accent); }
+
+  /* ALERT */
+  .alert {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 16px;
+  }
+  .alert-info {
+    background: rgba(0,184,255,0.08);
+    border: 1px solid rgba(0,184,255,0.2);
+    color: var(--accent2);
+  }
+  .alert-warn {
+    background: rgba(255,183,0,0.08);
+    border: 1px solid rgba(255,183,0,0.2);
+    color: var(--warn);
+  }
+  .alert-success {
+    background: rgba(0,229,160,0.08);
+    border: 1px solid rgba(0,229,160,0.2);
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-icon">G</div>
+    GST<span>Flow</span>
+  </div>
+  <div class="topbar-right">
+    <div class="fy-badge">FY 2025–26</div>
+    <div class="gstin-display" id="topbar-gstin">27AABCU9603R1ZX</div>
+    <div class="user-avatar">RA</div>
+  </div>
+</header>
+
+<!-- APP SHELL -->
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-section">Overview</div>
+    <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard', this)">
+      <span class="icon">🏠</span> Dashboard
+    </div>
+    <div class="nav-item" data-page="profile" onclick="navigate('profile', this)">
+      <span class="icon">🏢</span> Business Profile
+    </div>
+    <div class="sidebar-section">Transactions</div>
+    <div class="nav-item" data-page="sales" onclick="navigate('sales', this)">
+      <span class="icon">📤</span> Sales (Outward)
+      <span class="nav-badge" id="sales-count">0</span>
+    </div>
+    <div class="nav-item" data-page="purchases" onclick="navigate('purchases', this)">
+      <span class="icon">📥</span> Purchases (Inward)
+      <span class="nav-badge" id="purchase-count">0</span>
+    </div>
+    <div class="nav-item" data-page="assets" onclick="navigate('assets', this)">
+      <span class="icon">🏗️</span> Assets & Liabilities
+    </div>
+    <div class="sidebar-section">Filing</div>
+    <div class="nav-item" data-page="gstr1" onclick="navigate('gstr1', this)">
+      <span class="icon">📋</span> GSTR-1
+    </div>
+    <div class="nav-item" data-page="gstr3b" onclick="navigate('gstr3b', this)">
+      <span class="icon">📝</span> GSTR-3B
+    </div>
+    <div class="nav-item" data-page="reports" onclick="navigate('reports', this)">
+      <span class="icon">📊</span> Reports & Export
+    </div>
+    <div class="sidebar-section">Settings</div>
+    <div class="nav-item" data-page="settings" onclick="navigate('settings', this)">
+      <span class="icon">⚙️</span> Settings
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-hero">
+        <h1>Welcome back, Raj 👋</h1>
+        <p>Here's your GST overview for April 2025</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card green">
+          <div class="stat-label">Total Output Tax</div>
+          <div class="stat-value green" id="dash-output">₹0</div>
+          <div class="stat-sub">From sales invoices</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Total Input Tax Credit</div>
+          <div class="stat-value blue" id="dash-itc">₹0</div>
+          <div class="stat-sub">From purchases</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-label">Net Tax Payable</div>
+          <div class="stat-value orange" id="dash-net">₹0</div>
+          <div class="stat-sub">Output − ITC</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-label">Next Due Date</div>
+          <div class="stat-value yellow" style="font-size:18px">GSTR-3B</div>
+          <div class="stat-sub">Due: 20th May 2025</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:42%"></div></div>
+        </div>
+      </div>
+
+      <div class="alert alert-warn">⚠️ GSTR-1 for April is due on 11th May 2025. File before the deadline to avoid ₹50/day late fee.</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-header">
+            <div class="card-title">Filing Status</div>
+          </div>
+          <div class="step-tracker">
+            <div class="step done">
+              <div class="step-circle" style="position:relative">✓<span class="step-label">Profile</span></div>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step done">
+              <div class="step-circle" style="position:relative">✓<span class="step-label">GSTR-1</span></div>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step current">
+              <div class="step-circle" style="position:relative">3<span class="step-label">GSTR-3B</span></div>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step">
+              <div class="step-circle" style="position:relative">4<span class="step-label">Payment</span></div>
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--text3);margin-top:32px">Complete GSTR-3B to proceed to tax payment</p>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-header"><div class="card-title">Quick Actions</div></div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-primary" onclick="navigate('sales', document.querySelector('[data-page=sales]')); setTimeout(()=>openSaleModal(),200)">➕ Add Sales Invoice</button>
+            <button class="btn btn-secondary" onclick="navigate('purchases', document.querySelector('[data-page=purchases]')); setTimeout(()=>openPurchaseModal(),200)">➕ Add Purchase Bill</button>
+            <button class="btn btn-outline" onclick="navigate('reports', document.querySelector('[data-page=reports]'))">📊 Generate Reports</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== BUSINESS PROFILE ===== -->
+    <div class="page" id="page-profile">
+      <div class="page-hero">
+        <h1>Business Profile</h1>
+        <p>Your GSTIN registration details</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">GST Registration Details</div>
+          <button class="btn btn-primary btn-sm" onclick="saveProfile()">💾 Save Profile</button>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Business Name</label>
+            <input type="text" id="biz-name" value="Raj Agencies Pvt. Ltd." placeholder="Legal Business Name">
+          </div>
+          <div class="form-group">
+            <label>GSTIN</label>
+            <input type="text" id="biz-gstin" value="27AABCU9603R1ZX" placeholder="15-digit GSTIN" maxlength="15">
+          </div>
+          <div class="form-group">
+            <label>PAN</label>
+            <input type="text" id="biz-pan" value="AABCU9603R" placeholder="10-char PAN">
+          </div>
+          <div class="form-group">
+            <label>State</label>
+            <select id="biz-state">
+              <option value="27">Maharashtra (27)</option>
+              <option value="29">Karnataka (29)</option>
+              <option value="07">Delhi (07)</option>
+              <option value="33">Tamil Nadu (33)</option>
+              <option value="09">Uttar Pradesh (09)</option>
+              <option value="24">Gujarat (24)</option>
+              <option value="22">Chhattisgarh (22)</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Registered Address</label>
+            <textarea id="biz-address" rows="2">Plot 45, MIDC Industrial Area, Andheri East, Mumbai - 400093</textarea>
+          </div>
+          <div class="form-group">
+            <label>Registration Type</label>
+            <select id="biz-type">
+              <option>Regular</option>
+              <option>Composition Scheme</option>
+              <option>SEZ Unit</option>
+              <option>UIN (Embassy)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Business Nature</label>
+            <select id="biz-nature">
+              <option>Trader</option>
+              <option>Manufacturer</option>
+              <option>Service Provider</option>
+              <option>Works Contractor</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="biz-email" value="raj@rajagencies.com">
+          </div>
+          <div class="form-group">
+            <label>Mobile</label>
+            <input type="tel" id="biz-mobile" value="9876543210">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SALES ===== -->
+    <div class="page" id="page-sales">
+      <div class="page-hero">
+        <h1>Sales Invoices</h1>
+        <p>Record all outward supplies (B2B, B2C, exports)</p>
+      </div>
+      <div class="section-header">
+        <div class="section-title"><div class="dot"></div> Invoice List</div>
+        <button class="btn btn-primary" onclick="openSaleModal()">➕ Add Invoice</button>
+      </div>
+      <div class="card" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Invoice #</th><th>Date</th><th>Customer</th><th>GSTIN</th>
+                <th>Taxable Amt</th><th>CGST</th><th>SGST</th><th>IGST</th>
+                <th>Total</th><th>Type</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="sales-tbody">
+              <tr><td colspan="11"><div class="empty-state"><div class="icon">📄</div><h3>No invoices yet</h3><p>Click "Add Invoice" to record your first sale</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px">📊 Sales Summary</div>
+        <div id="sales-summary">
+          <div class="summary-row"><span class="key">Total Taxable Value</span><span class="val" id="ss-taxable">₹0.00</span></div>
+          <div class="summary-row"><span class="key">Total CGST</span><span class="val" id="ss-cgst">₹0.00</span></div>
+          <div class="summary-row"><span class="key">Total SGST</span><span class="val" id="ss-sgst">₹0.00</span></div>
+          <div class="summary-row"><span class="key">Total IGST</span><span class="val" id="ss-igst">₹0.00</span></div>
+          <div class="summary-row total"><span class="key">Total Output Tax</span><span class="val" id="ss-total">₹0.00</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PURCHASES ===== -->
+    <div class="page" id="page-purchases">
+      <div class="page-hero">
+        <h1>Purchase Bills</h1>
+        <p>Record inward supplies to claim Input Tax Credit</p>
+      </div>
+      <div class="section-header">
+        <div class="section-title"><div class="dot"></div> Purchase List</div>
+        <button class="btn btn-primary" onclick="openPurchaseModal()">➕ Add Purchase</button>
+      </div>
+      <div class="card" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Bill #</th><th>Date</th><th>Supplier</th><th>GSTIN</th>
+                <th>Taxable Amt</th><th>CGST</th><th>SGST</th><th>IGST</th>
+                <th>Total</th><th>ITC Eligible</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="purchase-tbody">
+              <tr><td colspan="11"><div class="empty-state"><div class="icon">🧾</div><h3>No purchases yet</h3><p>Click "Add Purchase" to record your first bill</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px">📊 ITC Summary</div>
+        <div>
+          <div class="summary-row"><span class="key">Total Taxable Value</span><span class="val" id="ps-taxable">₹0.00</span></div>
+          <div class="summary-row"><span class="key">Total CGST (ITC)</span><span class="val" id="ps-cgst">₹0.00</span></div>
+          <div class="summary-row"><span class="key">Total SGST (ITC)</span><span class="val" id="ps-sgst">₹0.00</span></div>
+          <div class="summary-row"><span class="key">Total IGST (ITC)</span><span class="val" id="ps-igst">₹0.00</span></div>
+          <div class="summary-row total"><span class="key">Total ITC Available</span><span class="val" id="ps-total">₹0.00</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ASSETS & LIABILITIES ===== -->
+    <div class="page" id="page-assets">
+      <div class="page-hero">
+        <h1>Assets & Liabilities</h1>
+        <p>Track capital goods, fixed assets & outstanding liabilities</p>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="switchAssetTab('assets-tab', this)">🏗️ Capital Assets</div>
+        <div class="tab" onclick="switchAssetTab('liabilities-tab', this)">💰 Liabilities</div>
+        <div class="tab" onclick="switchAssetTab('balance-tab', this)">⚖️ Balance Sheet</div>
+      </div>
+
+      <div id="assets-tab">
+        <div class="section-header">
+          <div class="section-title"><div class="dot"></div> Capital Assets</div>
+          <button class="btn btn-primary" onclick="openAssetModal()">➕ Add Asset</button>
+        </div>
+        <div class="card" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Asset Name</th><th>Category</th><th>Purchase Date</th><th>Cost</th><th>GST Paid</th><th>ITC Claimed</th><th>Dep. %</th><th>Book Value</th><th>Action</th></tr>
+              </thead>
+              <tbody id="assets-tbody">
+                <tr><td colspan="9"><div class="empty-state"><div class="icon">🏗️</div><h3>No assets recorded</h3><p>Add capital goods to track ITC on assets</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="liabilities-tab" style="display:none">
+        <div class="section-header">
+          <div class="section-title"><div class="dot"></div> Outstanding Liabilities</div>
+          <button class="btn btn-primary" onclick="openLiabilityModal()">➕ Add Liability</button>
+        </div>
+        <div class="card" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Description</th><th>Type</th><th>Amount</th><th>GST Component</th><th>Due Date</th><th>Status</th><th>Action</th></tr>
+              </thead>
+              <tbody id="liabilities-tbody">
+                <tr><td colspan="7"><div class="empty-state"><div class="icon">💰</div><h3>No liabilities recorded</h3><p>Record GST dues and payables here</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="balance-tab" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="card" style="margin-bottom:0">
+            <div class="card-header"><div class="card-title">Assets</div></div>
+            <div class="summary-row"><span class="key">Capital Goods</span><span class="val" id="bal-assets">₹0.00</span></div>
+            <div class="summary-row"><span class="key">ITC on Assets</span><span class="val" id="bal-asset-itc">₹0.00</span></div>
+            <div class="summary-row total"><span class="key">Total Assets</span><span class="val" id="bal-total-assets">₹0.00</span></div>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-header"><div class="card-title">Liabilities</div></div>
+            <div class="summary-row"><span class="key">GST Payable</span><span class="val" id="bal-gst-pay">₹0.00</span></div>
+            <div class="summary-row"><span class="key">Other Liabilities</span><span class="val" id="bal-other-liab">₹0.00</span></div>
+            <div class="summary-row total"><span class="key">Total Liabilities</span><span class="val" id="bal-total-liab">₹0.00</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== GSTR-1 ===== -->
+    <div class="page" id="page-gstr1">
+      <div class="page-hero">
+        <h1>GSTR-1 — Outward Supplies</h1>
+        <p>Statement of outward supplies for the tax period</p>
+      </div>
+      <div class="alert alert-info">ℹ️ GSTR-1 data is auto-populated from your Sales invoices. Review and file.</div>
+      <div class="tabs">
+        <div class="tab active" onclick="switchGstr1Tab('b2b', this)">B2B Invoices</div>
+        <div class="tab" onclick="switchGstr1Tab('b2c', this)">B2C (Large)</div>
+        <div class="tab" onclick="switchGstr1Tab('exports', this)">Exports</div>
+        <div class="tab" onclick="switchGstr1Tab('summary', this)">Summary</div>
+      </div>
+      <div id="gstr1-b2b">
+        <div class="card" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>GSTIN of Recipient</th><th>Invoice #</th><th>Date</th><th>Taxable</th><th>CGST</th><th>SGST</th><th>IGST</th><th>Total</th></tr></thead>
+              <tbody id="gstr1-b2b-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div id="gstr1-b2c" style="display:none">
+        <div class="card" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Taxable</th><th>CGST</th><th>SGST</th><th>IGST</th><th>Total</th></tr></thead>
+              <tbody id="gstr1-b2c-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div id="gstr1-exports" style="display:none">
+        <div class="empty-state"><div class="icon">🌐</div><h3>No export invoices</h3><p>Export invoices will appear here</p></div>
+      </div>
+      <div id="gstr1-summary" style="display:none">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">GSTR-1 Summary</div>
+          <div class="summary-row"><span class="key">B2B Supplies</span><span class="val" id="g1-b2b">₹0.00</span></div>
+          <div class="summary-row"><span class="key">B2C Supplies</span><span class="val" id="g1-b2c">₹0.00</span></div>
+          <div class="summary-row total"><span class="key">Total Outward Tax</span><span class="val" id="g1-total">₹0.00</span></div>
+        </div>
+        <button class="btn btn-primary" onclick="exportGSTR1PDF()">📄 Export GSTR-1 PDF</button>
+      </div>
+    </div>
+
+    <!-- ===== GSTR-3B ===== -->
+    <div class="page" id="page-gstr3b">
+      <div class="page-hero">
+        <h1>GSTR-3B — Monthly Summary</h1>
+        <p>Auto-computed from your sales & purchase data</p>
+      </div>
+      <div class="alert alert-success">✅ Data auto-populated. Verify values before filing.</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">3.1 — Outward Supplies</div>
+        </div>
+        <div class="summary-row"><span class="key">a) Taxable Outward Supplies</span><span class="val" id="t31a">₹0.00</span></div>
+        <div class="summary-row"><span class="key">b) Zero-rated Supplies (Export)</span><span class="val">₹0.00</span></div>
+        <div class="summary-row"><span class="key">c) Nil-rated / Exempt Supplies</span><span class="val">₹0.00</span></div>
+        <div class="summary-row total"><span class="key">Total Output Tax</span><span class="val" id="t31-total">₹0.00</span></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">4 — Eligible ITC</div>
+        </div>
+        <div class="summary-row"><span class="key">A. ITC Available (Import of Goods)</span><span class="val">₹0.00</span></div>
+        <div class="summary-row"><span class="key">B. ITC from Supplies (B2B Purchases)</span><span class="val" id="t4b">₹0.00</span></div>
+        <div class="summary-row"><span class="key">C. ITC on Capital Goods</span><span class="val" id="t4c">₹0.00</span></div>
+        <div class="summary-row total"><span class="key">Total ITC Claimed</span><span class="val" id="t4-total">₹0.00</span></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">5 — Net Tax Payable</div>
+        </div>
+        <div class="summary-row"><span class="key">CGST Payable</span><span class="val" id="t5-cgst">₹0.00</span></div>
+        <div class="summary-row"><span class="key">SGST Payable</span><span class="val" id="t5-sgst">₹0.00</span></div>
+        <div class="summary-row"><span class="key">IGST Payable</span><span class="val" id="t5-igst">₹0.00</span></div>
+        <div class="summary-row total"><span class="key">Total Net Tax Payable</span><span class="val" id="t5-total">₹0.00</span></div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="compute3B()">🔄 Compute GSTR-3B</button>
+        <button class="btn btn-outline" onclick="export3BPDF()">📄 Export GSTR-3B PDF</button>
+      </div>
+    </div>
+
+    <!-- ===== REPORTS ===== -->
+    <div class="page" id="page-reports">
+      <div class="page-hero">
+        <h1>Reports & Export</h1>
+        <p>Download and share GST filing reports</p>
+      </div>
+      <div class="return-grid">
+        <div class="return-card" onclick="exportGSTR1PDF()">
+          <div class="return-type">GSTR-1</div>
+          <div class="return-desc">Outward Supply Statement — Monthly</div>
+          <div class="return-meta">
+            <div class="return-due">Due: 11th every month</div>
+            <span class="tag tag-green">📄 Export PDF</span>
+          </div>
+        </div>
+        <div class="return-card" onclick="export3BPDF()">
+          <div class="return-type">GSTR-3B</div>
+          <div class="return-desc">Monthly Summary Return</div>
+          <div class="return-meta">
+            <div class="return-due">Due: 20th every month</div>
+            <span class="tag tag-blue">📄 Export PDF</span>
+          </div>
+        </div>
+        <div class="return-card" onclick="exportSalesCSV()">
+          <div class="return-type">Sales CSV</div>
+          <div class="return-desc">Sales Ledger — Full Period</div>
+          <div class="return-meta">
+            <div class="return-due">Anytime</div>
+            <span class="tag tag-orange">📊 Export CSV</span>
+          </div>
+        </div>
+        <div class="return-card" onclick="exportPurchaseCSV()">
+          <div class="return-type">Purchase CSV</div>
+          <div class="return-desc">Purchase & ITC Register</div>
+          <div class="return-meta">
+            <div class="return-due">Anytime</div>
+            <span class="tag tag-yellow">📊 Export CSV</span>
+          </div>
+        </div>
+        <div class="return-card" onclick="exportBalanceSheetPDF()">
+          <div class="return-type">Balance Sheet</div>
+          <div class="return-desc">Assets & Liabilities Overview</div>
+          <div class="return-meta">
+            <div class="return-due">Anytime</div>
+            <span class="tag tag-green">📄 Export PDF</span>
+          </div>
+        </div>
+        <div class="return-card" onclick="exportFullReport()">
+          <div class="return-type">Full Report</div>
+          <div class="return-desc">Comprehensive GST Filing Package</div>
+          <div class="return-meta">
+            <div class="return-due">Complete Package</div>
+            <span class="tag tag-blue">📦 Export All</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SETTINGS ===== -->
+    <div class="page" id="page-settings">
+      <div class="page-hero">
+        <h1>Settings</h1>
+        <p>Configure your GST filing preferences</p>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Tax Period</div></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Filing Month</label>
+            <select id="set-month">
+              <option>January</option><option>February</option><option>March</option>
+              <option>April</option><option>May</option><option>June</option>
+              <option>July</option><option>August</option><option>September</option>
+              <option>October</option><option>November</option><option>December</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Financial Year</label>
+            <select id="set-fy">
+              <option>2025-26</option><option>2024-25</option><option>2023-24</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Default GST Rate</label>
+            <select id="set-gst">
+              <option>5%</option><option>12%</option><option value="18" selected>18%</option><option>28%</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Supply Type Default</label>
+            <select id="set-supply">
+              <option>Intra-state (CGST+SGST)</option>
+              <option>Inter-state (IGST)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Data Management</div></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-secondary" onclick="clearAllData()">🗑️ Clear All Data</button>
+          <button class="btn btn-outline" onclick="loadSampleData()">🔄 Load Sample Data</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <div class="mobile-nav-item active" onclick="navigate('dashboard', null); setMobileActive(this)">
+      <span class="mn-icon">🏠</span><span>Home</span>
+    </div>
+    <div class="mobile-nav-item" onclick="navigate('sales', null); setMobileActive(this)">
+      <span class="mn-icon">📤</span><span>Sales</span>
+    </div>
+    <div class="mobile-nav-item" onclick="navigate('purchases', null); setMobileActive(this)">
+      <span class="mn-icon">📥</span><span>Purchases</span>
+    </div>
+    <div class="mobile-nav-item" onclick="navigate('gstr3b', null); setMobileActive(this)">
+      <span class="mn-icon">📝</span><span>GSTR-3B</span>
+    </div>
+    <div class="mobile-nav-item" onclick="navigate('reports', null); setMobileActive(this)">
+      <span class="mn-icon">📊</span><span>Reports</span>
+    </div>
+  </div>
+</nav>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<!-- MODAL: ADD SALE -->
+<div class="modal-overlay" id="modal-sale">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Sales Invoice</div>
+      <div class="modal-close" onclick="closeModal('modal-sale')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Invoice Number</label>
+          <input type="text" id="s-inv" placeholder="INV-001">
+        </div>
+        <div class="form-group">
+          <label>Invoice Date</label>
+          <input type="date" id="s-date">
+        </div>
+        <div class="form-group">
+          <label>Customer Name</label>
+          <input type="text" id="s-customer" placeholder="Customer Name">
+        </div>
+        <div class="form-group">
+          <label>Customer GSTIN (if B2B)</label>
+          <input type="text" id="s-gstin" placeholder="29XXXXX (optional)">
+        </div>
+        <div class="form-group">
+          <label>Taxable Amount (₹)</label>
+          <div class="amount-input"><input type="number" id="s-taxable" placeholder="0.00" oninput="calcSaleTax()"></div>
+        </div>
+        <div class="form-group">
+          <label>GST Rate</label>
+          <select id="s-rate" onchange="calcSaleTax()">
+            <option value="0">0%</option>
+            <option value="5">5%</option>
+            <option value="12">12%</option>
+            <option value="18" selected>18%</option>
+            <option value="28">28%</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Supply Type</label>
+          <select id="s-supply" onchange="calcSaleTax()">
+            <option value="intra">Intra-state (CGST+SGST)</option>
+            <option value="inter">Inter-state (IGST)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Invoice Type</label>
+          <select id="s-type">
+            <option value="B2B">B2B</option>
+            <option value="B2C">B2C</option>
+            <option value="Export">Export</option>
+          </select>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">
+        <div><div class="stat-label">CGST</div><div class="stat-value" style="font-size:18px" id="s-cgst-disp">₹0</div></div>
+        <div><div class="stat-label">SGST</div><div class="stat-value" style="font-size:18px" id="s-sgst-disp">₹0</div></div>
+        <div><div class="stat-label">IGST</div><div class="stat-value" style="font-size:18px" id="s-igst-disp">₹0</div></div>
+        <div><div class="stat-label">Total</div><div class="stat-value green" style="font-size:18px" id="s-total-disp">₹0</div></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-sale')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSale()">💾 Save Invoice</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD PURCHASE -->
+<div class="modal-overlay" id="modal-purchase">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Purchase Bill</div>
+      <div class="modal-close" onclick="closeModal('modal-purchase')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Bill Number</label>
+          <input type="text" id="p-bill" placeholder="BILL-001">
+        </div>
+        <div class="form-group">
+          <label>Bill Date</label>
+          <input type="date" id="p-date">
+        </div>
+        <div class="form-group">
+          <label>Supplier Name</label>
+          <input type="text" id="p-supplier" placeholder="Supplier Name">
+        </div>
+        <div class="form-group">
+          <label>Supplier GSTIN</label>
+          <input type="text" id="p-gstin" placeholder="29XXXXX">
+        </div>
+        <div class="form-group">
+          <label>Taxable Amount (₹)</label>
+          <div class="amount-input"><input type="number" id="p-taxable" placeholder="0.00" oninput="calcPurchaseTax()"></div>
+        </div>
+        <div class="form-group">
+          <label>GST Rate</label>
+          <select id="p-rate" onchange="calcPurchaseTax()">
+            <option value="0">0%</option>
+            <option value="5">5%</option>
+            <option value="12">12%</option>
+            <option value="18" selected>18%</option>
+            <option value="28">28%</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Supply Type</label>
+          <select id="p-supply" onchange="calcPurchaseTax()">
+            <option value="intra">Intra-state (CGST+SGST)</option>
+            <option value="inter">Inter-state (IGST)</option>
+          </select>
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <label class="checkbox-group">
+            <input type="checkbox" id="p-itc" checked>
+            <span>ITC Eligible</span>
+          </label>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">
+        <div><div class="stat-label">CGST</div><div class="stat-value" style="font-size:18px" id="p-cgst-disp">₹0</div></div>
+        <div><div class="stat-label">SGST</div><div class="stat-value" style="font-size:18px" id="p-sgst-disp">₹0</div></div>
+        <div><div class="stat-label">IGST</div><div class="stat-value" style="font-size:18px" id="p-igst-disp">₹0</div></div>
+        <div><div class="stat-label">Total</div><div class="stat-value blue" style="font-size:18px" id="p-total-disp">₹0</div></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-purchase')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePurchase()">💾 Save Bill</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD ASSET -->
+<div class="modal-overlay" id="modal-asset">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Capital Asset</div>
+      <div class="modal-close" onclick="closeModal('modal-asset')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Asset Name</label>
+          <input type="text" id="a-name" placeholder="e.g. Machinery, Laptop, Vehicle">
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="a-category">
+            <option>Plant & Machinery</option>
+            <option>IT Equipment</option>
+            <option>Vehicle</option>
+            <option>Furniture</option>
+            <option>Building</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Purchase Date</label>
+          <input type="date" id="a-date">
+        </div>
+        <div class="form-group">
+          <label>Cost (₹)</label>
+          <div class="amount-input"><input type="number" id="a-cost" placeholder="0.00"></div>
+        </div>
+        <div class="form-group">
+          <label>GST Paid (₹)</label>
+          <div class="amount-input"><input type="number" id="a-gst" placeholder="0.00"></div>
+        </div>
+        <div class="form-group">
+          <label>Depreciation Rate (%)</label>
+          <input type="number" id="a-dep" placeholder="15" value="15">
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <label class="checkbox-group">
+            <input type="checkbox" id="a-itc" checked>
+            <span>ITC Claimed on This Asset</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-asset')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAsset()">💾 Save Asset</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD LIABILITY -->
+<div class="modal-overlay" id="modal-liability">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Liability</div>
+      <div class="modal-close" onclick="closeModal('modal-liability')">×</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Description</label>
+          <input type="text" id="l-desc" placeholder="e.g. GST Payable for March 2025">
+        </div>
+        <div class="form-group">
+          <label>Type</label>
+          <select id="l-type">
+            <option>GST Payable</option>
+            <option>Input Tax Reversal</option>
+            <option>Interest & Penalty</option>
+            <option>Trade Payable</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Amount (₹)</label>
+          <div class="amount-input"><input type="number" id="l-amount" placeholder="0.00"></div>
+        </div>
+        <div class="form-group">
+          <label>GST Component (₹)</label>
+          <div class="amount-input"><input type="number" id="l-gst" placeholder="0.00"></div>
+        </div>
+        <div class="form-group">
+          <label>Due Date</label>
+          <input type="date" id="l-due">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="l-status">
+            <option>Pending</option>
+            <option>Paid</option>
+            <option>Overdue</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-liability')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLiability()">💾 Save Liability</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== STATE ====================
+let state = {
+  sales: [],
+  purchases: [],
+  assets: [],
+  liabilities: [],
+  profile: { name: 'Raj Agencies Pvt. Ltd.', gstin: '27AABCU9603R1ZX' }
+};
+
+// ==================== NAVIGATION ====================
+function navigate(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+  if (page === 'gstr3b') compute3B();
+  if (page === 'gstr1') renderGSTR1();
+  if (page === 'assets') updateBalanceSheet();
+}
+function setMobileActive(el) {
+  document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ==================== TABS ====================
+function switchAssetTab(tabId, el) {
+  ['assets-tab','liabilities-tab','balance-tab'].forEach(t => {
+    document.getElementById(t).style.display = t === tabId ? 'block' : 'none';
+  });
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if (tabId === 'balance-tab') updateBalanceSheet();
+}
+function switchGstr1Tab(name, el) {
+  ['b2b','b2c','exports','summary'].forEach(t => {
+    document.getElementById('gstr1-'+t).style.display = t === name ? 'block' : 'none';
+  });
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if (name === 'summary') renderGSTR1Summary();
+}
+
+// ==================== MODAL ====================
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openSaleModal() {
+  document.getElementById('s-date').valueAsDate = new Date();
+  document.getElementById('s-inv').value = 'INV-' + String(state.sales.length + 1).padStart(3, '0');
+  ['s-customer','s-gstin','s-taxable'].forEach(id => document.getElementById(id).value = '');
+  calcSaleTax();
+  document.getElementById('modal-sale').classList.add('open');
+}
+function openPurchaseModal() {
+  document.getElementById('p-date').valueAsDate = new Date();
+  document.getElementById('p-bill').value = 'BILL-' + String(state.purchases.length + 1).padStart(3, '0');
+  ['p-supplier','p-gstin','p-taxable'].forEach(id => document.getElementById(id).value = '');
+  calcPurchaseTax();
+  document.getElementById('modal-purchase').classList.add('open');
+}
+function openAssetModal() {
+  document.getElementById('a-date').valueAsDate = new Date();
+  document.getElementById('modal-asset').classList.add('open');
+}
+function openLiabilityModal() {
+  document.getElementById('l-due').valueAsDate = new Date();
+  document.getElementById('modal-liability').classList.add('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ==================== TAX CALC ====================
+function calcTax(taxable, rate, supply) {
+  const t = parseFloat(taxable) || 0;
+  const r = parseFloat(rate) / 100;
+  const gst = t * r;
+  if (supply === 'inter') return { cgst: 0, sgst: 0, igst: gst, total: t + gst };
+  return { cgst: gst / 2, sgst: gst / 2, igst: 0, total: t + gst };
+}
+function calcSaleTax() {
+  const t = document.getElementById('s-taxable').value;
+  const r = document.getElementById('s-rate').value;
+  const s = document.getElementById('s-supply').value;
+  const c = calcTax(t, r, s);
+  document.getElementById('s-cgst-disp').textContent = fmt(c.cgst);
+  document.getElementById('s-sgst-disp').textContent = fmt(c.sgst);
+  document.getElementById('s-igst-disp').textContent = fmt(c.igst);
+  document.getElementById('s-total-disp').textContent = fmt(c.total);
+}
+function calcPurchaseTax() {
+  const t = document.getElementById('p-taxable').value;
+  const r = document.getElementById('p-rate').value;
+  const s = document.getElementById('p-supply').value;
+  const c = calcTax(t, r, s);
+  document.getElementById('p-cgst-disp').textContent = fmt(c.cgst);
+  document.getElementById('p-sgst-disp').textContent = fmt(c.sgst);
+  document.getElementById('p-igst-disp').textContent = fmt(c.igst);
+  document.getElementById('p-total-disp').textContent = fmt(c.total);
+}
+
+// ==================== SAVE ====================
+function saveSale() {
+  const taxable = parseFloat(document.getElementById('s-taxable').value) || 0;
+  if (!taxable) { toast('Please enter a taxable amount', 'error'); return; }
+  const supply = document.getElementById('s-supply').value;
+  const rate = document.getElementById('s-rate').value;
+  const c = calcTax(taxable, rate, supply);
+  const row = {
+    id: Date.now(),
+    inv: document.getElementById('s-inv').value || 'INV-' + Date.now(),
+    date: document.getElementById('s-date').value,
+    customer: document.getElementById('s-customer').value || 'Unknown',
+    gstin: document.getElementById('s-gstin').value,
+    taxable, cgst: c.cgst, sgst: c.sgst, igst: c.igst,
+    total: c.total, type: document.getElementById('s-type').value,
+    rate, supply
+  };
+  state.sales.push(row);
+  renderSales();
+  updateDashboard();
+  closeModal('modal-sale');
+  toast('Invoice saved successfully ✓', 'success');
+}
+
+function savePurchase() {
+  const taxable = parseFloat(document.getElementById('p-taxable').value) || 0;
+  if (!taxable) { toast('Please enter a taxable amount', 'error'); return; }
+  const supply = document.getElementById('p-supply').value;
+  const rate = document.getElementById('p-rate').value;
+  const c = calcTax(taxable, rate, supply);
+  const row = {
+    id: Date.now(),
+    bill: document.getElementById('p-bill').value || 'BILL-' + Date.now(),
+    date: document.getElementById('p-date').value,
+    supplier: document.getElementById('p-supplier').value || 'Unknown',
+    gstin: document.getElementById('p-gstin').value,
+    taxable, cgst: c.cgst, sgst: c.sgst, igst: c.igst,
+    total: c.total, itc: document.getElementById('p-itc').checked,
+    rate, supply
+  };
+  state.purchases.push(row);
+  renderPurchases();
+  updateDashboard();
+  closeModal('modal-purchase');
+  toast('Purchase bill saved ✓', 'success');
+}
+
+function saveAsset() {
+  const name = document.getElementById('a-name').value;
+  if (!name) { toast('Please enter asset name', 'error'); return; }
+  const cost = parseFloat(document.getElementById('a-cost').value) || 0;
+  const gstPaid = parseFloat(document.getElementById('a-gst').value) || 0;
+  const dep = parseFloat(document.getElementById('a-dep').value) || 15;
+  const bookVal = cost - (cost * dep / 100);
+  const row = {
+    id: Date.now(),
+    name, category: document.getElementById('a-category').value,
+    date: document.getElementById('a-date').value,
+    cost, gstPaid, dep, bookVal,
+    itcClaimed: document.getElementById('a-itc').checked
+  };
+  state.assets.push(row);
+  renderAssets();
+  closeModal('modal-asset');
+  toast('Asset saved ✓', 'success');
+}
+
+function saveLiability() {
+  const desc = document.getElementById('l-desc').value;
+  if (!desc) { toast('Please enter description', 'error'); return; }
+  const row = {
+    id: Date.now(),
+    desc, type: document.getElementById('l-type').value,
+    amount: parseFloat(document.getElementById('l-amount').value) || 0,
+    gst: parseFloat(document.getElementById('l-gst').value) || 0,
+    due: document.getElementById('l-due').value,
+    status: document.getElementById('l-status').value
+  };
+  state.liabilities.push(row);
+  renderLiabilities();
+  closeModal('modal-liability');
+  toast('Liability saved ✓', 'success');
+}
+
+function saveProfile() {
+  state.profile.name = document.getElementById('biz-name').value;
+  state.profile.gstin = document.getElementById('biz-gstin').value;
+  document.getElementById('topbar-gstin').textContent = state.profile.gstin;
+  toast('Profile updated ✓', 'success');
+}
+
+// ==================== RENDER ====================
+function fmt(n) { return '₹' + (parseFloat(n) || 0).toFixed(2); }
+function fmtN(n) { return (parseFloat(n) || 0).toFixed(2); }
+
+function renderSales() {
+  const tbody = document.getElementById('sales-tbody');
+  document.getElementById('sales-count').textContent = state.sales.length;
+  if (!state.sales.length) {
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><div class="icon">📄</div><h3>No invoices yet</h3><p>Click "Add Invoice" to record your first sale</p></div></td></tr>`;
+    updateSalesSummary();
+    return;
+  }
+  tbody.innerHTML = state.sales.map(r => `
+    <tr>
+      <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--accent)">${r.inv}</span></td>
+      <td>${r.date}</td><td>${r.customer}</td>
+      <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">${r.gstin || '—'}</span></td>
+      <td>${fmt(r.taxable)}</td><td>${fmt(r.cgst)}</td><td>${fmt(r.sgst)}</td><td>${fmt(r.igst)}</td>
+      <td><strong>${fmt(r.total)}</strong></td>
+      <td><span class="tag ${r.type==='B2B'?'tag-green':r.type==='Export'?'tag-blue':'tag-yellow'}">${r.type}</span></td>
+      <td><button class="btn btn-danger btn-xs" onclick="deleteSale(${r.id})">✕</button></td>
+    </tr>`).join('');
+  updateSalesSummary();
+}
+
+function renderPurchases() {
+  const tbody = document.getElementById('purchase-tbody');
+  document.getElementById('purchase-count').textContent = state.purchases.length;
+  if (!state.purchases.length) {
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><div class="icon">🧾</div><h3>No purchases yet</h3></div></td></tr>`;
+    updatePurchaseSummary();
+    return;
+  }
+  tbody.innerHTML = state.purchases.map(r => `
+    <tr>
+      <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--accent2)">${r.bill}</span></td>
+      <td>${r.date}</td><td>${r.supplier}</td>
+      <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">${r.gstin || '—'}</span></td>
+      <td>${fmt(r.taxable)}</td><td>${fmt(r.cgst)}</td><td>${fmt(r.sgst)}</td><td>${fmt(r.igst)}</td>
+      <td><strong>${fmt(r.total)}</strong></td>
+      <td><span class="tag ${r.itc?'tag-green':'tag-red'}">${r.itc?'Yes':'No'}</span></td>
+      <td><button class="btn btn-danger btn-xs" onclick="deletePurchase(${r.id})">✕</button></td>
+    </tr>`).join('');
+  updatePurchaseSummary();
+}
+
+function renderAssets() {
+  const tbody = document.getElementById('assets-tbody');
+  if (!state.assets.length) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="icon">🏗️</div><h3>No assets</h3></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = state.assets.map(r => `
+    <tr>
+      <td><strong>${r.name}</strong></td>
+      <td><span class="tag tag-blue">${r.category}</span></td>
+      <td>${r.date}</td>
+      <td>${fmt(r.cost)}</td>
+      <td>${fmt(r.gstPaid)}</td>
+      <td><span class="tag ${r.itcClaimed?'tag-green':'tag-red'}">${r.itcClaimed?'Yes':'No'}</span></td>
+      <td>${r.dep}%</td>
+      <td>${fmt(r.bookVal)}</td>
+      <td><button class="btn btn-danger btn-xs" onclick="deleteAsset(${r.id})">✕</button></td>
+    </tr>`).join('');
+}
+
+function renderLiabilities() {
+  const tbody = document.getElementById('liabilities-tbody');
+  if (!state.liabilities.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="icon">💰</div><h3>No liabilities</h3></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = state.liabilities.map(r => `
+    <tr>
+      <td><strong>${r.desc}</strong></td>
+      <td><span class="tag tag-orange">${r.type}</span></td>
+      <td>${fmt(r.amount)}</td>
+      <td>${fmt(r.gst)}</td>
+      <td>${r.due}</td>
+      <td><span class="tag ${r.status==='Paid'?'tag-green':r.status==='Overdue'?'tag-red':'tag-yellow'}">${r.status}</span></td>
+      <td><button class="btn btn-danger btn-xs" onclick="deleteLiability(${r.id})">✕</button></td>
+    </tr>`).join('');
+}
+
+// ==================== SUMMARIES ====================
+function updateSalesSummary() {
+  const totals = state.sales.reduce((a, r) => ({
+    taxable: a.taxable + r.taxable,
+    cgst: a.cgst + r.cgst,
+    sgst: a.sgst + r.sgst,
+    igst: a.igst + r.igst,
+    total: a.total + (r.cgst + r.sgst + r.igst)
+  }), { taxable:0, cgst:0, sgst:0, igst:0, total:0 });
+  document.getElementById('ss-taxable').textContent = fmt(totals.taxable);
+  document.getElementById('ss-cgst').textContent = fmt(totals.cgst);
+  document.getElementById('ss-sgst').textContent = fmt(totals.sgst);
+  document.getElementById('ss-igst').textContent = fmt(totals.igst);
+  document.getElementById('ss-total').textContent = fmt(totals.total);
+}
+
+function updatePurchaseSummary() {
+  const eligible = state.purchases.filter(r => r.itc);
+  const totals = eligible.reduce((a, r) => ({
+    taxable: a.taxable + r.taxable,
+    cgst: a.cgst + r.cgst,
+    sgst: a.sgst + r.sgst,
+    igst: a.igst + r.igst,
+    total: a.total + (r.cgst + r.sgst + r.igst)
+  }), { taxable:0, cgst:0, sgst:0, igst:0, total:0 });
+  document.getElementById('ps-taxable').textContent = fmt(totals.taxable);
+  document.getElementById('ps-cgst').textContent = fmt(totals.cgst);
+  document.getElementById('ps-sgst').textContent = fmt(totals.sgst);
+  document.getElementById('ps-igst').textContent = fmt(totals.igst);
+  document.getElementById('ps-total').textContent = fmt(totals.total);
+}
+
+function updateDashboard() {
+  const outputTax = state.sales.reduce((a, r) => a + r.cgst + r.sgst + r.igst, 0);
+  const itc = state.purchases.filter(r => r.itc).reduce((a, r) => a + r.cgst + r.sgst + r.igst, 0);
+  const net = Math.max(0, outputTax - itc);
+  document.getElementById('dash-output').textContent = fmt(outputTax);
+  document.getElementById('dash-itc').textContent = fmt(itc);
+  document.getElementById('dash-net').textContent = fmt(net);
+}
+
+function updateBalanceSheet() {
+  const assetsCost = state.assets.reduce((a, r) => a + r.cost, 0);
+  const assetsITC = state.assets.filter(r => r.itcClaimed).reduce((a, r) => a + r.gstPaid, 0);
+  const liabGST = state.liabilities.filter(r => r.type === 'GST Payable').reduce((a, r) => a + r.amount, 0);
+  const liabOther = state.liabilities.filter(r => r.type !== 'GST Payable').reduce((a, r) => a + r.amount, 0);
+  document.getElementById('bal-assets').textContent = fmt(assetsCost);
+  document.getElementById('bal-asset-itc').textContent = fmt(assetsITC);
+  document.getElementById('bal-total-assets').textContent = fmt(assetsCost + assetsITC);
+  document.getElementById('bal-gst-pay').textContent = fmt(liabGST);
+  document.getElementById('bal-other-liab').textContent = fmt(liabOther);
+  document.getElementById('bal-total-liab').textContent = fmt(liabGST + liabOther);
+}
+
+function compute3B() {
+  const outward = state.sales.reduce((a, r) => ({
+    taxable: a.taxable + r.taxable,
+    cgst: a.cgst + r.cgst, sgst: a.sgst + r.sgst, igst: a.igst + r.igst
+  }), { taxable:0, cgst:0, sgst:0, igst:0 });
+  const itcPurch = state.purchases.filter(r => r.itc).reduce((a, r) => ({
+    cgst: a.cgst + r.cgst, sgst: a.sgst + r.sgst, igst: a.igst + r.igst
+  }), { cgst:0, sgst:0, igst:0 });
+  const itcAssets = state.assets.filter(r => r.itcClaimed).reduce((a, r) => a + r.gstPaid, 0);
+  const itcTotal = itcPurch.cgst + itcPurch.sgst + itcPurch.igst + itcAssets;
+  const outTotal = outward.cgst + outward.sgst + outward.igst;
+  const netCGST = Math.max(0, outward.cgst - itcPurch.cgst);
+  const netSGST = Math.max(0, outward.sgst - itcPurch.sgst);
+  const netIGST = Math.max(0, outward.igst - itcPurch.igst);
+  document.getElementById('t31a').textContent = fmt(outward.taxable);
+  document.getElementById('t31-total').textContent = fmt(outTotal);
+  document.getElementById('t4b').textContent = fmt(itcPurch.cgst + itcPurch.sgst + itcPurch.igst);
+  document.getElementById('t4c').textContent = fmt(itcAssets);
+  document.getElementById('t4-total').textContent = fmt(itcTotal);
+  document.getElementById('t5-cgst').textContent = fmt(netCGST);
+  document.getElementById('t5-sgst').textContent = fmt(netSGST);
+  document.getElementById('t5-igst').textContent = fmt(netIGST);
+  document.getElementById('t5-total').textContent = fmt(netCGST + netSGST + netIGST);
+}
+
+function renderGSTR1() {
+  const b2b = state.sales.filter(r => r.type === 'B2B');
+  const b2c = state.sales.filter(r => r.type === 'B2C');
+  document.getElementById('gstr1-b2b-body').innerHTML = b2b.length ? b2b.map(r => `
+    <tr><td><span style="font-family:var(--font-mono);font-size:12px">${r.gstin||'—'}</span></td>
+    <td>${r.inv}</td><td>${r.date}</td><td>${fmt(r.taxable)}</td>
+    <td>${fmt(r.cgst)}</td><td>${fmt(r.sgst)}</td><td>${fmt(r.igst)}</td><td><strong>${fmt(r.total)}</strong></td></tr>`).join('')
+    : `<tr><td colspan="8"><div class="empty-state"><h3>No B2B invoices</h3></div></td></tr>`;
+  document.getElementById('gstr1-b2c-body').innerHTML = b2c.length ? b2c.map(r => `
+    <tr><td>${r.inv}</td><td>${r.date}</td><td>${r.customer}</td><td>${fmt(r.taxable)}</td>
+    <td>${fmt(r.cgst)}</td><td>${fmt(r.sgst)}</td><td>${fmt(r.igst)}</td><td><strong>${fmt(r.total)}</strong></td></tr>`).join('')
+    : `<tr><td colspan="8"><div class="empty-state"><h3>No B2C invoices</h3></div></td></tr>`;
+}
+
+function renderGSTR1Summary() {
+  const b2bTotal = state.sales.filter(r => r.type === 'B2B').reduce((a, r) => a + r.cgst + r.sgst + r.igst, 0);
+  const b2cTotal = state.sales.filter(r => r.type === 'B2C').reduce((a, r) => a + r.cgst + r.sgst + r.igst, 0);
+  document.getElementById('g1-b2b').textContent = fmt(b2bTotal);
+  document.getElementById('g1-b2c').textContent = fmt(b2cTotal);
+  document.getElementById('g1-total').textContent = fmt(b2bTotal + b2cTotal);
+}
+
+// ==================== DELETE ====================
+function deleteSale(id) { state.sales = state.sales.filter(r => r.id !== id); renderSales(); updateDashboard(); }
+function deletePurchase(id) { state.purchases = state.purchases.filter(r => r.id !== id); renderPurchases(); updateDashboard(); }
+function deleteAsset(id) { state.assets = state.assets.filter(r => r.id !== id); renderAssets(); }
+function deleteLiability(id) { state.liabilities = state.liabilities.filter(r => r.id !== id); renderLiabilities(); }
+
+// ==================== TOAST ====================
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type==='success'?'✓':'✕'}</span> ${msg}`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ==================== PDF EXPORT ====================
+function getPDFHeader(doc, title) {
+  doc.setFillColor(0, 229, 160);
+  doc.rect(0, 0, 210, 16, 'F');
+  doc.setTextColor(10, 14, 26);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('GSTFlow', 10, 10);
+  doc.setTextColor(10, 14, 26);
+  doc.setFontSize(10);
+  doc.text(title, 105, 10, { align: 'center' });
+  doc.setTextColor(50, 50, 50);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text(`GSTIN: ${state.profile.gstin}  |  ${state.profile.name}`, 10, 24);
+  doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })}`, 200, 24, { align: 'right' });
+  doc.setDrawColor(200, 200, 200);
+  doc.line(10, 27, 200, 27);
+}
+
+function exportGSTR1PDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  getPDFHeader(doc, 'GSTR-1 — Outward Supply Return');
+  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+  doc.setTextColor(30, 30, 30);
+  doc.text('B2B Invoices', 10, 36);
+  const b2b = state.sales.filter(r => r.type === 'B2B');
+  if (b2b.length) {
+    doc.autoTable({
+      startY: 40,
+      head: [['GSTIN','Invoice #','Date','Taxable','CGST','SGST','IGST','Total']],
+      body: b2b.map(r => [r.gstin||'—', r.inv, r.date, fmtN(r.taxable), fmtN(r.cgst), fmtN(r.sgst), fmtN(r.igst), fmtN(r.total)]),
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [17, 24, 39], textColor: [0, 229, 160], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 248, 255] }
+    });
+  } else {
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    doc.text('No B2B invoices recorded.', 10, 46);
+  }
+  const b2c = state.sales.filter(r => r.type === 'B2C');
+  const y2 = (doc.lastAutoTable?.finalY || 50) + 10;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+  doc.text('B2C Invoices', 10, y2);
+  if (b2c.length) {
+    doc.autoTable({
+      startY: y2 + 4,
+      head: [['Invoice #','Date','Customer','Taxable','CGST','SGST','IGST','Total']],
+      body: b2c.map(r => [r.inv, r.date, r.customer, fmtN(r.taxable), fmtN(r.cgst), fmtN(r.sgst), fmtN(r.igst), fmtN(r.total)]),
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [17, 24, 39], textColor: [0, 229, 160], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 248, 255] }
+    });
+  }
+  const totalGST = state.sales.reduce((a, r) => a + r.cgst + r.sgst + r.igst, 0);
+  const fy = (doc.lastAutoTable?.finalY || y2 + 10) + 14;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+  doc.setFillColor(0, 229, 160);
+  doc.roundedRect(10, fy - 6, 190, 12, 2, 2, 'F');
+  doc.setTextColor(10, 14, 26);
+  doc.text(`Total Output Tax Liability: ₹${fmtN(totalGST)}`, 105, fy + 1, { align: 'center' });
+  doc.save('GSTR-1_' + new Date().getFullYear() + '.pdf');
+  toast('GSTR-1 PDF exported ✓', 'success');
+}
+
+function export3BPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  getPDFHeader(doc, 'GSTR-3B — Monthly Return Summary');
+  const outward = state.sales.reduce((a, r) => ({
+    taxable: a.taxable + r.taxable,
+    cgst: a.cgst + r.cgst, sgst: a.sgst + r.sgst, igst: a.igst + r.igst
+  }), { taxable:0, cgst:0, sgst:0, igst:0 });
+  const itcP = state.purchases.filter(r => r.itc).reduce((a, r) => ({
+    cgst: a.cgst + r.cgst, sgst: a.sgst + r.sgst, igst: a.igst + r.igst
+  }), { cgst:0, sgst:0, igst:0 });
+  const itcA = state.assets.filter(r => r.itcClaimed).reduce((a, r) => a + r.gstPaid, 0);
+  const outTotal = outward.cgst + outward.sgst + outward.igst;
+  const itcTotal = itcP.cgst + itcP.sgst + itcP.igst + itcA;
+  const netCGST = Math.max(0, outward.cgst - itcP.cgst);
+  const netSGST = Math.max(0, outward.sgst - itcP.sgst);
+  const netIGST = Math.max(0, outward.igst - itcP.igst);
+  doc.autoTable({
+    startY: 34,
+    head: [['Section', 'Description', 'Amount (₹)']],
+    body: [
+      ['3.1(a)', 'Taxable Outward Supplies', fmtN(outward.taxable)],
+      ['3.1', 'Total Output Tax', fmtN(outTotal)],
+      ['', '', ''],
+      ['4(B)', 'ITC from B2B Purchases', fmtN(itcP.cgst+itcP.sgst+itcP.igst)],
+      ['4(C)', 'ITC on Capital Goods', fmtN(itcA)],
+      ['4', 'Total ITC Claimed', fmtN(itcTotal)],
+      ['', '', ''],
+      ['5', 'Net CGST Payable', fmtN(netCGST)],
+      ['5', 'Net SGST Payable', fmtN(netSGST)],
+      ['5', 'Net IGST Payable', fmtN(netIGST)],
+      ['5', 'Total Net Tax Payable', fmtN(netCGST+netSGST+netIGST)],
+    ],
+    styles: { fontSize: 9, cellPadding: 4 },
+    headStyles: { fillColor: [17, 24, 39], textColor: [0, 229, 160], fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [245, 248, 255] },
+    columnStyles: { 2: { halign: 'right' } }
+  });
+  doc.save('GSTR-3B_' + new Date().getFullYear() + '.pdf');
+  toast('GSTR-3B PDF exported ✓', 'success');
+}
+
+function exportBalanceSheetPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  getPDFHeader(doc, 'Assets & Liabilities — Balance Sheet');
+  doc.autoTable({
+    startY: 34,
+    head: [['Asset', 'Category', 'Cost (₹)', 'GST Paid (₹)', 'ITC', 'Book Value (₹)']],
+    body: state.assets.length ? state.assets.map(r => [r.name, r.category, fmtN(r.cost), fmtN(r.gstPaid), r.itcClaimed?'Yes':'No', fmtN(r.bookVal)])
+      : [['No assets recorded', '', '', '', '', '']],
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [17, 24, 39], textColor: [0, 229, 160] }
+  });
+  const y2 = (doc.lastAutoTable?.finalY || 40) + 10;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(30,30,30);
+  doc.text('Liabilities', 10, y2);
+  doc.autoTable({
+    startY: y2 + 4,
+    head: [['Description', 'Type', 'Amount (₹)', 'GST (₹)', 'Due Date', 'Status']],
+    body: state.liabilities.length ? state.liabilities.map(r => [r.desc, r.type, fmtN(r.amount), fmtN(r.gst), r.due, r.status])
+      : [['No liabilities recorded', '', '', '', '', '']],
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [17, 24, 39], textColor: [0, 229, 160] }
+  });
+  doc.save('BalanceSheet_' + new Date().getFullYear() + '.pdf');
+  toast('Balance Sheet PDF exported ✓', 'success');
+}
+
+function exportSalesCSV() {
+  if (!state.sales.length) { toast('No sales data to export', 'error'); return; }
+  const header = ['Invoice #','Date','Customer','GSTIN','Taxable','CGST','SGST','IGST','Total','Type'];
+  const rows = state.sales.map(r => [r.inv, r.date, r.customer, r.gstin, r.taxable, r.cgst, r.sgst, r.igst, r.total, r.type]);
+  downloadCSV([header, ...rows], 'Sales_Ledger.csv');
+  toast('Sales CSV exported ✓', 'success');
+}
+
+function exportPurchaseCSV() {
+  if (!state.purchases.length) { toast('No purchase data to export', 'error'); return; }
+  const header = ['Bill #','Date','Supplier','GSTIN','Taxable','CGST','SGST','IGST','Total','ITC Eligible'];
+  const rows = state.purchases.map(r => [r.bill, r.date, r.supplier, r.gstin, r.taxable, r.cgst, r.sgst, r.igst, r.total, r.itc?'Yes':'No']);
+  downloadCSV([header, ...rows], 'Purchase_Ledger.csv');
+  toast('Purchase CSV exported ✓', 'success');
+}
+
+function downloadCSV(rows, filename) {
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = filename; a.click();
+}
+
+function exportFullReport() {
+  exportGSTR1PDF();
+  setTimeout(() => { export3BPDF(); }, 500);
+  setTimeout(() => { exportSalesCSV(); }, 1000);
+  toast('Full report package exported ✓', 'success');
+}
+
+// ==================== DATA MANAGEMENT ====================
+function clearAllData() {
+  if (!confirm('Clear all data? This cannot be undone.')) return;
+  state.sales = []; state.purchases = []; state.assets = []; state.liabilities = [];
+  renderSales(); renderPurchases(); renderAssets(); renderLiabilities();
+  updateDashboard();
+  toast('All data cleared', 'success');
+}
+
+function loadSampleData() {
+  state.sales = [
+    { id: 1, inv: 'INV-001', date: '2025-04-05', customer: 'Tata Industries Ltd', gstin: '27AADCT4096Q1Z3', taxable: 100000, cgst: 9000, sgst: 9000, igst: 0, total: 118000, type: 'B2B', rate: '18', supply: 'intra' },
+    { id: 2, inv: 'INV-002', date: '2025-04-10', customer: 'Reliance Retail', gstin: '27AARFR0295G1ZI', taxable: 50000, cgst: 4500, sgst: 4500, igst: 0, total: 59000, type: 'B2B', rate: '18', supply: 'intra' },
+    { id: 3, inv: 'INV-003', date: '2025-04-15', customer: 'Walk-in Customer', gstin: '', taxable: 25000, cgst: 2250, sgst: 2250, igst: 0, total: 29500, type: 'B2C', rate: '18', supply: 'intra' },
+    { id: 4, inv: 'INV-004', date: '2025-04-18', customer: 'Karnataka Traders', gstin: '29AAKFC9678D1ZU', taxable: 75000, cgst: 0, sgst: 0, igst: 13500, total: 88500, type: 'B2B', rate: '18', supply: 'inter' }
+  ];
+  state.purchases = [
+    { id: 5, bill: 'BILL-001', date: '2025-04-02', supplier: 'Mahindra & Mahindra', gstin: '27AAACM1143L1ZD', taxable: 80000, cgst: 7200, sgst: 7200, igst: 0, total: 94400, itc: true, rate: '18', supply: 'intra' },
+    { id: 6, bill: 'BILL-002', date: '2025-04-08', supplier: 'Office Supplies Co.', gstin: '27AABCO9532P1ZL', taxable: 12000, cgst: 600, sgst: 600, igst: 0, total: 13200, itc: true, rate: '10', supply: 'intra' },
+    { id: 7, bill: 'BILL-003', date: '2025-04-12', supplier: 'Canteen Vendor', gstin: '', taxable: 8000, cgst: 400, sgst: 400, igst: 0, total: 8800, itc: false, rate: '10', supply: 'intra' }
+  ];
+  state.assets = [
+    { id: 8, name: 'Industrial Printer', category: 'Plant & Machinery', date: '2025-01-10', cost: 250000, gstPaid: 45000, dep: 15, bookVal: 212500, itcClaimed: true },
+    { id: 9, name: 'Company Laptop (x5)', category: 'IT Equipment', date: '2025-03-01', cost: 75000, gstPaid: 13500, dep: 40, bookVal: 45000, itcClaimed: true }
+  ];
+  state.liabilities = [
+    { id: 10, desc: 'GSTR-3B Tax Payable (March 2025)', type: 'GST Payable', amount: 28000, gst: 28000, due: '2025-04-20', status: 'Pending' },
+    { id: 11, desc: 'Trade Payable — Mahindra', type: 'Trade Payable', amount: 45000, gst: 0, due: '2025-05-10', status: 'Pending' }
+  ];
+  renderSales(); renderPurchases(); renderAssets(); renderLiabilities();
+  updateDashboard();
+  toast('Sample data loaded ✓', 'success');
+}
+
+// ==================== INIT ====================
+document.querySelectorAll('input[type="date"]').forEach(i => i.valueAsDate = new Date());
+updateDashboard();
+</script>
+</body>
+</html>

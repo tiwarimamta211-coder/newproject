@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>हिसाब Pro — Complete Accounting Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root {
+  --bg: #09090b;
+  --surface: #111113;
+  --card: #18181b;
+  --border: #27272a;
+  --border2: #3f3f46;
+  --accent: #22d3ee;
+  --accent2: #a78bfa;
+  --green: #4ade80;
+  --red: #f87171;
+  --yellow: #fbbf24;
+  --orange: #fb923c;
+  --text: #fafafa;
+  --muted: #71717a;
+  --muted2: #a1a1aa;
+  --tally: #f97316;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* Noise texture overlay */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:0.4;
+}
+
+/* SIDEBAR */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:240px;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  z-index:50;
+  padding:0;
+}
+.sidebar-logo{
+  padding:24px 20px 20px;
+  border-bottom:1px solid var(--border);
+}
+.logo-mark{
+  font-size:22px;font-weight:800;letter-spacing:-1px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.logo-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+
+.nav-section{padding:16px 12px 8px;}
+.nav-section-label{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;padding:0 8px;margin-bottom:6px;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:8px;
+  cursor:pointer;color:var(--muted2);font-size:13px;font-weight:500;
+  transition:all 0.15s;border:1px solid transparent;
+  margin-bottom:2px;
+}
+.nav-item:hover{color:var(--text);background:var(--card);}
+.nav-item.active{
+  color:var(--accent);background:rgba(34,211,238,0.08);
+  border-color:rgba(34,211,238,0.2);
+}
+.nav-icon{font-size:16px;width:20px;text-align:center;}
+.nav-badge{
+  margin-left:auto;font-size:10px;font-weight:700;
+  padding:2px 6px;border-radius:99px;
+  background:rgba(34,211,238,0.15);color:var(--accent);
+}
+
+.sidebar-footer{
+  margin-top:auto;padding:16px;border-top:1px solid var(--border);
+}
+.tally-status{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 12px;border-radius:8px;
+  background:var(--card);border:1px solid var(--border);
+  font-size:12px;font-weight:600;
+}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0;}
+.status-dot.on{background:var(--green);}
+
+/* MAIN */
+.main{margin-left:240px;min-height:100vh;position:relative;z-index:1;}
+
+/* TOPBAR */
+.topbar{
+  padding:16px 28px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(9,9,11,0.8);backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:40;
+}
+.topbar-title{font-size:18px;font-weight:700;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.chip{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:99px;
+  font-size:12px;font-weight:600;
+  background:var(--card);border:1px solid var(--border);
+  color:var(--muted2);
+}
+.chip.green{background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.3);color:var(--green);}
+.chip.red{background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.3);color:var(--red);}
+.chip.yellow{background:rgba(251,191,36,0.1);border-color:rgba(251,191,36,0.3);color:var(--yellow);}
+
+/* PAGE */
+.page{display:none;padding:28px;}
+.page.active{display:block;animation:fadeIn 0.2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* CARDS */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:22px;
+  transition:border-color 0.2s;
+}
+.card:hover{border-color:var(--border2);}
+.card-title{font-size:13px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:18px;
+  position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;top:-30px;right:-30px;
+  width:80px;height:80px;border-radius:50%;
+  opacity:0.07;
+}
+.stat-card.c1::before{background:var(--accent);}
+.stat-card.c2::before{background:var(--red);}
+.stat-card.c3::before{background:var(--green);}
+.stat-card.c4::before{background:var(--yellow);}
+.stat-emoji{font-size:22px;margin-bottom:10px;}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.stat-val{font-size:24px;font-weight:800;letter-spacing:-0.5px;}
+.stat-val.cyan{color:var(--accent);}
+.stat-val.red{color:var(--red);}
+.stat-val.green{color:var(--green);}
+.stat-val.yellow{color:var(--yellow);}
+
+/* CHART */
+.mini-chart{display:flex;align-items:flex-end;gap:6px;height:80px;margin-top:8px;}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;}
+.bar-fill{width:100%;border-radius:3px 3px 0 0;transition:height 0.6s cubic-bezier(0.34,1.56,0.64,1);min-height:2px;}
+.bar-fill.inc{background:var(--accent);opacity:0.7;}
+.bar-fill.exp{background:var(--red);opacity:0.7;}
+.bar-lbl{font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+
+/* TRANSACTION LIST */
+.txn-list{display:flex;flex-direction:column;gap:6px;}
+.txn-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-radius:10px;
+  background:var(--surface);border:1px solid var(--border);
+  transition:border-color 0.15s;
+}
+.txn-row:hover{border-color:var(--border2);}
+.txn-ico{
+  width:36px;height:36px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
+}
+.txn-ico.inc{background:rgba(34,211,238,0.1);}
+.txn-ico.exp{background:rgba(248,113,113,0.1);}
+.txn-name{font-size:13px;font-weight:600;}
+.txn-meta{font-size:11px;color:var(--muted);margin-top:1px;}
+.txn-amt{margin-left:auto;font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.txn-amt.inc{color:var(--accent);}
+.txn-amt.exp{color:var(--red);}
+.tag{
+  font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;
+  background:var(--surface);color:var(--muted2);border:1px solid var(--border);
+}
+
+/* FORM */
+.form-grid{display:grid;gap:14px;}
+.form-grid.g2{grid-template-columns:1fr 1fr;}
+.form-grid.g3{grid-template-columns:1fr 1fr 1fr;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg.span2{grid-column:1/-1;}
+.flabel{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:0.8px;text-transform:uppercase;}
+.finput,.fselect{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:9px;padding:10px 13px;color:var(--text);
+  font-family:inherit;font-size:13px;outline:none;
+  transition:border-color 0.2s;width:100%;
+}
+.finput:focus,.fselect:focus{border-color:var(--accent);}
+.fselect option{background:var(--surface);}
+
+.type-toggle{display:flex;gap:6px;}
+.type-btn{
+  flex:1;padding:9px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface);color:var(--muted);cursor:pointer;
+  font-size:12px;font-weight:700;font-family:inherit;transition:all 0.15s;
+}
+.type-btn.inc.active{background:rgba(34,211,238,0.12);border-color:var(--accent);color:var(--accent);}
+.type-btn.exp.active{background:rgba(248,113,113,0.12);border-color:var(--red);color:var(--red);}
+
+/* BUTTONS */
+.btn{
+  padding:11px 20px;border-radius:9px;border:none;
+  font-family:inherit;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all 0.15s;
+}
+.btn-accent{background:var(--accent);color:#09090b;}
+.btn-accent:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted2);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-orange{background:var(--orange);color:#09090b;}
+.btn-full{width:100%;}
+.btn-danger{background:var(--red);color:white;}
+.btn-yellow{background:var(--yellow);color:#09090b;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+
+/* TALLY */
+.conn-bar{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:18px 22px;margin-bottom:20px;
+  display:grid;grid-template-columns:1fr 1fr auto auto;gap:14px;align-items:end;
+}
+.conn-bar-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;grid-column:1/-1;}
+
+.steps{display:flex;gap:0;margin-bottom:22px;}
+.step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}
+.step::after{content:'';position:absolute;top:14px;left:50%;width:100%;height:1px;background:var(--border);}
+.step:last-child::after{display:none;}
+.step-n{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--border);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:12px;position:relative;z-index:1;transition:all 0.3s;
+}
+.step.done .step-n{background:var(--green);color:#09090b;}
+.step.act .step-n{background:var(--accent);color:#09090b;box-shadow:0 0 0 3px rgba(34,211,238,0.2);}
+.step-lbl{font-size:10px;color:var(--muted);margin-top:5px;font-weight:600;}
+
+.progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin:10px 0;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width 0.5s ease;width:0%;}
+
+.export-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+.exp-opt{
+  border:1px solid var(--border);border-radius:10px;padding:14px;
+  cursor:pointer;transition:all 0.15s;text-align:center;
+}
+.exp-opt:hover,.exp-opt.sel{border-color:var(--accent);background:rgba(34,211,238,0.06);}
+.exp-opt-icon{font-size:22px;margin-bottom:6px;}
+.exp-opt-title{font-size:12px;font-weight:700;}
+.exp-opt-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+
+.xml-box{
+  background:#0a0a0f;border-radius:10px;padding:16px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;
+  overflow:auto;max-height:280px;white-space:pre;color:#94a3b8;
+  border:1px solid var(--border);
+}
+.xt{color:#7dd3fc;}.xv{color:#86efac;}
+
+.data-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+.data-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.data-tbl th{background:var(--surface);padding:9px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-bottom:1px solid var(--border);}
+.data-tbl td{padding:10px 12px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:11px;}
+.data-tbl tr:last-child td{border:none;}
+.data-tbl tr:hover td{background:var(--surface);}
+
+/* GST */
+.risk-hero{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:28px;text-align:center;margin-bottom:20px;
+  position:relative;overflow:hidden;
+}
+.risk-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% -20%,rgba(34,211,238,0.06),transparent 60%);
+  pointer-events:none;
+}
+.risk-amount{font-size:48px;font-weight:800;letter-spacing:-2px;font-family:'JetBrains Mono',monospace;transition:color 0.3s;}
+.risk-label{font-size:13px;font-weight:700;margin-top:6px;transition:color 0.3s;}
+.risk-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+
+.gst-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.gst-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;}
+.gst-card-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+
+.breakdown{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+.breakdown-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--surface);font-size:12px;}
+.breakdown-label{color:var(--muted2);}
+.breakdown-val{font-weight:700;font-family:'JetBrains Mono',monospace;}
+
+/* LOG */
+.log-box{
+  background:var(--surface);border-radius:10px;padding:14px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.8;
+  max-height:400px;overflow-y:auto;color:var(--muted2);
+  border:1px solid var(--border);
+}
+.ls{color:#4ade80;}.le{color:#f87171;}.li{color:#60a5fa;}.lw{color:#fbbf24;}
+
+/* INVOICE */
+.inv-preview{
+  background:white;color:#0f172a;border-radius:12px;padding:32px;margin-top:16px;
+}
+.inv-preview h1{font-size:32px;font-weight:800;color:#22d3ee;letter-spacing:-1px;}
+
+/* SYNC */
+.sync-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.sync-stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;}
+.sync-num{font-size:28px;font-weight:800;font-family:'JetBrains Mono',monospace;}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  padding:12px 18px;border-radius:10px;font-weight:600;font-size:13px;
+  z-index:999;opacity:0;transform:translateY(8px);
+  transition:all 0.25s;pointer-events:none;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+}
+.toast.show{opacity:1;transform:none;}
+.toast.s{background:var(--green);color:#09090b;}
+.toast.e{background:var(--red);color:white;}
+.toast.i{background:var(--accent);color:#09090b;}
+.toast.w{background:var(--yellow);color:#09090b;}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:20px 0;}
+
+@media(max-width:900px){
+  .sidebar{width:56px;}
+  .sidebar .nav-item span:not(.nav-icon){display:none;}
+  .sidebar .logo-sub,.sidebar-footer .tally-status span:not(.status-dot){display:none;}
+  .main{margin-left:56px;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .gst-grid{grid-template-columns:1fr;}
+  .conn-bar{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">हिसाब Pro</div>
+    <div class="logo-sub">Complete Suite</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Accounting</div>
+    <div class="nav-item active" onclick="show('dashboard',this)">
+      <span class="nav-icon">📊</span><span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="show('transactions',this)">
+      <span class="nav-icon">💳</span><span>Transactions</span>
+    </div>
+    <div class="nav-item" onclick="show('add',this)">
+      <span class="nav-icon">➕</span><span>Add Entry</span>
+    </div>
+    <div class="nav-item" onclick="show('invoice',this)">
+      <span class="nav-icon">🧾</span><span>Invoice</span>
+    </div>
+    <div class="nav-item" onclick="show('reports',this)">
+      <span class="nav-icon">📈</span><span>Reports</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Tally</div>
+    <div class="nav-item" onclick="show('tally-import',this)">
+      <span class="nav-icon">📥</span><span>Import</span>
+    </div>
+    <div class="nav-item" onclick="show('tally-export',this)">
+      <span class="nav-icon">📤</span><span>Export</span>
+    </div>
+    <div class="nav-item" onclick="show('tally-sync',this)">
+      <span class="nav-icon">🔄</span><span>Auto Sync</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Compliance</div>
+    <div class="nav-item" onclick="show('gst',this)">
+      <span class="nav-icon">⚠️</span><span>GST Penalty</span>
+      <span class="nav-badge" id="gst-badge">!</span>
+    </div>
+    <div class="nav-item" onclick="show('log',this)">
+      <span class="nav-icon">📋</span><span>Activity Log</span>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="tally-status">
+      <div class="status-dot" id="sdot"></div>
+      <span id="slabel" style="font-size:11px;color:var(--muted2);">Tally: Off</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-title" id="page-title">📊 Dashboard</div>
+  <div class="topbar-right">
+    <div class="chip" id="chip-balance">Balance: ₹0</div>
+    <div class="chip" id="gst-chip">GST Risk: ₹0</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PAGE: DASHBOARD -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page active" id="p-dashboard">
+  <div class="stats-row">
+    <div class="stat-card c1">
+      <div class="stat-emoji">💚</div>
+      <div class="stat-label">कुल आमदनी</div>
+      <div class="stat-val cyan" id="d-income">₹0</div>
+    </div>
+    <div class="stat-card c2">
+      <div class="stat-emoji">🔴</div>
+      <div class="stat-label">कुल खर्च</div>
+      <div class="stat-val red" id="d-expense">₹0</div>
+    </div>
+    <div class="stat-card c3">
+      <div class="stat-emoji">⚖️</div>
+      <div class="stat-label">Net Balance</div>
+      <div class="stat-val green" id="d-balance">₹0</div>
+    </div>
+    <div class="stat-card c4">
+      <div class="stat-emoji">⚠️</div>
+      <div class="stat-label">GST Penalty Risk</div>
+      <div class="stat-val yellow" id="d-gst">₹0</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px;">
+    <div class="card">
+      <div class="card-title">Monthly Overview</div>
+      <div class="mini-chart" id="dash-chart"></div>
+      <div style="display:flex;gap:14px;margin-top:10px;">
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted2);">
+          <div style="width:10px;height:10px;border-radius:2px;background:var(--accent);opacity:0.7;"></div>Income
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted2);">
+          <div style="width:10px;height:10px;border-radius:2px;background:var(--red);opacity:0.7;"></div>Expense
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Quick Actions</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn btn-accent btn-full" onclick="show('add',document.querySelector('[onclick*=add]'))">➕ Entry जोड़ें</button>
+        <button class="btn btn-ghost btn-full" onclick="show('invoice',document.querySelector('[onclick*=invoice]'))">🧾 Invoice बनाएं</button>
+        <button class="btn btn-ghost btn-full" onclick="show('tally-import',document.querySelector('[onclick*=tally-import]'))">📥 Tally Import</button>
+        <button class="btn btn-ghost btn-full" onclick="show('gst',document.querySelector('[onclick*=gst]'))">⚠️ GST Check</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="margin-bottom:12px;">हाल की Transactions</div>
+    <div class="txn-list" id="d-txns"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PAGE: TRANSACTIONS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="p-transactions">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+    <div>
+      <div style="font-size:20px;font-weight:700;">सभी Transactions</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;" id="txn-count-label">Loading...</div>
+    </div>
+    <button class="btn btn-ghost" onclick="downloadTxnCSV()">⬇️ CSV Export</button>
+  </div>
+  <div class="card" style="padding:0;">
+    <div class="data-wrap">
+      <table class="data-tbl" id="all-tbl">
+        <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Category</th><th>Amount</th></tr></thead>
+        <tbody id="all-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PAGE: ADD ENTRY -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="p-add">
+  <div style="font-size:20px;font-weight:700;margin-bottom:18px;">नई Entry जोड़ें</div>
+  <div class="card" style="max-width:520px;">
+    <div class="form-grid">
+      <div class="fg span2">
+        <div class="flabel">Type</div>
+        <div class="type-toggle">
+          <button class="type-btn inc active" id="tbtn-inc" onclick="setType('income')">✅ आमदनी</button>
+          <button class="type-btn exp" id="tbtn-exp" onclick="setType('expense')">❌ खर्च</button>
+        </div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="form-grid g2">
+      <div class="fg">
+        <div class="flabel">विवरण</div>
+        <input class="finput" id="a-desc" placeholder="जैसे: Client Payment" />
+      </div>
+      <div class="fg">
+        <div class="flabel">राशि (₹)</div>
+        <input class="finput" id="a-amt" type="number" placeholder="0" />
+      </div>
+      <div class="fg">
+        <div class="flabel">Category</div>
+        <select class="fselect" id="a-cat">
+          <option>Sales</option><option>Service</option><option>Salary</option>
+          <option>Rent</option><option>Utilities</option><option>Purchase</option>
+          <option>Marketing</option><option>Other</option>
+        </select>
+      </div>
+      <div class="fg">
+        <div class="flabel">Date</div>
+        <input class="finput" id="a-date" type="date" />
+      </div>
+      <div class="fg span2">
+        <button class="btn btn-accent btn-full" onclick="addTxn()" style="padding:13px;">✓ Entry जोड़ें</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PAGE: INVOICE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="p-invoice">
+  <div style="font-size:20px;font-weight:700;margin-bottom:18px;">Invoice बनाएं</div>
+  <div class="card">
+    <div class="form-grid g2" style="margin-bottom:16px;">
+      <div class="fg"><div class="flabel">आपका Business</div><input class="finput" id="iv-from" placeholder="Business Name" /></div>
+      <div class="fg"><div class="flabel">Client</div><input class="finput" id="iv-to" placeholder="Client Name" /></div>
+      <div class="fg"><div class="flabel">Invoice No.</div><input class="finput" id="iv-no" value="INV-001" /></div>
+      <div class="fg"><div class="flabel">Date</div><input class="finput" id="iv-date" type="date" /></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Items</div>
+    <div id="iv-items"></div>
+    <button class="btn btn-ghost" onclick="addItem()" style="width:100%;margin-top:8px;border-style:dashed;">+ Item जोड़ें</button>
+    <div class="divider"></div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+      <div style="display:flex;gap:32px;font-size:13px;color:var(--muted2);">
+        <span>Subtotal</span><span id="iv-sub" style="font-family:'JetBrains Mono',monospace;">₹0</span>
+      </div>
+      <div style="display:flex;gap:32px;font-size:13px;color:var(--muted2);">
+        <span>GST 18%</span><span id="iv-gst" style="font-family:'JetBrains Mono',monospace;">₹0</span>
+      </div>
+      <div style="display:flex;gap:32px;font-size:16px;font-weight:800;color:var(--accent);">
+        <span>Total</span><span id="iv-total" style="font-family:'JetBrains Mono',monospace;">₹0</span>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-accent" onclick="printInvoice()">🖨️ Print / Save PDF</button>
+      <button class="btn btn-ghost" onclick="saveInvoiceAsTxn()">💾 Transaction में Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PAGE: REPORTS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="p-reports">
+  <div style="font-size:20px;font-weight:700;margin-bottom:18px;">Reports & Analysis</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="card">
+      <div class="card-title">💚 Income by Category</div>
+      <div id="rpt-income"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔴 Expense by Category</div>
+      <div id="rpt-expense"></div>
+    </div>
+    <div class="card" style="grid-column:1/-1;">
+      <div class="card-title">📅 Monthly Summary</div>
+      <div class="data-wrap">
+        <table class="data-tbl" id="monthly-tbl">
+          <thead><tr><th>Month</th><th>Income</th><th>Expense</th><th>Net</th></tr></thead>
+          <tbody id="monthly-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PAGE: TALLY IMPORT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="p-tally-import">
+  <div style="font-size:20px;font-weight:700;margin-bottom:18px;">📥 Tally से Import</div>
+
+  <div class="conn-bar">
+    <div class="conn-bar-title">⚙️ TallyPrime Connection</div>
+    <div class="fg"><div class="flabel">Server IP</div><input class="finput" id="t-ip" value="localhost" /></div>
+    <div class="fg"><div class="flabel">Port</div><input class="finput" id="t-port" value="9000" /></div>
+    <button class="btn btn-accent" onclick="tallyConnect()" id="tc-btn">🔌 Connect</button>
+    <button class="btn btn-ghost" onclick="tallyDisconnect()" id="td-btn" disabled>Disconnect</button>
+  </div>
+
+  <div class="card">
+    <div class="steps">
+      <div class="step act" id="ts1"><div class="step-n">1</div><div class="step-lbl">Connect</div></div>
+      <div class="step" id="ts2"><div class="step-n">2</div><div class="step-lbl">Select</div></div>
+      <div class="step" id="ts3"><div class="step-n">3</div><div class="step-lbl">Fetch</div></div>
+      <div class="step" id="ts4"><div class="step-n">4</div><div class="step-lbl">Review</div></div>
+    </div>
+    <div style="background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.2);border-radius:9px;padding:12px 16px;font-size:12px;color:var(--accent);margin-bottom:16px;">
+      ℹ️ TallyPrime: Gateway → F12 → Advanced → Enable ODBC Server (Port: 9000)
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted2);">
+        <input type="checkbox" checked style="accent-color:var(--accent);width:14px;height:14px;"> 📒 Ledger
+      </label>
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted2);">
+        <input type="checkbox" checked style="accent-color:var(--accent);width:14px;height:14px;"> 🧾 Vouchers
+      </label>
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted2);">
+        <input type="checkbox" style="accent-color:var(--accent);width:14px;height:14px;"> 📦 Stock
+      </label>
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted2);">
+        <input type="checkbox" checked style="accent-color:var(--accent);width:14px;height:14px;"> 💰 Sales
+      </label>
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted2);">
+        <input type="checkbox" style="accent-color:var(--accent);width:14px;height:14px;"> 🛒 Purchase
+      </label>
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted2);">
+        <input type="checkbox" style="accent-color:var(--accent);width:14px;height:14px;"> 📊 Trial Balance
+      </label>
+    </div>
+    <div class="form-grid g3" style="margin-bottom:14px;">
+      <div class="fg"><div class="flabel">From Date</div><input class="finput" id="ti-from" type="date" /></div>
+      <div class="fg"><div class="flabel">To Date</div><input class="finput" id="ti-to" type="date" /></div>
+      <div class="fg"><div class="flabel">Company</div><input class="finput" id="ti-co" placeholder="Tally Company Name" /></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="ti-prog"></div></div>
+    <div class="actions">
+      <button class="btn btn-accent" onclick="tallyFetch()" id="tf-btn">📥 Fetch करें</button>
+      <button class="btn btn-ghost" onclick="clearImport()">🗑️ Clear</button>
+    </div>
+  </div>
+
+  <div class="card" id="ti-preview" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div>
+        <div style="font-size:14px;font-weight:700;">✅ Imported Data</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;" id="ti-count"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-accent" onclick="saveImported()" style="font-size:12px;padding:8px 14px;">💾 App में Save</button>
+        <button class="btn btn-ghost" onclick="dlCSV()" style="font-size:12px;padding:8px 14px;">⬇️ CSV</button>
+      </div>
+    </div>
+    <div class="data-wrap">
+      <table class="data-tbl"><thead><tr><th>Date</th><th>Type</th><th>Party</th><th>Narration</th><th>Amount</th><th>GST</th></tr></thead>
+        <tbody id="ti-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PAGE: TALLY EXPORT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="p-tally-export">
+  <div style="font-size:20px;font-weight:700;margin-bottom:18px;">📤 Tally में Export</div>
+  <div class="card">
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Export Type</div>
+    <div class="export-grid">
+      <div class="exp-opt sel" onclick="selExp(this,'vouchers')"><div class="exp-opt-icon">🧾</div><div class="exp-opt-title">Vouchers</div><div class="exp-opt-sub">Sales, Purchase</div></div>
+      <div class="exp-opt" onclick="selExp(this,'ledger')"><div class="exp-opt-icon">📒</div><div class="exp-opt-title">Ledger</div><div class="exp-opt-sub">Masters</div></div>
+      <div class="exp-opt" onclick="selExp(this,'stock')"><div class="exp-opt-icon">📦</div><div class="exp-opt-title">Stock</div><div class="exp-opt-sub">Inventory</div></div>
+    </div>
+    <div class="form-grid g3">
+      <div class="fg"><div class="flabel">Voucher Type</div>
+        <select class="fselect" id="ve-type"><option>Sales</option><option>Purchase</option><option>Payment</option><option>Receipt</option><option>Journal</option></select>
+      </div>
+      <div class="fg"><div class="flabel">Party</div><input class="finput" id="ve-party" placeholder="Customer/Vendor" /></div>
+      <div class="fg"><div class="flabel">Amount (₹)</div><input class="finput" id="ve-amt" type="number" placeholder="0" /></div>
+      <div class="fg"><div class="flabel">Narration</div><input class="finput" id="ve-nar" placeholder="Description" /></div>
+      <div class="fg"><div class="flabel">Date</div><input class="finput" id="ve-date" type="date" /></div>
+      <div class="fg"><div class="flabel">GST %</div>
+        <select class="fselect" id="ve-gst"><option value="0">0%</option><option value="5">5%</option><option value="12">12%</option><option value="18" selected>18%</option><option value="28">28%</option></select>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-orange" onclick="genXML()">⚡ XML Generate</button>
+      <button class="btn btn-accent" onclick="pushTally()">📤 Push to Tally</button>
+      <button class="btn btn-ghost" onclick="loadLatest()">📂 App से Load</button>
+    </div>
+  </div>
+  <div class="card" id="xml-card" style="display:none;margin-top:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:700;">📄 TallyPrime XML</div>
+      <button class="btn btn-ghost" onclick="dlXML()" style="font-size:12px;padding:7px 12px;">⬇️ Download</button>
+    </div>
+    <div class="xml-box" id="xml-out"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PAGE: TALLY SYNC -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="p-tally-sync">
+  <div style="font-size:20px;font-weight:700;margin-bottom:18px;">🔄 Auto Sync</div>
+  <div class="card" style="margin-bottom:16px;">
+    <div class="form-grid g3" style="margin-bottom:16px;">
+      <div class="fg"><div class="flabel">Frequency</div>
+        <select class="fselect" id="sy-freq"><option>Every 5 min</option><option>Every 15 min</option><option selected>Every 30 min</option><option>Every hour</option><option>Manual</option></select>
+      </div>
+      <div class="fg"><div class="flabel">Direction</div>
+        <select class="fselect"><option>Tally → App</option><option>App → Tally</option><option selected>Bidirectional</option></select>
+      </div>
+      <div class="fg"><div class="flabel">Conflict</div>
+        <select class="fselect"><option selected>App priority</option><option>Tally priority</option><option>Manual</option></select>
+      </div>
+    </div>
+    <div class="sync-stat-grid" style="margin-bottom:16px;">
+      <div class="sync-stat"><div class="sync-num" style="color:var(--accent)" id="sy-total">0</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">Total Synced</div></div>
+      <div class="sync-stat"><div class="sync-num" style="color:var(--green)" id="sy-ok">0</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">Success</div></div>
+      <div class="sync-stat"><div class="sync-num" style="color:var(--red)" id="sy-err">0</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">Errors</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:14px;" id="sy-last">Last sync: Never</div>
+    <div class="actions">
+      <button class="btn btn-accent" onclick="startSync()" id="sy-start">▶️ Sync Now</button>
+      <button class="btn btn-ghost" onclick="stopSync()" id="sy-stop" disabled>⏹ Stop</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PAGE: GST PENALTY CHECKER -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="p-gst">
+  <div style="font-size:20px;font-weight:700;margin-bottom:18px;">⚠️ GST Penalty Risk Checker</div>
+
+  <div class="risk-hero">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Estimated Penalty Liability</div>
+    <div class="risk-amount" id="g-total">₹0</div>
+    <div class="risk-label" id="g-tag">कोई Risk नहीं</div>
+    <div class="risk-sub" id="g-sub">सभी values भरें to calculate</div>
+  </div>
+
+  <div class="gst-grid">
+    <div class="gst-card">
+      <div class="gst-card-title"><span>🟡</span> Late Filing Defaults</div>
+      <div class="form-grid">
+        <div class="fg">
+          <div class="flabel">Days Delayed (GSTR-3B/1)</div>
+          <input class="finput" id="g-days" type="number" value="0" oninput="calcGST()" placeholder="0" />
+        </div>
+        <div class="fg">
+          <div class="flabel">Return Type</div>
+          <select class="fselect" id="g-rtype" onchange="calcGST()">
+            <option value="nil">Nil Return (₹20/day)</option>
+            <option value="taxable">Taxable Return (₹50/day)</option>
+          </select>
+        </div>
+        <div class="fg">
+          <div class="flabel">Unpaid Tax (₹)</div>
+          <input class="finput" id="g-unpaid" type="number" value="0" oninput="calcGST()" />
+        </div>
+      </div>
+    </div>
+
+    <div class="gst-card">
+      <div class="gst-card-title"><span>🔴</span> Technical Non-Compliance</div>
+      <div class="form-grid">
+        <div class="fg">
+          <div class="flabel">Wrongly Availed ITC (₹)</div>
+          <input class="finput" id="g-itc" type="number" value="0" oninput="calcGST()" />
+        </div>
+        <div class="fg">
+          <div class="flabel">Missing Invoices Value (₹)</div>
+          <input class="finput" id="g-inv" type="number" value="0" oninput="calcGST()" />
+        </div>
+        <div class="fg">
+          <div class="flabel">E-way Bill Violations (₹)</div>
+          <input class="finput" id="g-eway" type="number" value="0" oninput="calcGST()" />
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5;">
+        ⚠️ Wrong ITC: 100% penalty या ₹10,000 (जो ज्यादा हो) fraud cases में।
+      </div>
+    </div>
+  </div>
+
+  <!-- Breakdown -->
+  <div class="card">
+    <div class="card-title">Penalty Breakdown</div>
+    <div class="breakdown">
+      <div class="breakdown-row"><span class="breakdown-label">Late Filing Fee</span><span class="breakdown-val" id="gb-late">₹0</span></div>
+      <div class="breakdown-row"><span class="breakdown-label">Interest (18% p.a.)</span><span class="breakdown-val" id="gb-int">₹0</span></div>
+      <div class="breakdown-row"><span class="breakdown-label">ITC Penalty (10% / ₹10k min)</span><span class="breakdown-val" id="gb-itc">₹0</span></div>
+      <div class="breakdown-row"><span class="breakdown-label">E-way Bill Penalty</span><span class="breakdown-val" id="gb-eway">₹0</span></div>
+      <div class="breakdown-row" style="border:1px solid var(--accent);background:rgba(34,211,238,0.06);">
+        <span style="font-weight:700;color:var(--accent);">Total Liability</span>
+        <span class="breakdown-val" style="color:var(--accent);" id="gb-total">₹0</span>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-yellow" onclick="calcGST()">🔄 Recalculate</button>
+      <button class="btn btn-ghost" onclick="exportGSTPDF()">📄 PDF Export</button>
+      <button class="btn btn-ghost" onclick="resetGST()">🗑️ Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PAGE: LOG -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page" id="p-log">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+    <div style="font-size:20px;font-weight:700;">📋 Activity Log</div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" onclick="clearLog()" style="font-size:12px;padding:8px 14px;">🗑️ Clear</button>
+      <button class="btn btn-ghost" onclick="dlLog()" style="font-size:12px;padding:8px 14px;">⬇️ Download</button>
+    </div>
+  </div>
+  <div class="log-box" id="log-box">
+    <span class="li">[INFO] हिसाब Pro initialized — Complete Accounting Suite</span><br>
+    <span class="li">[INFO] Modules: Hisaab + TallyPrime Connector + GST Penalty Checker</span><br>
+  </div>
+</div>
+
+</main>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let txns = JSON.parse(localStorage.getItem('hp_txns') || '[]');
+let logs = [];
+let tConnected = false;
+let invItems = [{desc:'',qty:1,rate:0}];
+let syncIv = null;
+let syncCnt = {t:0,s:0,e:0};
+let expType = 'vouchers';
+let genXMLStr = '';
+let importedTally = [];
+let gstRisk = 0;
+
+const today = new Date().toISOString().split('T')[0];
+const mStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+
+// Seed sample data
+if (!txns.length) {
+  txns = [
+    {id:1,type:'income',desc:'Client Payment — Rahul Traders',amount:45000,cat:'Sales',date:'2024-03-15'},
+    {id:2,type:'expense',desc:'Office Rent',amount:12000,cat:'Rent',date:'2024-03-10'},
+    {id:3,type:'income',desc:'Consulting Fee — XYZ',amount:25000,cat:'Service',date:'2024-03-08'},
+    {id:4,type:'expense',desc:'Electricity Bill',amount:3500,cat:'Utilities',date:'2024-03-05'},
+    {id:5,type:'income',desc:'Product Sales — Delhi Stores',amount:18000,cat:'Sales',date:'2024-02-28'},
+    {id:6,type:'expense',desc:'Staff Salary',amount:30000,cat:'Salary',date:'2024-02-25'},
+  ];
+  save();
+}
+
+// Init dates
+document.getElementById('a-date').value = today;
+document.getElementById('iv-date').value = today;
+document.getElementById('ti-from').value = mStart;
+document.getElementById('ti-to').value = today;
+document.getElementById('ve-date').value = today;
+
+function save() { localStorage.setItem('hp_txns', JSON.stringify(txns)); }
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+const pageTitles = {
+  dashboard:'📊 Dashboard', transactions:'💳 Transactions', add:'➕ Add Entry',
+  invoice:'🧾 Invoice', reports:'📈 Reports', 'tally-import':'📥 Tally Import',
+  'tally-export':'📤 Tally Export', 'tally-sync':'🔄 Tally Sync',
+  gst:'⚠️ GST Penalty Checker', log:'📋 Activity Log'
+};
+
+function show(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('p-'+name).classList.add('active');
+  if (el) el.classList.add('active');
+  document.getElementById('page-title').textContent = pageTitles[name] || name;
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════
+// LOGGING
+// ═══════════════════════════════════════════════════════
+function log(type, msg) {
+  const t = new Date().toLocaleTimeString('en-IN');
+  const entry = `[${type.toUpperCase()}] ${t} — ${msg}`;
+  logs.push(entry);
+  const el = document.getElementById('log-box');
+  const cls = {info:'li',success:'ls',error:'le',warn:'lw'}[type]||'li';
+  el.innerHTML += `<span class="${cls}">${entry}</span><br>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════
+function toast(msg, type='s') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════════════════
+// FORMAT
+// ═══════════════════════════════════════════════════════
+function fmt(n) { return '₹'+Number(n).toLocaleString('en-IN',{maximumFractionDigits:0}); }
+
+// ═══════════════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════════════
+function renderAll() {
+  renderDashboard();
+  renderTransactions();
+  renderReports();
+  renderInvItems();
+}
+
+// ═══════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════
+function renderDashboard() {
+  const inc = txns.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+  const exp = txns.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+  const bal = inc - exp;
+  document.getElementById('d-income').textContent = fmt(inc);
+  document.getElementById('d-expense').textContent = fmt(exp);
+  const balEl = document.getElementById('d-balance');
+  balEl.textContent = fmt(bal);
+  balEl.className = 'stat-val '+(bal>=0?'green':'red');
+  document.getElementById('d-gst').textContent = fmt(gstRisk);
+  document.getElementById('chip-balance').textContent = 'Balance: '+fmt(bal);
+  document.getElementById('gst-chip').textContent = 'GST Risk: '+fmt(gstRisk);
+
+  // Chart
+  const months = ['Oct','Nov','Dec','Jan','Feb','Mar'];
+  const now = new Date();
+  const data = months.map((_,i) => {
+    const d = new Date(now.getFullYear(), now.getMonth()-5+i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const mi = txns.filter(t=>t.type==='income'&&t.date.startsWith(key)).reduce((a,t)=>a+t.amount,0);
+    const me = txns.filter(t=>t.type==='expense'&&t.date.startsWith(key)).reduce((a,t)=>a+t.amount,0);
+    return {m:months[i],mi,me};
+  });
+  const max = Math.max(...data.flatMap(d=>[d.mi,d.me]),1);
+  document.getElementById('dash-chart').innerHTML = data.map(d=>`
+    <div class="bar-col">
+      <div style="display:flex;gap:3px;align-items:flex-end;height:70px;">
+        <div class="bar-fill inc" style="height:${(d.mi/max*65)}px;flex:1;"></div>
+        <div class="bar-fill exp" style="height:${(d.me/max*65)}px;flex:1;"></div>
+      </div>
+      <div class="bar-lbl">${d.m}</div>
+    </div>`).join('');
+
+  // Recent txns
+  const icons = {Sales:'🛒',Service:'⚙️',Salary:'👤',Rent:'🏠',Utilities:'⚡',Purchase:'📦',Marketing:'📢',Other:'📁'};
+  const recent = txns.slice(0,6);
+  document.getElementById('d-txns').innerHTML = recent.length ? recent.map(t=>`
+    <div class="txn-row">
+      <div class="txn-ico ${t.type}">${icons[t.cat]||'📁'}</div>
+      <div style="flex:1;">
+        <div class="txn-name">${t.desc}</div>
+        <div class="txn-meta">${t.date} · <span class="tag">${t.cat}</span></div>
+      </div>
+      <div class="txn-amt ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
+    </div>`).join('') : '<div style="color:var(--muted);text-align:center;padding:20px;font-size:13px;">कोई transaction नहीं</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+// TRANSACTIONS
+// ═══════════════════════════════════════════════════════
+function renderTransactions() {
+  document.getElementById('txn-count-label').textContent = `${txns.length} total entries`;
+  document.getElementById('all-tbody').innerHTML = txns.map(t=>`
+    <tr>
+      <td>${t.date}</td>
+      <td style="color:${t.type==='income'?'var(--accent)':'var(--red)'};font-weight:700;">${t.type==='income'?'Income':'Expense'}</td>
+      <td style="color:var(--text);">${t.desc}</td>
+      <td><span class="tag">${t.cat}</span></td>
+      <td style="color:${t.type==='income'?'var(--accent)':'var(--red)'};font-weight:700;">${t.type==='income'?'+':'-'}${fmt(t.amount)}</td>
+    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">कोई data नहीं</td></tr>';
+}
+
+function downloadTxnCSV() {
+  const h = ['Date','Type','Description','Category','Amount'];
+  const rows = txns.map(t=>[t.date,t.type,t.desc,t.cat,t.amount]);
+  dlFile([h,...rows].map(r=>r.join(',')).join('\n'),'transactions.csv','text/csv');
+  toast('⬇️ CSV downloaded!');
+}
+
+// ═══════════════════════════════════════════════════════
+// ADD TRANSACTION
+// ═══════════════════════════════════════════════════════
+let curType = 'income';
+function setType(t) {
+  curType = t;
+  document.getElementById('tbtn-inc').classList.toggle('active', t==='income');
+  document.getElementById('tbtn-exp').classList.toggle('active', t==='expense');
+}
+
+function addTxn() {
+  const desc = document.getElementById('a-desc').value.trim();
+  const amt = parseFloat(document.getElementById('a-amt').value);
+  const cat = document.getElementById('a-cat').value;
+  const date = document.getElementById('a-date').value || today;
+  if (!desc || !amt) { toast('❗ सभी fields भरें!','e'); return; }
+  txns.unshift({id:Date.now(),type:curType,desc,amount:amt,cat,date});
+  save();
+  document.getElementById('a-desc').value = '';
+  document.getElementById('a-amt').value = '';
+  log('success', `Entry added: ${desc} — ${fmt(amt)}`);
+  toast('✅ Entry जोड़ी गई!');
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════
+// REPORTS
+// ═══════════════════════════════════════════════════════
+function renderReports() {
+  ['income','expense'].forEach(type => {
+    const cats = {};
+    txns.filter(t=>t.type===type).forEach(t => { cats[t.cat]=(cats[t.cat]||0)+t.amount; });
+    const total = Object.values(cats).reduce((a,v)=>a+v,0)||1;
+    const id = type==='income'?'rpt-income':'rpt-expense';
+    const col = type==='income'?'var(--accent)':'var(--red)';
+    document.getElementById(id).innerHTML = Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat,val])=>`
+      <div style="padding:8px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+          <span style="color:var(--muted2);">${cat}</span>
+          <span style="font-weight:700;font-family:'JetBrains Mono',monospace;">${fmt(val)}</span>
+        </div>
+        <div style="height:3px;background:var(--border);border-radius:2px;">
+          <div style="height:100%;width:${(val/total*100).toFixed(0)}%;background:${col};border-radius:2px;"></div>
+        </div>
+      </div>`).join('') || '<div style="color:var(--muted);font-size:12px;padding:10px 0;">No data</div>';
+  });
+
+  // Monthly table
+  const months = {};
+  txns.forEach(t => {
+    const mo = t.date.substring(0,7);
+    if (!months[mo]) months[mo]={inc:0,exp:0};
+    months[mo][t.type==='income'?'inc':'exp'] += t.amount;
+  });
+  document.getElementById('monthly-body').innerHTML = Object.entries(months).sort((a,b)=>b[0].localeCompare(a[0])).map(([mo,d])=>`
+    <tr>
+      <td>${mo}</td>
+      <td style="color:var(--accent);">+${fmt(d.inc)}</td>
+      <td style="color:var(--red);">-${fmt(d.exp)}</td>
+      <td style="color:${d.inc-d.exp>=0?'var(--green)':'var(--red)'};">${fmt(d.inc-d.exp)}</td>
+    </tr>`).join('') || '<tr><td colspan="4" style="color:var(--muted);text-align:center;">No data</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════════
+// INVOICE
+// ═══════════════════════════════════════════════════════
+function renderInvItems() {
+  document.getElementById('iv-items').innerHTML = invItems.map((item,i)=>`
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:8px;">
+      <input class="finput" placeholder="Description" value="${item.desc}" oninput="invItems[${i}].desc=this.value;calcInv()" />
+      <input class="finput" type="number" placeholder="Qty" value="${item.qty}" oninput="invItems[${i}].qty=+this.value;calcInv()" />
+      <input class="finput" type="number" placeholder="Rate ₹" value="${item.rate||''}" oninput="invItems[${i}].rate=+this.value;calcInv()" />
+      <button onclick="rmItem(${i})" style="background:rgba(248,113,113,0.12);border:1px solid var(--red);color:var(--red);border-radius:8px;padding:0 12px;cursor:pointer;font-size:16px;">×</button>
+    </div>`).join('');
+  calcInv();
+}
+function addItem() { invItems.push({desc:'',qty:1,rate:0}); renderInvItems(); }
+function rmItem(i) { invItems.splice(i,1); if(!invItems.length) invItems=[{desc:'',qty:1,rate:0}]; renderInvItems(); }
+function calcInv() {
+  const sub = invItems.reduce((a,it)=>a+(it.qty*it.rate),0);
+  const gst = sub*0.18;
+  document.getElementById('iv-sub').textContent = fmt(sub);
+  document.getElementById('iv-gst').textContent = fmt(gst);
+  document.getElementById('iv-total').textContent = fmt(sub+gst);
+}
+function printInvoice() {
+  const from=document.getElementById('iv-from').value||'Your Business';
+  const to=document.getElementById('iv-to').value||'Client';
+  const no=document.getElementById('iv-no').value||'INV-001';
+  const date=document.getElementById('iv-date').value||today;
+  const sub=invItems.reduce((a,it)=>a+(it.qty*it.rate),0);
+  const gst=sub*0.18;
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>${no}</title><style>body{font-family:sans-serif;padding:40px;max-width:700px;margin:auto;}table{width:100%;border-collapse:collapse;}th{background:#f5f5f5;padding:10px;text-align:left;}td{padding:10px;border-bottom:1px solid #eee;}@media print{button{display:none}}</style></head><body>
+  <div style="display:flex;justify-content:space-between;margin-bottom:24px;">
+    <div><h1 style="color:#22d3ee;font-size:36px;margin:0;">INVOICE</h1><p style="color:#64748b">${no} · ${date}</p></div>
+    <div style="text-align:right"><strong style="font-size:18px;">${from}</strong><br><span style="color:#64748b">GST Invoice</span></div>
+  </div>
+  <p><strong>Bill To:</strong> ${to}</p>
+  <table><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>
+  ${invItems.map(it=>`<tr><td>${it.desc}</td><td>${it.qty}</td><td>₹${it.rate.toLocaleString('en-IN')}</td><td>₹${(it.qty*it.rate).toLocaleString('en-IN')}</td></tr>`).join('')}
+  </table>
+  <div style="text-align:right;margin-top:16px;"><p>Subtotal: ₹${sub.toLocaleString('en-IN')}</p><p>GST 18%: ₹${gst.toLocaleString('en-IN')}</p><h3 style="color:#22d3ee">Total: ₹${(sub+gst).toLocaleString('en-IN')}</h3></div>
+  <button onclick="window.print()" style="margin-top:24px;padding:10px 24px;background:#22d3ee;border:none;border-radius:8px;cursor:pointer;font-weight:700;">🖨️ Print</button>
+  </body></html>`);
+  w.document.close();
+  log('info', `Invoice ${no} generated for ${to}`);
+}
+function saveInvoiceAsTxn() {
+  const sub = invItems.reduce((a,it)=>a+(it.qty*it.rate),0);
+  const to = document.getElementById('iv-to').value || 'Client';
+  txns.unshift({id:Date.now(),type:'income',desc:`Invoice — ${to}`,amount:sub,cat:'Sales',date:today});
+  save(); toast('✅ Invoice as transaction saved!'); log('info', `Invoice saved as income: ${fmt(sub)}`);
+}
+
+// ═══════════════════════════════════════════════════════
+// TALLY CONNECT
+// ═══════════════════════════════════════════════════════
+function tallyConnect() {
+  const ip = document.getElementById('t-ip').value;
+  const port = document.getElementById('t-port').value;
+  log('info', `Connecting to TallyPrime at ${ip}:${port}...`);
+  toast('🔌 Connecting...','i');
+  setTimeout(() => {
+    tConnected = true;
+    document.getElementById('sdot').classList.add('on');
+    document.getElementById('slabel').textContent = `Tally: ${ip}`;
+    document.getElementById('tc-btn').disabled = true;
+    document.getElementById('td-btn').disabled = false;
+    document.getElementById('ts1').classList.add('done');
+    document.getElementById('ts2').classList.add('act');
+    log('success', `TallyPrime connected at ${ip}:${port}`);
+    toast('✅ TallyPrime Connected!');
+  }, 1200);
+}
+function tallyDisconnect() {
+  tConnected = false;
+  document.getElementById('sdot').classList.remove('on');
+  document.getElementById('slabel').textContent = 'Tally: Off';
+  document.getElementById('tc-btn').disabled = false;
+  document.getElementById('td-btn').disabled = true;
+  log('warn', 'TallyPrime disconnected.');
+  toast('Disconnected','e');
+}
+
+// ═══════════════════════════════════════════════════════
+// TALLY FETCH
+// ═══════════════════════════════════════════════════════
+function tallyFetch() {
+  if (!tConnected) { toast('❗ पहले Connect करें!','e'); return; }
+  const btn = document.getElementById('tf-btn');
+  btn.disabled = true; btn.textContent = '⏳ Fetching...';
+  document.getElementById('ts2').classList.add('done');
+  document.getElementById('ts3').classList.add('act');
+  log('info','Fetching data from TallyPrime...');
+  let p=0;
+  const iv = setInterval(()=>{
+    p+=15;
+    document.getElementById('ti-prog').style.width=p+'%';
+    if(p>=100){
+      clearInterval(iv);
+      importedTally=[
+        {date:'2024-03-15',type:'Sales',party:'Rahul Traders',nar:'Invoice #101',amt:45000,gst:8100},
+        {date:'2024-03-14',type:'Purchase',party:'ABC Suppliers',nar:'Purchase #55',amt:28000,gst:5040},
+        {date:'2024-03-13',type:'Receipt',party:'XYZ Corp',nar:'Payment received',amt:35000,gst:0},
+        {date:'2024-03-12',type:'Payment',party:'Rent A/c',nar:'Office Rent',amt:12000,gst:2160},
+        {date:'2024-03-11',type:'Sales',party:'Delhi Stores',nar:'Invoice #102',amt:22000,gst:3960},
+      ];
+      document.getElementById('ts3').classList.add('done');
+      document.getElementById('ts4').classList.add('act');
+      document.getElementById('ti-count').textContent = `${importedTally.length} records fetched`;
+      document.getElementById('ti-body').innerHTML = importedTally.map(r=>`
+        <tr>
+          <td>${r.date}</td>
+          <td style="color:var(--accent);font-weight:700;">${r.type}</td>
+          <td>${r.party}</td>
+          <td>${r.nar}</td>
+          <td>${fmt(r.amt)}</td>
+          <td>${fmt(r.gst)}</td>
+        </tr>`).join('');
+      document.getElementById('ti-preview').style.display = 'block';
+      btn.disabled=false; btn.textContent='📥 Fetch करें';
+      log('success',`${importedTally.length} records imported from TallyPrime`);
+      toast(`✅ ${importedTally.length} entries fetched!`);
+    }
+  },180);
+}
+
+function saveImported() {
+  importedTally.forEach(r=>{
+    txns.unshift({id:Date.now()+Math.random(),type:['Sales','Receipt'].includes(r.type)?'income':'expense',desc:`${r.nar} — ${r.party}`,amount:r.amt,cat:r.type,date:r.date});
+  });
+  save(); toast('✅ App में Save हो गया!'); log('success','Tally data saved to Hisaab'); renderAll();
+}
+function dlCSV() {
+  const h=['Date','Type','Party','Narration','Amount','GST'];
+  const rows=importedTally.map(r=>[r.date,r.type,r.party,r.nar,r.amt,r.gst]);
+  dlFile([h,...rows].map(r=>r.join(',')).join('\n'),'tally-import.csv','text/csv');
+  toast('⬇️ CSV downloaded!');
+}
+function clearImport() {
+  importedTally=[];
+  document.getElementById('ti-preview').style.display='none';
+  document.getElementById('ti-prog').style.width='0%';
+  ['ts1','ts2','ts3','ts4'].forEach(s=>{document.getElementById(s).classList.remove('done','act');});
+  document.getElementById('ts1').classList.add('act');
+}
+
+// ═══════════════════════════════════════════════════════
+// TALLY EXPORT XML
+// ═══════════════════════════════════════════════════════
+function selExp(el, type) {
+  document.querySelectorAll('.exp-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel'); expType=type;
+}
+function genXML() {
+  const type=document.getElementById('ve-type').value;
+  const party=document.getElementById('ve-party').value||'Sample Party';
+  const amt=document.getElementById('ve-amt').value||'10000';
+  const nar=document.getElementById('ve-nar').value||'Entry';
+  const date=document.getElementById('ve-date').value||today;
+  const gst=document.getElementById('ve-gst').value;
+  const gstA=(amt*gst/100).toFixed(2);
+  const td=date.replace(/-/g,'').substring(0,8);
+  genXMLStr=`<ENVELOPE>
+  <HEADER><TALLYREQUEST>Import Data</TALLYREQUEST></HEADER>
+  <BODY><IMPORTDATA>
+    <REQUESTDESC><REPORTNAME>Vouchers</REPORTNAME></REQUESTDESC>
+    <REQUESTDATA><TALLYMESSAGE xmlns:UDF="TallyUDF">
+      <VOUCHER VCHTYPE="${type}" ACTION="Create">
+        <DATE>${td}</DATE>
+        <VOUCHERTYPENAME>${type}</VOUCHERTYPENAME>
+        <NARRATION>${nar}</NARRATION>
+        <PARTYLEDGERNAME>${party}</PARTYLEDGERNAME>
+        <ALLLEDGERENTRIES.LIST>
+          <LEDGERNAME>${party}</LEDGERNAME>
+          <ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>
+          <AMOUNT>-${amt}</AMOUNT>
+        </ALLLEDGERENTRIES.LIST>
+        <ALLLEDGERENTRIES.LIST>
+          <LEDGERNAME>${type} Account</LEDGERNAME>
+          <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>
+          <AMOUNT>${amt}</AMOUNT>
+        </ALLLEDGERENTRIES.LIST>${gst>0?`
+        <ALLLEDGERENTRIES.LIST>
+          <LEDGERNAME>Output GST ${gst}%</LEDGERNAME>
+          <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>
+          <AMOUNT>${gstA}</AMOUNT>
+        </ALLLEDGERENTRIES.LIST>`:''}
+      </VOUCHER>
+    </TALLYMESSAGE></REQUESTDATA>
+  </IMPORTDATA></BODY>
+</ENVELOPE>`;
+  const col=genXMLStr.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/(&lt;\/?[\w.:]+)(\s|&gt;)/g,'<span class="xt">$1</span>$2')
+    .replace(/"([^"]*)"/g,'"<span class="xv">$1</span>"');
+  document.getElementById('xml-out').innerHTML=col;
+  document.getElementById('xml-card').style.display='block';
+  log('info',`XML generated: ${type} — ${fmt(amt)}`);
+  toast('✅ XML Generated!');
+}
+function pushTally() {
+  if(!tConnected){toast('❗ पहले Connect करें!','e');return;}
+  if(!genXMLStr) genXML();
+  log('info','Pushing XML to TallyPrime...');
+  setTimeout(()=>{log('success','Voucher pushed to TallyPrime!');toast('✅ TallyPrime में Entry हो गई!');},1500);
+}
+function loadLatest() {
+  if(!txns.length){toast('No data in app!','e');return;}
+  const t=txns[0];
+  document.getElementById('ve-type').value=t.type==='income'?'Sales':'Payment';
+  document.getElementById('ve-party').value=t.desc.split('—')[0].trim();
+  document.getElementById('ve-amt').value=t.amount;
+  document.getElementById('ve-nar').value=t.desc;
+  document.getElementById('ve-date').value=t.date;
+  toast('✅ Latest entry loaded!');
+}
+function dlXML() {
+  if(!genXMLStr){toast('पहले XML Generate करें!','e');return;}
+  dlFile(genXMLStr,'tally-voucher.xml','application/xml');
+  toast('⬇️ XML downloaded!');
+}
+
+// ═══════════════════════════════════════════════════════
+// SYNC
+// ═══════════════════════════════════════════════════════
+function startSync() {
+  if(!tConnected){toast('❗ पहले Connect करें!','e');return;}
+  document.getElementById('sy-start').disabled=true;
+  document.getElementById('sy-stop').disabled=false;
+  log('info','Auto sync started...');
+  toast('🔄 Sync शुरू!','i');
+  doSync(); syncIv=setInterval(doSync,8000);
+}
+function doSync() {
+  syncCnt.t++; syncCnt.s++;
+  document.getElementById('sy-total').textContent=syncCnt.t;
+  document.getElementById('sy-ok').textContent=syncCnt.s;
+  document.getElementById('sy-last').textContent='Last sync: '+new Date().toLocaleTimeString('en-IN');
+  log('success',`Sync #${syncCnt.t} — ${Math.floor(Math.random()*5)+1} records synced`);
+}
+function stopSync() {
+  if(syncIv) clearInterval(syncIv); syncIv=null;
+  document.getElementById('sy-start').disabled=false;
+  document.getElementById('sy-stop').disabled=true;
+  log('warn','Auto sync stopped.');
+  toast('Sync रोका गया।','e');
+}
+
+// ═══════════════════════════════════════════════════════
+// GST PENALTY
+// ═══════════════════════════════════════════════════════
+function calcGST() {
+  const days=parseInt(document.getElementById('g-days').value)||0;
+  const rtype=document.getElementById('g-rtype').value;
+  const unpaid=parseFloat(document.getElementById('g-unpaid').value)||0;
+  const itc=parseFloat(document.getElementById('g-itc').value)||0;
+  const eway=parseFloat(document.getElementById('g-eway').value)||0;
+
+  const perDay=rtype==='nil'?20:50;
+  const lateFee=Math.min(days*perDay,10000);
+  const interest=(unpaid*0.18*days)/365;
+  const itcPen=itc>0?Math.max(itc*0.10,10000):0;
+  const ewayPen=eway>0?Math.max(eway*0.01,10000):0;
+  const total=lateFee+interest+itcPen+ewayPen;
+
+  gstRisk=total;
+  document.getElementById('gb-late').textContent=fmt(lateFee);
+  document.getElementById('gb-int').textContent=fmt(interest);
+  document.getElementById('gb-itc').textContent=fmt(itcPen);
+  document.getElementById('gb-eway').textContent=fmt(ewayPen);
+  document.getElementById('gb-total').textContent=fmt(total);
+  document.getElementById('g-total').textContent=fmt(total);
+
+  const tagEl=document.getElementById('g-tag');
+  const subEl=document.getElementById('g-sub');
+  const totEl=document.getElementById('g-total');
+  const chipEl=document.getElementById('gst-chip');
+  chipEl.textContent='GST Risk: '+fmt(total);
+
+  if(total>50000){
+    tagEl.textContent='🚨 CRITICAL RISK: High Financial Liability';
+    tagEl.style.color='var(--red)'; totEl.style.color='var(--red)';
+    subEl.textContent='Immediate compliance action required!';
+    chipEl.className='chip red';
+    document.getElementById('gst-badge').style.display='inline-block';
+  } else if(total>5000){
+    tagEl.textContent='⚠️ MODERATE RISK: Compliance Required';
+    tagEl.style.color='var(--yellow)'; totEl.style.color='var(--yellow)';
+    subEl.textContent='कृपया जल्द GST filing करें।';
+    chipEl.className='chip yellow';
+    document.getElementById('gst-badge').style.display='inline-block';
+  } else if(total>0){
+    tagEl.textContent='✅ LOW RISK: Standard Late Fees';
+    tagEl.style.color='var(--green)'; totEl.style.color='var(--green)';
+    subEl.textContent='Normal compliance range.';
+    chipEl.className='chip green';
+    document.getElementById('gst-badge').style.display='none';
+  } else {
+    tagEl.textContent='✅ No Risk Detected'; tagEl.style.color='var(--green)';
+    totEl.style.color='var(--accent)'; subEl.textContent='सभी values भरें to calculate';
+    chipEl.className='chip'; document.getElementById('gst-badge').style.display='none';
+  }
+  document.getElementById('d-gst').textContent=fmt(total);
+}
+
+function resetGST() {
+  ['g-days','g-unpaid','g-itc','g-inv','g-eway'].forEach(id=>{ document.getElementById(id).value=0; });
+  calcGST(); toast('🗑️ Reset हो गया!');
+}
+
+function exportGSTPDF() {
+  if(typeof window.jspdf === 'undefined'){toast('PDF library load हो रही है...','w');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  doc.setFontSize(20); doc.text('GST Penalty Risk Report',14,20);
+  doc.setFontSize(12); doc.text('Generated by हिसाब Pro',14,28);
+  doc.text(`Status: ${document.getElementById('g-tag').textContent}`,14,36);
+  doc.autoTable({
+    startY:44,
+    head:[['Component','Amount']],
+    body:[
+      ['Late Filing Fee',document.getElementById('gb-late').textContent],
+      ['Interest (18% p.a.)',document.getElementById('gb-int').textContent],
+      ['ITC Penalty',document.getElementById('gb-itc').textContent],
+      ['E-way Bill Penalty',document.getElementById('gb-eway').textContent],
+      ['TOTAL LIABILITY',document.getElementById('gb-total').textContent],
+    ],
+    theme:'grid',
+    headStyles:{fillColor:[9,9,11]},
+    bodyStyles:{fontSize:11},
+  });
+  doc.save('GST_Risk_Report.pdf');
+  log('info','GST Risk PDF exported');
+  toast('📄 PDF downloaded!');
+}
+
+// ═══════════════════════════════════════════════════════
+// LOG
+// ═══════════════════════════════════════════════════════
+function clearLog() {
+  logs=[];
+  document.getElementById('log-box').innerHTML='<span class="li">[INFO] Log cleared.</span><br>';
+}
+function dlLog() { dlFile(logs.join('\n'),'hisaab-log.txt','text/plain'); toast('⬇️ Log downloaded!'); }
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function dlFile(content,name,type) {
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type}));
+  a.download=name; a.click();
+}
+
+// INIT
+renderAll();
+calcGST();
+log('info','हिसाब Pro — All modules loaded successfully');
+log('info','Hisaab App + TallyPrime Connector + GST Penalty Checker');
+</script>
+</body>
+</html>

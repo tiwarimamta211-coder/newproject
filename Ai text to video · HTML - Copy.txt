@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOXFRAME — AI Text-to-Video Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c12;
+  --surface: #0e1520;
+  --card: #121c2b;
+  --border: #1e2d42;
+  --accent: #00e5ff;
+  --accent2: #7c3aed;
+  --accent3: #f97316;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --glow: 0 0 30px rgba(0,229,255,0.12);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Background grid */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container { max-width: 1280px; margin: auto; padding: 28px 20px; position: relative; z-index: 1; }
+
+/* Header */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-dot { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 12px var(--accent); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+
+.badge {
+  font-size: 11px;
+  padding: 4px 10px;
+  background: rgba(0,229,255,0.08);
+  border: 1px solid rgba(0,229,255,0.2);
+  border-radius: 20px;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+
+/* Main grid */
+.grid {
+  display: grid;
+  grid-template-columns: 480px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title::before { content:''; width:3px; height:14px; background:var(--accent); border-radius:2px; }
+
+/* Form elements */
+label {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  margin-top: 16px;
+}
+label:first-of-type { margin-top: 0; }
+
+textarea, input[type="text"], select {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  resize: vertical;
+}
+textarea:focus, input[type="text"]:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
+}
+textarea { min-height: 160px; line-height: 1.7; }
+select option { background: var(--card); }
+
+/* File input */
+.file-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+  transition: border-color .2s, color .2s;
+}
+.file-label:hover { border-color: var(--accent); color: var(--accent); }
+.file-label svg { flex-shrink: 0; }
+input[type="file"] { display: none; }
+
+/* Buttons */
+.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+
+button {
+  padding: 11px 16px;
+  border: none;
+  border-radius: 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+  grid-column: 1/-1;
+  font-size: 13px;
+  padding: 13px;
+}
+.btn-primary:hover { filter: brightness(1.1); box-shadow: 0 0 20px rgba(0,229,255,0.3); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { border-color: var(--muted); background: rgba(255,255,255,0.03); }
+
+.btn-purple {
+  background: rgba(124,58,237,0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(124,58,237,0.3);
+}
+.btn-purple:hover { background: rgba(124,58,237,0.25); }
+
+.btn-orange {
+  background: rgba(249,115,22,0.12);
+  color: #fb923c;
+  border: 1px solid rgba(249,115,22,0.25);
+}
+.btn-orange:hover { background: rgba(249,115,22,0.2); }
+
+/* Preview */
+.preview-wrap {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 16/9;
+}
+.preview-wrap img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: opacity .4s;
+}
+.preview-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.75) 0%, transparent 50%);
+}
+.subtitle {
+  position: absolute;
+  bottom: 18px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(8px);
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'DM Mono', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90%;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: opacity .3s;
+}
+
+/* Scene counter badge */
+.scene-badge {
+  position: absolute;
+  top: 14px; right: 14px;
+  background: rgba(0,229,255,0.1);
+  border: 1px solid rgba(0,229,255,0.3);
+  color: var(--accent);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+}
+
+/* Timeline */
+.timeline-title {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 16px 0 10px;
+}
+.timeline {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.scene {
+  min-width: 100px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .2s;
+  flex-shrink: 0;
+}
+.scene.active { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.06); }
+.scene:hover:not(.active) { border-color: var(--border); color: var(--text); }
+.scene-num { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+
+/* SEO Output */
+.seo-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  margin-top: 16px;
+  display: none;
+}
+.seo-box.visible { display: block; }
+.seo-row { margin-bottom: 14px; }
+.seo-row:last-child { margin-bottom: 0; }
+.seo-key { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 5px; }
+.seo-val { font-size: 12px; color: var(--text); line-height: 1.6; }
+.seo-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.tag {
+  font-size: 10px;
+  padding: 3px 9px;
+  background: rgba(124,58,237,0.12);
+  border: 1px solid rgba(124,58,237,0.25);
+  border-radius: 20px;
+  color: #a78bfa;
+}
+
+/* Thumbnail */
+.thumb-canvas {
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 12px;
+  display: none;
+}
+.thumb-canvas.visible { display: block; }
+canvas { display: block; width: 100%; border-radius: 10px; }
+
+/* Status bar */
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 10px;
+  min-height: 20px;
+  transition: color .3s;
+}
+.status.active { color: var(--accent); }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+  header { flex-wrap: wrap; gap: 10px; }
+}
+@media (max-width: 480px) {
+  .btn-row { grid-template-columns: 1fr; }
+  .btn-primary { grid-column: auto; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="logo">
+      <div class="logo-dot"></div>
+      VOXFRAME
+    </div>
+    <span class="badge">AI TEXT-TO-VIDEO</span>
+  </header>
+
+  <div class="grid">
+
+    <!-- Left: Controls -->
+    <div class="card">
+      <div class="card-title">Script & Settings</div>
+
+      <label>Video Script</label>
+      <textarea id="script" placeholder="Write your video script here. Each sentence becomes a scene. Use clear, descriptive language for best results..."></textarea>
+
+      <label>YouTube Title</label>
+      <input type="text" id="title" placeholder="Enter your video title...">
+
+      <label>Voice</label>
+      <select id="voiceSelect"></select>
+
+      <label>Background Image</label>
+      <label class="file-label" for="bgUpload">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 16l4-4 4 4 4-6 4 6"/><rect x="2" y="3" width="20" height="18" rx="3"/></svg>
+        Click to upload background image
+      </label>
+      <input type="file" id="bgUpload" accept="image/*">
+
+      <div class="btn-row">
+        <button class="btn-primary" onclick="generateScenes()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Generate Scenes
+        </button>
+        <button class="btn-purple" onclick="speakText()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          Narrate
+        </button>
+        <button class="btn-ghost" onclick="generateSEO()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          SEO
+        </button>
+        <button class="btn-orange" onclick="generateThumbnail()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Thumbnail
+        </button>
+        <button class="btn-ghost" onclick="downloadScript()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </button>
+        <button class="btn-ghost" onclick="stopNarration()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          Stop
+        </button>
+      </div>
+
+      <div class="status" id="status">
+        <div class="status-dot"></div>
+        Ready
+      </div>
+    </div>
+
+    <!-- Right: Preview & Output -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <div class="card">
+        <div class="card-title">Preview</div>
+
+        <div class="preview-wrap">
+          <img id="bgImage" src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&q=80" alt="preview">
+          <div class="preview-overlay"></div>
+          <div class="subtitle" id="subtitle">Your scene subtitles will appear here</div>
+          <div class="scene-badge" id="sceneBadge" style="display:none;"></div>
+        </div>
+
+        <div class="timeline-title">Scene Timeline</div>
+        <div class="timeline" id="timeline">
+          <div style="color:var(--muted);font-size:12px;padding:10px 0;">Generate scenes to populate timeline</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">SEO & Export</div>
+        <div class="seo-box" id="seoOutput"></div>
+        <div id="noSeo" style="font-size:12px;color:var(--muted);">Click "SEO" after entering a title and script to generate optimized metadata.</div>
+
+        <div class="thumb-canvas" id="thumbWrap">
+          <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Auto Thumbnail</div>
+          <canvas id="thumbCanvas" width="1280" height="720"></canvas>
+          <button class="btn-ghost" onclick="downloadThumbnail()" style="margin-top:10px;width:100%;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Thumbnail
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Voice loader ──────────────────────────────────────────────
+let voices = [];
+const voiceSelect = document.getElementById('voiceSelect');
+
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+  voiceSelect.innerHTML = voices.map((v, i) =>
+    `<option value="${i}">${v.name} (${v.lang})</option>`
+  ).join('');
+}
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+
+// ── Status helper ─────────────────────────────────────────────
+function setStatus(msg, active = false) {
+  const s = document.getElementById('status');
+  s.textContent = msg;
+  s.className = 'status' + (active ? ' active' : '');
+  s.insertAdjacentHTML('afterbegin', '<div class="status-dot"></div>');
+}
+
+// ── Narration ─────────────────────────────────────────────────
+function speakText() {
+  const text = document.getElementById('script').value.trim();
+  if (!text) return setStatus('⚠ No script to narrate');
+  speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.voice = voices[voiceSelect.value] || null;
+  utt.onend = () => setStatus('Narration complete');
+  speechSynthesis.speak(utt);
+  setStatus('Narrating…', true);
+}
+function stopNarration() { speechSynthesis.cancel(); setStatus('Stopped'); }
+
+// ── Scene generator ───────────────────────────────────────────
+let scenes = [], currentScene = 0, subtitleTimer = null;
+
+function generateScenes() {
+  const text = document.getElementById('script').value.trim();
+  if (!text) return setStatus('⚠ Enter a script first');
+
+  scenes = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
+  const timeline = document.getElementById('timeline');
+  timeline.innerHTML = scenes.map((s, i) => `
+    <div class="scene ${i===0?'active':''}" onclick="jumpScene(${i})" id="sc${i}">
+      <div class="scene-num">${String(i+1).padStart(2,'0')}</div>
+      ${s.slice(0,40)}${s.length>40?'…':''}
+    </div>
+  `).join('');
+
+  const badge = document.getElementById('sceneBadge');
+  badge.style.display = 'block';
+  badge.textContent = `${scenes.length} SCENES`;
+
+  clearInterval(subtitleTimer);
+  currentScene = 0;
+  showScene(0);
+  subtitleTimer = setInterval(() => {
+    currentScene = (currentScene + 1) % scenes.length;
+    showScene(currentScene);
+  }, 3000);
+
+  setStatus(`${scenes.length} scenes generated`, true);
+}
+
+function showScene(i) {
+  document.getElementById('subtitle').textContent = scenes[i] || '';
+  document.querySelectorAll('.scene').forEach((el, j) => {
+    el.classList.toggle('active', j === i);
+  });
+}
+
+function jumpScene(i) {
+  clearInterval(subtitleTimer);
+  currentScene = i;
+  showScene(i);
+  subtitleTimer = setInterval(() => {
+    currentScene = (currentScene + 1) % scenes.length;
+    showScene(currentScene);
+  }, 3000);
+}
+
+// ── Background upload ─────────────────────────────────────────
+document.getElementById('bgUpload').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('bgImage').src = ev.target.result;
+    document.querySelector('.file-label').textContent = '✓ ' + file.name;
+  };
+  reader.readAsDataURL(file);
+});
+
+// ── SEO generator ─────────────────────────────────────────────
+function generateSEO() {
+  const title = document.getElementById('title').value.trim();
+  const script = document.getElementById('script').value.trim();
+  if (!script) return setStatus('⚠ Enter a script first');
+
+  const words = script.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(/\s+/);
+  const freq = {};
+  words.forEach(w => { if (w.length > 4) freq[w] = (freq[w] || 0) + 1; });
+  const keywords = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([w])=>w);
+  const desc = script.length > 250 ? script.slice(0,250) + '…' : script;
+
+  const box = document.getElementById('seoOutput');
+  box.className = 'seo-box visible';
+  box.innerHTML = `
+    <div class="seo-row">
+      <div class="seo-key">Title</div>
+      <div class="seo-val">${title || '[Add a title above]'}</div>
+    </div>
+    <div class="seo-row">
+      <div class="seo-key">Description</div>
+      <div class="seo-val">${desc}</div>
+    </div>
+    <div class="seo-row">
+      <div class="seo-key">Tags</div>
+      <div class="seo-tags">${keywords.map(k=>`<span class="tag">#${k}</span>`).join('')}</div>
+    </div>
+    <div class="seo-row">
+      <div class="seo-key">Scenes</div>
+      <div class="seo-val">${scenes.length || 'Generate scenes first'} total scenes</div>
+    </div>
+  `;
+  document.getElementById('noSeo').style.display = 'none';
+  setStatus('SEO metadata generated', true);
+}
+
+// ── Thumbnail generator ───────────────────────────────────────
+function generateThumbnail() {
+  const title = document.getElementById('title').value.trim() || 'Your Video Title';
+  const canvas = document.getElementById('thumbCanvas');
+  const ctx = canvas.getContext('2d');
+  const img = document.getElementById('bgImage');
+  const wrap = document.getElementById('thumbWrap');
+
+  function draw() {
+    ctx.drawImage(img, 0, 0, 1280, 720);
+    // Dark overlay
+    const grad = ctx.createLinearGradient(0,0,0,720);
+    grad.addColorStop(0, 'rgba(0,0,0,0.3)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.82)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,1280,720);
+    // Accent line
+    ctx.fillStyle = '#00e5ff';
+    ctx.fillRect(80, 580, 220, 5);
+    // Title text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 72px Arial';
+    ctx.fillText(title.slice(0,28), 80, 560);
+    // Sub text
+    ctx.fillStyle = '#00e5ff';
+    ctx.font = '28px monospace';
+    ctx.fillText('AI GENERATED VIDEO', 80, 630);
+    wrap.className = 'thumb-canvas visible';
+    setStatus('Thumbnail generated', true);
+  }
+
+  if (img.complete && img.naturalWidth > 0) {
+    draw();
+  } else {
+    img.onload = draw;
+    setStatus('Loading image…');
+  }
+}
+
+function downloadThumbnail() {
+  const link = document.createElement('a');
+  link.download = 'thumbnail.png';
+  link.href = document.getElementById('thumbCanvas').toDataURL('image/png');
+  link.click();
+}
+
+// ── Script download ───────────────────────────────────────────
+function downloadScript() {
+  const text = document.getElementById('script').value.trim();
+  if (!text) return setStatus('⚠ Nothing to download');
+  const blob = new Blob([text], { type: 'text/plain' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'video-script.txt';
+  link.click();
+  setStatus('Script downloaded');
+}
+</script>
+</body>
+</html>

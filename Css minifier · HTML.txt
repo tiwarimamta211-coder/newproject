@@ -1,0 +1,2186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JS Formatter Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f0ede8;
+  --bg2:#e8e4de;
+  --surface:#faf8f5;
+  --surface2:#f2efe9;
+  --ink:#1a1612;
+  --ink2:#4a4540;
+  --ink3:#8a837a;
+  --ink4:#b8b0a8;
+  --border:#d8d0c8;
+  --border2:#c8bfb5;
+  --amber:#d4870a;
+  --amber-light:#f5a623;
+  --amber-dim:#f5a62322;
+  --green:#2d7a4a;
+  --green-dim:#2d7a4a18;
+  --red:#c0392b;
+  --red-dim:#c0392b15;
+  --blue:#1a5fa8;
+  --blue-dim:#1a5fa812;
+  --mono:'DM Mono',monospace;
+  --display:'Cabinet Grotesk',sans-serif;
+  --r:8px;
+  --shadow:0 1px 3px #1a16120f, 0 4px 16px #1a16120a;
+  --shadow-lg:0 4px 24px #1a161218, 0 1px 4px #1a16120f;
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  font-family:var(--display);
+  background:var(--bg);
+  color:var(--ink);
+  min-height:100vh;
+  position:relative;
+}
+
+/* Subtle paper texture */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 24px, #1a161206 25px),
+    repeating-linear-gradient(90deg, transparent, transparent 24px, #1a161203 25px);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* Corner decoration */
+body::after{
+  content:'';
+  position:fixed;
+  top:0;right:0;
+  width:400px;height:400px;
+  background:radial-gradient(ellipse at top right, #d4870a0f 0%, transparent 60%);
+  pointer-events:none;
+  z-index:0;
+}
+
+.wrap{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:0 20px}
+
+/* ─── HEADER ─── */
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:20px 0 0;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+.logo{display:flex;align-items:center;gap:14px}
+
+.logo-mark{
+  width:44px;height:44px;
+  background:var(--ink);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+  position:relative;
+  overflow:hidden;
+  flex-shrink:0;
+}
+
+.logo-mark::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg,transparent 40%,#ffffff18);
+}
+
+.logo-name{
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:-0.5px;
+  line-height:1;
+}
+
+.logo-name span{color:var(--amber)}
+
+.logo-sub{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--ink3);
+  letter-spacing:1px;
+  margin-top:3px;
+}
+
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+.theme-toggle{
+  display:flex;
+  border:1px solid var(--border);
+  border-radius:6px;
+  overflow:hidden;
+  background:var(--surface);
+}
+
+.theme-btn{
+  font-family:var(--mono);
+  font-size:10px;
+  padding:6px 10px;
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  color:var(--ink3);
+  transition:all 0.2s;
+  letter-spacing:0.5px;
+}
+
+.theme-btn.active{background:var(--ink);color:#fff}
+
+/* ─── USAGE DASHBOARD ─── */
+.dashboard{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:12px;
+  margin:20px 0;
+}
+
+.dash-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:14px 16px;
+  box-shadow:var(--shadow);
+  position:relative;
+  overflow:hidden;
+  transition:transform 0.2s, box-shadow 0.2s;
+}
+
+.dash-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+
+.dash-card::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:3px;
+}
+
+.dash-card.amber::before{background:var(--amber)}
+.dash-card.green::before{background:var(--green)}
+.dash-card.blue::before{background:var(--blue)}
+.dash-card.red::before{background:var(--red)}
+.dash-card.ink::before{background:var(--ink)}
+
+.dash-label{
+  font-family:var(--mono);
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  color:var(--ink3);
+  margin-bottom:6px;
+}
+
+.dash-value{
+  font-size:26px;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:-1px;
+}
+
+.dash-card.amber .dash-value{color:var(--amber)}
+.dash-card.green .dash-value{color:var(--green)}
+.dash-card.blue  .dash-value{color:var(--blue)}
+.dash-card.red   .dash-value{color:var(--red)}
+
+.dash-sub{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--ink4);
+  margin-top:4px;
+}
+
+.dash-trend{
+  position:absolute;
+  bottom:10px;right:12px;
+  font-size:18px;
+  opacity:0.15;
+}
+
+/* ─── TOOLBAR ─── */
+.toolbar{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:12px 16px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  align-items:center;
+  margin-bottom:16px;
+  box-shadow:var(--shadow);
+}
+
+.toolbar-section{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.toolbar-label{
+  font-family:var(--mono);
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  color:var(--ink4);
+  padding-right:4px;
+}
+
+.toolbar-sep{
+  width:1px;
+  height:28px;
+  background:var(--border);
+  flex-shrink:0;
+}
+
+.btn{
+  font-family:var(--mono);
+  font-size:11px;
+  padding:7px 13px;
+  border-radius:6px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--ink2);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+  transition:all 0.18s;
+  letter-spacing:0.3px;
+  box-shadow:0 1px 2px #1a16120a;
+}
+
+.btn:hover{background:var(--bg2);border-color:var(--border2);color:var(--ink);transform:translateY(-1px);box-shadow:0 2px 6px #1a161214}
+.btn:active{transform:translateY(0)}
+
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:500}
+.btn.primary:hover{background:#2d2820;box-shadow:0 4px 12px #1a161633}
+
+.btn.amber{background:var(--amber);border-color:var(--amber);color:#fff;font-weight:500}
+.btn.amber:hover{background:#b8730a;box-shadow:0 4px 12px #d4870a44}
+
+.btn.green{background:var(--green-dim);border-color:#2d7a4a44;color:var(--green)}
+.btn.green:hover{background:#2d7a4a22;border-color:var(--green)}
+
+.btn.red{background:var(--red-dim);border-color:#c0392b33;color:var(--red)}
+.btn.red:hover{background:#c0392b22}
+
+.btn.blue{background:var(--blue-dim);border-color:#1a5fa822;color:var(--blue)}
+.btn.blue:hover{background:#1a5fa820}
+
+.btn:disabled{opacity:0.4;cursor:not-allowed;pointer-events:none}
+
+/* Select dropdown */
+.sel{
+  font-family:var(--mono);
+  font-size:11px;
+  padding:7px 28px 7px 10px;
+  border-radius:6px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--ink2);
+  cursor:pointer;
+  outline:none;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238a837a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 10px center;
+  transition:all 0.18s;
+  box-shadow:0 1px 2px #1a16120a;
+}
+
+.sel:focus{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-dim)}
+.sel option{background:var(--surface)}
+
+/* ─── EDITOR LAYOUT ─── */
+.editor-layout{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-bottom:16px;
+}
+
+@media(max-width:800px){.editor-layout{grid-template-columns:1fr}}
+
+.panel{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  box-shadow:var(--shadow);
+  transition:box-shadow 0.2s;
+}
+
+.panel:focus-within{box-shadow:0 0 0 2px var(--amber-light), var(--shadow-lg)}
+
+.panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.panel-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  color:var(--ink3);
+}
+
+.panel-dot{
+  width:8px;height:8px;
+  border-radius:50%;
+  background:var(--ink4);
+}
+
+.panel-dot.amber{background:var(--amber)}
+.panel-dot.green{background:var(--green)}
+
+.panel-acts{display:flex;gap:6px;flex-wrap:wrap}
+
+/* Editor area */
+.editor-body{
+  display:flex;
+  flex:1;
+  min-height:340px;
+  overflow:hidden;
+}
+
+.line-col{
+  font-family:var(--mono);
+  font-size:12.5px;
+  line-height:1.65;
+  padding:14px 8px 14px 12px;
+  color:var(--ink4);
+  text-align:right;
+  user-select:none;
+  min-width:44px;
+  border-right:1px solid var(--border);
+  background:var(--bg2);
+  overflow:hidden;
+  flex-shrink:0;
+}
+
+.code-area{
+  font-family:var(--mono);
+  font-size:12.5px;
+  line-height:1.65;
+  background:transparent;
+  border:none;
+  color:var(--ink);
+  width:100%;
+  resize:none;
+  outline:none;
+  padding:14px;
+  flex:1;
+  tab-size:2;
+  white-space:pre;
+  overflow:auto;
+}
+
+.code-area::placeholder{color:var(--ink4);font-style:italic}
+.code-area[readonly]{color:var(--green);cursor:default}
+
+/* Status bar */
+.status-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:6px 14px;
+  border-top:1px solid var(--border);
+  background:var(--bg2);
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--ink4);
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.status-left,.status-right{display:flex;align-items:center;gap:12px}
+
+.status-pill{
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:9px;
+  letter-spacing:0.5px;
+  font-weight:500;
+}
+
+.status-pill.ok{background:var(--green-dim);color:var(--green);border:1px solid #2d7a4a22}
+.status-pill.err{background:var(--red-dim);color:var(--red);border:1px solid #c0392b22}
+.status-pill.warn{background:var(--amber-dim);color:var(--amber);border:1px solid #d4870a22}
+
+/* ─── ACTION BAR ─── */
+.action-bar{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  margin-bottom:16px;
+  flex-wrap:wrap;
+}
+
+.btn-format{
+  font-family:var(--display);
+  font-size:15px;
+  font-weight:800;
+  padding:14px 40px;
+  border-radius:999px;
+  border:2px solid var(--ink);
+  background:var(--ink);
+  color:#fff;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  transition:all 0.25s;
+  letter-spacing:-0.3px;
+  position:relative;
+  overflow:hidden;
+}
+
+.btn-format::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg,var(--amber),#f5a623);
+  opacity:0;
+  transition:opacity 0.25s;
+}
+
+.btn-format:hover::before{opacity:1}
+.btn-format:hover{border-color:var(--amber);transform:translateY(-2px);box-shadow:0 8px 30px #d4870a44}
+.btn-format span{position:relative;z-index:1}
+.btn-format:disabled{opacity:0.5;cursor:not-allowed;pointer-events:none}
+
+/* ─── ERROR BOX ─── */
+.error-panel{
+  background:var(--red-dim);
+  border:1px solid #c0392b33;
+  border-radius:var(--r);
+  padding:14px 16px;
+  margin-bottom:16px;
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--red);
+  display:none;
+  align-items:flex-start;
+  gap:10px;
+  line-height:1.5;
+}
+
+.error-panel.show{display:flex}
+
+/* ─── DIFF ─── */
+.diff-panel{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  margin-bottom:16px;
+  display:none;
+  box-shadow:var(--shadow);
+  animation:slideDown 0.25s ease;
+}
+
+.diff-panel.show{display:block}
+
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+.diff-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 16px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);
+}
+
+.diff-body{
+  padding:14px;
+  font-family:var(--mono);
+  font-size:11.5px;
+  line-height:1.7;
+  max-height:220px;
+  overflow-y:auto;
+}
+
+.diff-line{padding:1px 8px;border-radius:3px;white-space:pre-wrap;word-break:break-all}
+.diff-line.rem{color:var(--red);background:#c0392b08}
+.diff-line.add{color:var(--green);background:#2d7a4a08}
+.diff-line.ctx{color:var(--ink4)}
+
+/* ─── ANALYTICS ─── */
+.analytics-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:16px;
+  margin-bottom:16px;
+}
+
+.analytics-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+
+.analytics-head{
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  color:var(--ink3);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.analytics-body{padding:16px}
+
+/* Bar chart */
+.bar-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.bar-label{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--ink3);
+  width:80px;
+  flex-shrink:0;
+  text-align:right;
+}
+
+.bar-track{
+  flex:1;
+  height:8px;
+  background:var(--bg2);
+  border-radius:999px;
+  overflow:hidden;
+  border:1px solid var(--border);
+}
+
+.bar-fill{
+  height:100%;
+  border-radius:999px;
+  transition:width 0.8s cubic-bezier(0.4,0,0.2,1);
+  width:0%;
+}
+
+.bar-val{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--ink3);
+  width:36px;
+  text-align:right;
+  flex-shrink:0;
+}
+
+/* Sparkline */
+.sparkline-wrap{height:60px;position:relative;margin-top:4px}
+canvas.sparkline{width:100%;height:100%}
+
+/* Usage timeline */
+.timeline{max-height:160px;overflow-y:auto}
+
+.timeline-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:8px 0;
+  border-bottom:1px solid var(--border);
+  font-size:12px;
+}
+
+.timeline-item:last-child{border-bottom:none}
+
+.timeline-time{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--ink4);
+  flex-shrink:0;
+  width:56px;
+}
+
+.timeline-action{
+  flex:1;
+  color:var(--ink2);
+  font-family:var(--mono);
+  font-size:11px;
+}
+
+.timeline-tag{
+  font-family:var(--mono);
+  font-size:9px;
+  padding:2px 7px;
+  border-radius:4px;
+  flex-shrink:0;
+}
+
+.tag-format{background:var(--amber-dim);color:var(--amber);border:1px solid #d4870a22}
+.tag-minify{background:var(--blue-dim);color:var(--blue);border:1px solid #1a5fa822}
+.tag-validate{background:var(--green-dim);color:var(--green);border:1px solid #2d7a4a22}
+.tag-copy{background:#1a16120a;color:var(--ink3);border:1px solid var(--border)}
+
+/* Heatmap */
+.heatmap{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:4px}
+.heat-cell{
+  aspect-ratio:1;
+  border-radius:2px;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  transition:background 0.3s;
+  cursor:default;
+  position:relative;
+}
+
+.heat-cell::after{
+  content:attr(data-tip);
+  position:absolute;
+  bottom:calc(100% + 4px);
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--ink);
+  color:#fff;
+  font-family:var(--mono);
+  font-size:9px;
+  padding:3px 7px;
+  border-radius:4px;
+  white-space:nowrap;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.15s;
+  z-index:10;
+}
+
+.heat-cell:hover::after{opacity:1}
+
+/* ─── OPTIONS PANEL ─── */
+.opts-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:14px;
+  margin-bottom:16px;
+}
+
+.opt-group{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:14px 16px;
+  flex:1;
+  min-width:220px;
+  box-shadow:var(--shadow);
+}
+
+.opt-title{
+  font-size:10px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  color:var(--ink3);
+  margin-bottom:12px;
+}
+
+.opt-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+
+.opt-item:last-child{margin-bottom:0}
+.opt-item label{font-size:12px;color:var(--ink2);font-family:var(--mono)}
+
+/* Toggle switch */
+.tog input{display:none}
+.tog-track{
+  width:36px;height:20px;
+  border-radius:999px;
+  background:var(--border);
+  position:relative;
+  cursor:pointer;
+  transition:background 0.2s;
+  flex-shrink:0;
+}
+
+.tog-track::after{
+  content:'';
+  position:absolute;
+  top:3px;left:3px;
+  width:14px;height:14px;
+  border-radius:50%;
+  background:var(--surface);
+  box-shadow:0 1px 3px #1a16121a;
+  transition:left 0.2s;
+}
+
+.tog input:checked ~ .tog-track{background:var(--amber)}
+.tog input:checked ~ .tog-track::after{left:19px}
+
+/* Range input */
+.range-wrap{display:flex;align-items:center;gap:8px}
+.range-val{font-family:var(--mono);font-size:11px;color:var(--ink2);min-width:20px;text-align:right}
+
+input[type=range]{
+  -webkit-appearance:none;
+  appearance:none;
+  height:4px;
+  background:var(--border);
+  border-radius:999px;
+  outline:none;
+  cursor:pointer;
+  accent-color:var(--amber);
+}
+
+/* ─── HISTORY ─── */
+.history-panel{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  margin-bottom:16px;
+  box-shadow:var(--shadow);
+}
+
+.history-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 16px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);
+}
+
+.history-body{max-height:200px;overflow-y:auto}
+
+.history-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 16px;
+  border-bottom:1px solid var(--border);
+  transition:background 0.15s;
+  flex-wrap:wrap;
+}
+
+.history-item:hover{background:var(--bg2)}
+.history-item:last-child{border-bottom:none}
+
+.history-meta{font-family:var(--mono);font-size:10px;color:var(--ink4)}
+.history-info{flex:1;font-family:var(--mono);font-size:11px;color:var(--ink2)}
+.history-badge{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:4px;background:var(--amber-dim);color:var(--amber);border:1px solid #d4870a22}
+.history-acts{display:flex;gap:6px}
+
+.history-empty{
+  padding:28px;
+  text-align:center;
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--ink4);
+  font-style:italic;
+}
+
+/* ─── SHORTCUTS PANEL ─── */
+.shortcuts{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:var(--shadow);
+  display:none;
+}
+
+.shortcuts.show{display:block;animation:slideDown 0.2s ease}
+
+.shortcuts-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+
+.shortcut-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:8px 12px;
+  border-radius:6px;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  font-family:var(--mono);
+  font-size:11px;
+}
+
+.shortcut-action{color:var(--ink2)}
+.shortcut-key{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-bottom:2px solid var(--border2);
+  border-radius:4px;
+  padding:2px 6px;
+  font-size:10px;
+  color:var(--ink3);
+}
+
+/* ─── TOAST ─── */
+.toast-wrap{
+  position:fixed;
+  bottom:24px;right:24px;
+  z-index:999;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  pointer-events:none;
+}
+
+.toast{
+  background:var(--ink);
+  color:#fff;
+  font-family:var(--mono);
+  font-size:11px;
+  padding:10px 16px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  box-shadow:0 4px 20px #1a161633;
+  animation:toastIn 0.3s ease;
+  pointer-events:auto;
+  max-width:280px;
+}
+
+.toast.ok{border-left:3px solid var(--green)}
+.toast.err{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--amber)}
+
+@keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+
+/* ─── FOOTER ─── */
+footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:16px 0 28px;
+  border-top:1px solid var(--border);
+  flex-wrap:wrap;
+  gap:12px;
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--ink4);
+}
+
+/* ─── DARK MODE ─── */
+body.dark{
+  --bg:#111010;
+  --bg2:#171616;
+  --surface:#1d1c1b;
+  --surface2:#222120;
+  --ink:#f0ede8;
+  --ink2:#c8c0b8;
+  --ink3:#807870;
+  --ink4:#504840;
+  --border:#2a2826;
+  --border2:#383430;
+  --amber:#f5a623;
+  --amber-light:#f5c050;
+  --amber-dim:#f5a62318;
+  --green:#3dc870;
+  --green-dim:#3dc87014;
+  --red:#ff6b5b;
+  --red-dim:#ff6b5b12;
+  --blue:#5b9ff5;
+  --blue-dim:#5b9ff510;
+  --shadow:0 1px 3px #00000033, 0 4px 16px #0000002a;
+  --shadow-lg:0 4px 24px #00000044;
+}
+
+body.dark::after{background:radial-gradient(ellipse at top right,#f5a62308 0%,transparent 60%)}
+
+/* ─── SCROLLBARS ─── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:999px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink4)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:600px){
+  .dashboard{grid-template-columns:repeat(2,1fr)}
+  .action-bar{flex-direction:column}
+  .btn-format{width:100%;justify-content:center}
+  .opts-row{flex-direction:column}
+  .analytics-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">{ }</div>
+    <div>
+      <div class="logo-name">JS Formatter <span>Studio</span></div>
+      <div class="logo-sub">FORMAT · VALIDATE · ANALYZE</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn" onclick="toggleShortcuts()">⌨ Shortcuts</button>
+    <div class="theme-toggle">
+      <button class="theme-btn active" id="themeLight" onclick="setTheme('light')">☀ Light</button>
+      <button class="theme-btn" id="themeDark" onclick="setTheme('dark')">☾ Dark</button>
+    </div>
+  </div>
+</header>
+
+<!-- SHORTCUTS PANEL -->
+<div class="shortcuts" id="shortcutsPanel">
+  <div class="opt-title">⌨ Keyboard Shortcuts</div>
+  <div class="shortcuts-grid">
+    <div class="shortcut-item"><span class="shortcut-action">Format JS</span><span class="shortcut-key">Ctrl+Enter</span></div>
+    <div class="shortcut-item"><span class="shortcut-action">Copy Output</span><span class="shortcut-key">Ctrl+Shift+C</span></div>
+    <div class="shortcut-item"><span class="shortcut-action">Clear Input</span><span class="shortcut-key">Ctrl+Shift+X</span></div>
+    <div class="shortcut-item"><span class="shortcut-action">Minify</span><span class="shortcut-key">Ctrl+Shift+M</span></div>
+    <div class="shortcut-item"><span class="shortcut-action">Validate</span><span class="shortcut-key">Ctrl+Shift+V</span></div>
+    <div class="shortcut-item"><span class="shortcut-action">Toggle Diff</span><span class="shortcut-key">Ctrl+Shift+D</span></div>
+    <div class="shortcut-item"><span class="shortcut-action">Load Sample</span><span class="shortcut-key">Ctrl+Shift+S</span></div>
+    <div class="shortcut-item"><span class="shortcut-action">Download</span><span class="shortcut-key">Ctrl+S</span></div>
+  </div>
+</div>
+
+<!-- USAGE DASHBOARD -->
+<div class="dashboard">
+  <div class="dash-card amber">
+    <div class="dash-label">Formats Run</div>
+    <div class="dash-value" id="dFormats">0</div>
+    <div class="dash-sub">This session</div>
+    <div class="dash-trend">⚡</div>
+  </div>
+  <div class="dash-card green">
+    <div class="dash-label">Lines Formatted</div>
+    <div class="dash-value" id="dLines">0</div>
+    <div class="dash-sub">Total lines</div>
+    <div class="dash-trend">📄</div>
+  </div>
+  <div class="dash-card blue">
+    <div class="dash-label">Chars Processed</div>
+    <div class="dash-value" id="dChars">0</div>
+    <div class="dash-sub">Total characters</div>
+    <div class="dash-trend">🔤</div>
+  </div>
+  <div class="dash-card red">
+    <div class="dash-label">Errors Found</div>
+    <div class="dash-value" id="dErrors">0</div>
+    <div class="dash-sub">Syntax issues</div>
+    <div class="dash-trend">⚠</div>
+  </div>
+  <div class="dash-card ink">
+    <div class="dash-label">Time Saved</div>
+    <div class="dash-value" id="dTime">0s</div>
+    <div class="dash-sub">Estimated</div>
+    <div class="dash-trend">⏱</div>
+  </div>
+</div>
+
+<!-- OPTIONS PANEL -->
+<div class="opts-row">
+  <div class="opt-group">
+    <div class="opt-title">Formatting Options</div>
+    <div class="opt-item">
+      <label>Indent Size</label>
+      <div class="range-wrap">
+        <input type="range" min="1" max="8" value="2" id="indentSize" oninput="document.getElementById('indentVal').textContent=this.value" style="width:80px">
+        <span class="range-val" id="indentVal">2</span>
+      </div>
+    </div>
+    <div class="opt-item">
+      <label>Use Tabs</label>
+      <label class="tog"><input type="checkbox" id="useTabs"><div class="tog-track"></div></label>
+    </div>
+    <div class="opt-item">
+      <label>Single Quotes</label>
+      <label class="tog"><input type="checkbox" id="singleQuotes" checked><div class="tog-track"></div></label>
+    </div>
+    <div class="opt-item">
+      <label>Semicolons</label>
+      <label class="tog"><input type="checkbox" id="addSemis" checked><div class="tog-track"></div></label>
+    </div>
+  </div>
+  <div class="opt-group">
+    <div class="opt-title">Advanced Options</div>
+    <div class="opt-item">
+      <label>Trailing Commas</label>
+      <label class="tog"><input type="checkbox" id="trailingCommas"><div class="tog-track"></div></label>
+    </div>
+    <div class="opt-item">
+      <label>Arrow Parens</label>
+      <label class="tog"><input type="checkbox" id="arrowParens" checked><div class="tog-track"></div></label>
+    </div>
+    <div class="opt-item">
+      <label>Bracket Spacing</label>
+      <label class="tog"><input type="checkbox" id="bracketSpacing" checked><div class="tog-track"></div></label>
+    </div>
+    <div class="opt-item">
+      <label>Line Width</label>
+      <div class="range-wrap">
+        <input type="range" min="40" max="200" value="80" id="printWidth" oninput="document.getElementById('pwVal').textContent=this.value" style="width:80px">
+        <span class="range-val" id="pwVal">80</span>
+      </div>
+    </div>
+  </div>
+  <div class="opt-group">
+    <div class="opt-title">Output Mode</div>
+    <div class="opt-item">
+      <label>Mode</label>
+      <select class="sel" id="outputMode">
+        <option value="format">Beautify</option>
+        <option value="minify">Minify</option>
+        <option value="compact">Compact</option>
+      </select>
+    </div>
+    <div class="opt-item">
+      <label>Line Endings</label>
+      <select class="sel" id="lineEndings">
+        <option value="lf">LF (Unix)</option>
+        <option value="crlf">CRLF (Win)</option>
+        <option value="cr">CR (Old Mac)</option>
+      </select>
+    </div>
+    <div class="opt-item">
+      <label>Sort Imports</label>
+      <label class="tog"><input type="checkbox" id="sortImports"><div class="tog-track"></div></label>
+    </div>
+    <div class="opt-item">
+      <label>Remove Logs</label>
+      <label class="tog"><input type="checkbox" id="removeLogs"><div class="tog-track"></div></label>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="toolbar-section">
+    <span class="toolbar-label">Input</span>
+    <button class="btn" onclick="loadSample()">Load Sample</button>
+    <button class="btn" onclick="uploadFile()">Upload .js</button>
+    <button class="btn red" onclick="clearAll()">Clear</button>
+    <input type="file" id="fileInput" accept=".js,.ts,.jsx,.tsx,.json" style="display:none" onchange="handleFileUpload(event)">
+  </div>
+  <div class="toolbar-sep"></div>
+  <div class="toolbar-section">
+    <span class="toolbar-label">Transform</span>
+    <button class="btn blue" onclick="validateOnly()">✓ Validate</button>
+    <button class="btn" onclick="minifyDirect()">⬡ Minify</button>
+    <button class="btn" onclick="obfuscateBasic()">⊕ Obfuscate</button>
+    <button class="btn" onclick="stripComments()">≠ Strip Comments</button>
+  </div>
+  <div class="toolbar-sep"></div>
+  <div class="toolbar-section">
+    <span class="toolbar-label">Output</span>
+    <button class="btn green" onclick="copyOutput()">Copy</button>
+    <button class="btn" onclick="downloadOutput()">Download</button>
+    <button class="btn" onclick="toggleDiff()">Diff</button>
+    <button class="btn" onclick="shareSnippet()">Share</button>
+  </div>
+</div>
+
+<!-- ERROR PANEL -->
+<div class="error-panel" id="errorPanel">
+  <span>⚠</span>
+  <div id="errorMsg">Syntax error found</div>
+</div>
+
+<!-- EDITOR LAYOUT -->
+<div class="editor-layout">
+  <!-- INPUT -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title"><div class="panel-dot amber"></div> Input JavaScript</div>
+      <div class="panel-acts">
+        <button class="btn" onclick="wrapSelection('(',')')" title="Wrap with ()">( )</button>
+        <button class="btn" onclick="wrapSelection('[',']')" title="Wrap with []">[ ]</button>
+        <button class="btn" onclick="wrapSelection('{','}')" title="Wrap with {}">{ }</button>
+        <button class="btn" onclick="toggleComment()" title="Toggle comment">// </button>
+      </div>
+    </div>
+    <div class="editor-body">
+      <div class="line-col" id="lnInput">1</div>
+      <textarea class="code-area" id="inputJS" placeholder="// Paste or type JavaScript here…
+// Ctrl+Enter to format
+// Or click 'Load Sample' to try it out" oninput="onInputChange()" onscroll="syncLineNums('input')" onkeydown="handleTab(event)"></textarea>
+    </div>
+    <div class="status-bar">
+      <div class="status-left">
+        <span id="inLines">0 lines</span>
+        <span id="inChars">0 chars</span>
+        <span id="inBytes">0 B</span>
+      </div>
+      <div class="status-right">
+        <span id="inStatus" class="status-pill warn">No input</span>
+        <span id="inCursor">Ln 1, Col 1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title"><div class="panel-dot green"></div> Formatted Output</div>
+      <div class="panel-acts">
+        <button class="btn green" onclick="copyOutput()">Copy</button>
+        <button class="btn" onclick="pushBackToInput()">→ Input</button>
+        <button class="btn" onclick="downloadOutput()">↓ Save</button>
+      </div>
+    </div>
+    <div class="editor-body">
+      <div class="line-col" id="lnOutput">1</div>
+      <textarea class="code-area" id="outputJS" readonly placeholder="// Formatted output will appear here…"></textarea>
+    </div>
+    <div class="status-bar">
+      <div class="status-left">
+        <span id="outLines">0 lines</span>
+        <span id="outChars">0 chars</span>
+        <span id="outBytes">0 B</span>
+      </div>
+      <div class="status-right">
+        <span id="outStatus" class="status-pill warn">Waiting</span>
+        <span id="compressionRatio">—</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FORMAT BUTTON -->
+<div class="action-bar">
+  <button class="btn-format" onclick="formatJS()" id="formatBtn">
+    <span>{ }</span>
+    <span id="formatBtnTxt">Format JavaScript</span>
+  </button>
+  <button class="btn" onclick="autoFormat()" style="padding:14px 20px;border-radius:999px">
+    ⟳ Auto
+  </button>
+</div>
+
+<!-- DIFF -->
+<div class="diff-panel" id="diffPanel">
+  <div class="diff-head">
+    <div class="panel-title">📊 Diff View — Input vs Output</div>
+    <button class="btn" onclick="toggleDiff()">✕ Close</button>
+  </div>
+  <div class="diff-body" id="diffBody"></div>
+</div>
+
+<!-- ANALYTICS -->
+<div class="analytics-grid">
+  <!-- Operation Breakdown -->
+  <div class="analytics-card">
+    <div class="analytics-head">📊 Operation Breakdown</div>
+    <div class="analytics-body">
+      <div class="bar-row">
+        <div class="bar-label">Format</div>
+        <div class="bar-track"><div class="bar-fill" id="barFormat" style="background:var(--amber)"></div></div>
+        <div class="bar-val" id="barFormatVal">0</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Validate</div>
+        <div class="bar-track"><div class="bar-fill" id="barValidate" style="background:var(--green)"></div></div>
+        <div class="bar-val" id="barValidateVal">0</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Minify</div>
+        <div class="bar-track"><div class="bar-fill" id="barMinify" style="background:var(--blue)"></div></div>
+        <div class="bar-val" id="barMinifyVal">0</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Copy</div>
+        <div class="bar-track"><div class="bar-fill" id="barCopy" style="background:var(--ink3)"></div></div>
+        <div class="bar-val" id="barCopyVal">0</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Other</div>
+        <div class="bar-track"><div class="bar-fill" id="barOther" style="background:var(--red)"></div></div>
+        <div class="bar-val" id="barOtherVal">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Code Quality -->
+  <div class="analytics-card">
+    <div class="analytics-head">🔍 Last Parse Analysis</div>
+    <div class="analytics-body">
+      <div class="bar-row">
+        <div class="bar-label">Functions</div>
+        <div class="bar-track"><div class="bar-fill" id="qaFunctions" style="background:var(--amber)"></div></div>
+        <div class="bar-val" id="qaFunctionsVal">0</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Variables</div>
+        <div class="bar-track"><div class="bar-fill" id="qaVariables" style="background:var(--green)"></div></div>
+        <div class="bar-val" id="qaVariablesVal">0</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Comments</div>
+        <div class="bar-track"><div class="bar-fill" id="qaComments" style="background:var(--blue)"></div></div>
+        <div class="bar-val" id="qaCommentsVal">0</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Strings</div>
+        <div class="bar-track"><div class="bar-fill" id="qaStrings" style="background:var(--ink3)"></div></div>
+        <div class="bar-val" id="qaStringsVal">0</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Imports</div>
+        <div class="bar-track"><div class="bar-fill" id="qaImports" style="background:var(--red)"></div></div>
+        <div class="bar-val" id="qaImportsVal">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Usage Heatmap -->
+  <div class="analytics-card">
+    <div class="analytics-head">🗓 Hourly Activity (Last 12h)</div>
+    <div class="analytics-body">
+      <div class="heatmap" id="heatmap"></div>
+      <div class="sparkline-wrap" style="margin-top:12px">
+        <canvas class="sparkline" id="sparkline" width="300" height="60"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Timeline -->
+  <div class="analytics-card">
+    <div class="analytics-head">🕓 Recent Activity</div>
+    <div class="analytics-body" style="padding:0">
+      <div class="timeline" id="timeline">
+        <div style="padding:20px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--ink4);font-style:italic">No activity yet. Start formatting!</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="history-panel">
+  <div class="history-head">
+    <div class="panel-title">📁 Format History</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" onclick="exportHistory()">Export</button>
+      <button class="btn red" onclick="clearHistory()">Clear</button>
+    </div>
+  </div>
+  <div class="history-body" id="historyBody">
+    <div class="history-empty">No format history yet. Format some JavaScript to see it here!</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span>JS Formatter Studio · Built with ♥ and vanilla JS</span>
+  <span>Ctrl+Enter to format · No data leaves your browser</span>
+</footer>
+
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+const state = {
+  formats: 0, validates: 0, minifies: 0, copies: 0, others: 0,
+  totalLines: 0, totalChars: 0, totalErrors: 0, timeSaved: 0,
+  history: [],
+  hourly: new Array(12).fill(0),
+  sparkData: [],
+  diffVisible: false,
+  autoMode: false,
+  autoTimer: null,
+  shortcutsVisible: false,
+  lastInput: '', lastOutput: ''
+};
+
+// ═══════════════════════════════════════════════════════
+//  FORMATTER ENGINE
+// ═══════════════════════════════════════════════════════
+function formatJS() {
+  const input = document.getElementById('inputJS').value;
+  if (!input.trim()) { showToast('Paste some JavaScript first!', 'err'); return; }
+
+  hideError();
+  setBusy(true);
+
+  setTimeout(() => {
+    try {
+      const opts = getOpts();
+      let result = formatCode(input, opts);
+
+      if (opts.removeLogs) result = result.replace(/console\.(log|warn|error|info|debug)\([^)]*\);?\n?/g, '');
+      if (opts.sortImports) result = sortImportLines(result);
+
+      const mode = document.getElementById('outputMode').value;
+      if (mode === 'minify') result = minifyCode(result);
+      else if (mode === 'compact') result = compactCode(result);
+
+      document.getElementById('outputJS').value = result;
+      state.lastInput = input; state.lastOutput = result;
+
+      updateOutputStats(result);
+      updateQualityAnalysis(input);
+
+      const lines = result.split('\n').length;
+      state.formats++;
+      state.totalLines += lines;
+      state.totalChars += input.length;
+      state.timeSaved += Math.ceil(input.length / 200);
+      state.sparkData.push(input.length);
+      if (state.sparkData.length > 20) state.sparkData.shift();
+      state.hourly[new Date().getHours() % 12]++;
+
+      addHistory(input, result, 'format');
+      addTimeline('Formatted JS', 'format', lines + ' lines');
+      updateDashboard();
+      updateBars();
+      drawSparkline();
+      renderHeatmap();
+      setBusy(false);
+      showToast('Formatted successfully! (' + lines + ' lines)', 'ok');
+    } catch(e) {
+      showError('Parse error: ' + e.message);
+      state.totalErrors++;
+      updateDashboard();
+      setBusy(false);
+    }
+  }, 80);
+}
+
+function getOpts() {
+  return {
+    indent: document.getElementById('useTabs').checked ? '\t' : ' '.repeat(+document.getElementById('indentSize').value),
+    singleQuotes: document.getElementById('singleQuotes').checked,
+    semis: document.getElementById('addSemis').checked,
+    trailingCommas: document.getElementById('trailingCommas').checked,
+    arrowParens: document.getElementById('arrowParens').checked,
+    bracketSpacing: document.getElementById('bracketSpacing').checked,
+    removeLogs: document.getElementById('removeLogs').checked,
+    sortImports: document.getElementById('sortImports').checked,
+    lineEnding: document.getElementById('lineEndings').value,
+    printWidth: +document.getElementById('printWidth').value,
+  };
+}
+
+function formatCode(code, opts) {
+  // Validate first
+  new Function(code); // throws on syntax error
+
+  let result = code;
+  const ind = opts.indent;
+
+  // Normalize line endings
+  result = result.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+
+  // Quote normalization
+  if (opts.singleQuotes) {
+    result = result.replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, (m,inner) => "'" + inner.replace(/\\"/g,'"').replace(/'/g,"\\'") + "'");
+  } else {
+    result = result.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, (m,inner) => '"' + inner.replace(/\\'/g,"'").replace(/"/g,'\\"') + '"');
+  }
+
+  // Run a robust pretty-printer
+  result = prettyPrint(result, ind, opts);
+
+  // Add/remove semicolons
+  if (!opts.semis) {
+    result = result.split('\n').map(l => l.trimEnd().replace(/;$/, '')).join('\n');
+  } else {
+    result = ensureSemis(result);
+  }
+
+  // Line endings
+  if (opts.lineEnding === 'crlf') result = result.replace(/\n/g, '\r\n');
+  else if (opts.lineEnding === 'cr') result = result.replace(/\n/g, '\r');
+
+  return result;
+}
+
+function prettyPrint(code, ind, opts) {
+  const lines = [];
+  let depth = 0;
+  let inStr = false, strChar = '', inML = false;
+  let i = 0, cur = '';
+
+  const flush = () => {
+    const t = cur.trim();
+    if (t) lines.push(ind.repeat(Math.max(0, depth)) + t);
+    cur = '';
+  };
+
+  while (i < code.length) {
+    const ch = code[i];
+    const next = code[i+1] || '';
+
+    if (!inStr && !inML && ch === '/' && next === '*') { inML = true; cur += ch; i++; continue; }
+    if (inML) { cur += ch; if (ch === '*' && next === '/') { cur += next; i++; inML = false; } i++; continue; }
+    if (!inStr && !inML && ch === '/' && next === '/') {
+      flush();
+      let c = ''; while (i < code.length && code[i] !== '\n') { c += code[i]; i++; }
+      lines.push(ind.repeat(Math.max(0,depth)) + c.trim());
+      continue;
+    }
+    if (!inStr && (ch === '"' || ch === "'" || ch === '`')) { inStr = true; strChar = ch; cur += ch; i++; continue; }
+    if (inStr) {
+      cur += ch;
+      if (ch === '\\') { cur += next; i++; }
+      else if (ch === strChar) inStr = false;
+      i++; continue;
+    }
+
+    if (ch === '\n') { flush(); i++; continue; }
+    if (ch === '{') {
+      cur += opts.bracketSpacing && cur.trim() ? ' {' : '{';
+      flush(); depth++;
+    } else if (ch === '}') {
+      flush(); depth = Math.max(0, depth - 1);
+      cur = '}';
+      if (next === ';' || next === ',' || next === ')') { cur += next; i++; }
+      flush();
+    } else if (ch === ';') {
+      cur += ';'; flush();
+    } else {
+      cur += ch;
+    }
+    i++;
+  }
+  flush();
+  return lines.filter((l,i,a) => !(l.trim()==='' && a[i-1]?.trim()==='')).join('\n');
+}
+
+function ensureSemis(code) {
+  return code.split('\n').map((line, i, arr) => {
+    const t = line.trimEnd();
+    if (!t) return line;
+    const last = t[t.length-1];
+    const next = (arr[i+1]||'').trim();
+    if (['{','}',',',';','(','['].includes(last)) return line;
+    if (next.startsWith('}') || next.startsWith(')') || next.startsWith(']')) return line;
+    if (/^\s*(\/\/|\/\*|\*|if|else|for|while|switch|function|class|const|let|var|return|import|export)/.test(t) && last === ')') return line;
+    return t + ';';
+  }).join('\n');
+}
+
+function minifyCode(code) {
+  let r = code;
+  r = r.replace(/\/\/[^\n]*/g,'').replace(/\/\*[\s\S]*?\*\//g,'');
+  r = r.replace(/\s+/g,' ').replace(/\s*([{}();,=+\-*/<>!&|:?])\s*/g,'$1').trim();
+  return r;
+}
+
+function compactCode(code) {
+  return code.split('\n').filter(l=>l.trim()).map(l=>l.trim()).join(' ');
+}
+
+function sortImportLines(code) {
+  const lines = code.split('\n');
+  const imports = lines.filter(l => l.trim().startsWith('import '));
+  const rest = lines.filter(l => !l.trim().startsWith('import '));
+  imports.sort();
+  return [...imports, '', ...rest].join('\n');
+}
+
+function updateQualityAnalysis(code) {
+  const fns  = (code.match(/\bfunction\b|\b=>\s*{|\bconst\s+\w+\s*=\s*(\([^)]*\)|[\w]+)\s*=>/g)||[]).length;
+  const vars  = (code.match(/\b(const|let|var)\s+/g)||[]).length;
+  const coms  = (code.match(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g)||[]).length;
+  const strs  = (code.match(/"[^"]*"|'[^']*'|`[^`]*`/g)||[]).length;
+  const imps  = (code.match(/\bimport\b/g)||[]).length;
+  const max   = Math.max(fns,vars,coms,strs,imps,1);
+  const setPct= (id,v) => { document.getElementById(id).style.width=(v/max*100)+'%'; document.getElementById(id+'Val').textContent=v; };
+  setPct('qaFunctions',fns); setPct('qaVariables',vars); setPct('qaComments',coms); setPct('qaStrings',strs); setPct('qaImports',imps);
+}
+
+// ═══════════════════════════════════════════════════════
+//  VALIDATE
+// ═══════════════════════════════════════════════════════
+function validateOnly() {
+  const code = document.getElementById('inputJS').value;
+  if (!code.trim()) { showToast('Nothing to validate!', 'err'); return; }
+  try {
+    new Function(code);
+    hideError();
+    document.getElementById('inStatus').className = 'status-pill ok';
+    document.getElementById('inStatus').textContent = '✓ Valid';
+    state.validates++;
+    addTimeline('Validated JS', 'validate', 'No errors');
+    addHistory(code, '', 'validate');
+    updateBars();
+    showToast('✓ Syntax looks valid!', 'ok');
+  } catch(e) {
+    showError(e.message);
+    document.getElementById('inStatus').className = 'status-pill err';
+    document.getElementById('inStatus').textContent = '✕ Error';
+    state.totalErrors++;
+    state.validates++;
+    addTimeline('Validation failed', 'validate', e.message.slice(0,40));
+    updateDashboard();
+    updateBars();
+    showToast('Syntax error found', 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MINIFY DIRECT
+// ═══════════════════════════════════════════════════════
+function minifyDirect() {
+  const code = document.getElementById('inputJS').value;
+  if (!code.trim()) { showToast('Nothing to minify!', 'err'); return; }
+  try {
+    new Function(code);
+    const result = minifyCode(code);
+    document.getElementById('outputJS').value = result;
+    state.lastInput = code; state.lastOutput = result;
+    updateOutputStats(result);
+    state.minifies++;
+    addTimeline('Minified JS', 'minify', formatBytes(byteSize(result)));
+    addHistory(code, result, 'minify');
+    updateBars();
+    showToast('Minified: ' + formatBytes(byteSize(code)) + ' → ' + formatBytes(byteSize(result)), 'ok');
+  } catch(e) {
+    showError('Cannot minify: ' + e.message);
+    showToast('Syntax error — fix code first', 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  OBFUSCATE (basic)
+// ═══════════════════════════════════════════════════════
+function obfuscateBasic() {
+  const code = document.getElementById('inputJS').value;
+  if (!code.trim()) { showToast('Nothing to obfuscate!', 'err'); return; }
+  let r = minifyCode(code);
+  // encode string literals to unicode
+  r = r.replace(/'([^']*)'/g, (m,s) => {
+    return "'" + s.split('').map(c => '\\u' + c.charCodeAt(0).toString(16).padStart(4,'0')).join('') + "'";
+  });
+  document.getElementById('outputJS').value = r;
+  state.lastInput = code; state.lastOutput = r;
+  updateOutputStats(r);
+  state.others++;
+  addTimeline('Obfuscated JS', 'minify', formatBytes(byteSize(r)));
+  updateBars();
+  showToast('Basic obfuscation applied!', 'info');
+}
+
+// ═══════════════════════════════════════════════════════
+//  STRIP COMMENTS
+// ═══════════════════════════════════════════════════════
+function stripComments() {
+  const code = document.getElementById('inputJS').value;
+  if (!code.trim()) { showToast('Nothing to strip!', 'err'); return; }
+  const r = code.replace(/\/\/[^\n]*/g,'').replace(/\/\*[\s\S]*?\*\//g,'').replace(/\n{3,}/g,'\n\n').trim();
+  document.getElementById('outputJS').value = r;
+  document.getElementById('inputJS').value = r;
+  state.lastInput = code; state.lastOutput = r;
+  updateInputStats();
+  updateOutputStats(r);
+  state.others++;
+  addTimeline('Stripped comments', 'copy', '');
+  updateBars();
+  showToast('Comments removed!', 'ok');
+}
+
+// ═══════════════════════════════════════════════════════
+//  EDITOR HELPERS
+// ═══════════════════════════════════════════════════════
+function handleTab(e) {
+  if (e.key !== 'Tab') return;
+  e.preventDefault();
+  const ta = e.target;
+  const s = ta.selectionStart, end = ta.selectionEnd;
+  const ind = document.getElementById('useTabs').checked ? '\t' : ' '.repeat(+document.getElementById('indentSize').value);
+  ta.value = ta.value.slice(0,s) + ind + ta.value.slice(end);
+  ta.selectionStart = ta.selectionEnd = s + ind.length;
+  onInputChange();
+}
+
+function wrapSelection(open, close) {
+  const ta = document.getElementById('inputJS');
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  const sel = ta.value.slice(s, e) || 'selection';
+  ta.value = ta.value.slice(0,s) + open + sel + close + ta.value.slice(e);
+  ta.selectionStart = s + open.length;
+  ta.selectionEnd = s + open.length + sel.length;
+  onInputChange();
+}
+
+function toggleComment() {
+  const ta = document.getElementById('inputJS');
+  const s = ta.selectionStart;
+  const lineStart = ta.value.lastIndexOf('\n', s-1) + 1;
+  const line = ta.value.slice(lineStart);
+  const lineEnd = line.indexOf('\n');
+  const fullLine = lineEnd >= 0 ? line.slice(0, lineEnd) : line;
+  const isCommented = fullLine.trim().startsWith('//');
+  const newLine = isCommented ? fullLine.replace(/^(\s*)\/\/\s?/, '$1') : fullLine.replace(/^(\s*)/, '$1// ');
+  ta.value = ta.value.slice(0, lineStart) + newLine + ta.value.slice(lineStart + fullLine.length);
+  onInputChange();
+}
+
+function pushBackToInput() {
+  const out = document.getElementById('outputJS').value;
+  if (!out) { showToast('No output to push!', 'err'); return; }
+  document.getElementById('inputJS').value = out;
+  onInputChange();
+  showToast('Output pushed to input', 'info');
+}
+
+function syncLineNums(which) {
+  if (which === 'input') {
+    const ta = document.getElementById('inputJS');
+    document.getElementById('lnInput').scrollTop = ta.scrollTop;
+  }
+}
+
+function updateLineNums(id, text) {
+  const count = text ? text.split('\n').length : 1;
+  document.getElementById(id).textContent = Array.from({length:count},(_,i)=>i+1).join('\n');
+}
+
+function onInputChange() {
+  const v = document.getElementById('inputJS').value;
+  updateLineNums('lnInput', v);
+  updateInputStats();
+  updateCursor();
+  if (state.autoMode) {
+    clearTimeout(state.autoTimer);
+    state.autoTimer = setTimeout(formatJS, 800);
+  }
+}
+
+function updateInputStats() {
+  const v = document.getElementById('inputJS').value;
+  const lines = v.split('\n').length;
+  const chars = v.length;
+  document.getElementById('inLines').textContent = lines + ' lines';
+  document.getElementById('inChars').textContent = chars + ' chars';
+  document.getElementById('inBytes').textContent = formatBytes(byteSize(v));
+  const pill = document.getElementById('inStatus');
+  if (!v.trim()) { pill.className='status-pill warn'; pill.textContent='No input'; }
+  else { pill.className='status-pill ok'; pill.textContent='Ready'; }
+}
+
+function updateOutputStats(v) {
+  const lines = v.split('\n').length;
+  const chars = v.length;
+  document.getElementById('outLines').textContent = lines + ' lines';
+  document.getElementById('outChars').textContent = chars + ' chars';
+  document.getElementById('outBytes').textContent = formatBytes(byteSize(v));
+  document.getElementById('outStatus').className = 'status-pill ok';
+  document.getElementById('outStatus').textContent = '✓ Done';
+  updateLineNums('lnOutput', v);
+
+  const inp = document.getElementById('inputJS').value;
+  if (inp.length) {
+    const ratio = ((1 - v.length / inp.length) * 100).toFixed(1);
+    document.getElementById('compressionRatio').textContent = ratio > 0 ? '−'+ratio+'% size' : '+'+Math.abs(ratio)+'% size';
+  }
+}
+
+function updateCursor() {
+  const ta = document.getElementById('inputJS');
+  const text = ta.value.slice(0, ta.selectionStart);
+  const lines = text.split('\n');
+  document.getElementById('inCursor').textContent = 'Ln ' + lines.length + ', Col ' + (lines[lines.length-1].length+1);
+}
+
+// ═══════════════════════════════════════════════════════
+//  FILE HANDLING
+// ═══════════════════════════════════════════════════════
+function uploadFile() { document.getElementById('fileInput').click(); }
+
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('inputJS').value = ev.target.result;
+    onInputChange();
+    showToast('Loaded: ' + file.name, 'ok');
+    state.others++;
+    addTimeline('Uploaded file', 'copy', file.name);
+    updateBars();
+  };
+  reader.readAsText(file);
+}
+
+function downloadOutput() {
+  const val = document.getElementById('outputJS').value;
+  if (!val) { showToast('Nothing to download!', 'err'); return; }
+  const blob = new Blob([val], {type:'text/javascript'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'formatted.js';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  state.others++;
+  addTimeline('Downloaded output', 'copy', formatBytes(byteSize(val)));
+  updateBars();
+  showToast('Downloaded formatted.js', 'ok');
+}
+
+function copyOutput() {
+  const val = document.getElementById('outputJS').value;
+  if (!val) { showToast('Nothing to copy!', 'err'); return; }
+  navigator.clipboard.writeText(val).then(() => {
+    state.copies++;
+    addTimeline('Copied output', 'copy', formatBytes(byteSize(val)));
+    updateBars();
+    showToast('Copied to clipboard!', 'ok');
+  });
+}
+
+function shareSnippet() {
+  const val = document.getElementById('inputJS').value;
+  if (!val) { showToast('Nothing to share!', 'err'); return; }
+  const encoded = btoa(encodeURIComponent(val).replace(/%([0-9A-F]{2})/g,(_,p)=>String.fromCharCode('0x'+p)));
+  const url = location.href.split('?')[0] + '?code=' + encoded.slice(0, 200);
+  navigator.clipboard.writeText(url).then(() => showToast('Share URL copied! (truncated)', 'info'));
+}
+
+function clearAll() {
+  document.getElementById('inputJS').value = '';
+  document.getElementById('outputJS').value = '';
+  hideError();
+  onInputChange();
+  document.getElementById('outLines').textContent = '0 lines';
+  document.getElementById('outChars').textContent = '0 chars';
+  document.getElementById('outBytes').textContent = '0 B';
+  document.getElementById('outStatus').className = 'status-pill warn';
+  document.getElementById('outStatus').textContent = 'Waiting';
+  document.getElementById('compressionRatio').textContent = '—';
+  showToast('Cleared', 'info');
+}
+
+function loadSample() {
+  document.getElementById('inputJS').value = `// JS Formatter Studio — Sample Code
+import {useState, useEffect, useCallback} from 'react'
+import axios from "axios"
+
+const API_BASE = 'https://api.example.com/v2'
+const DEFAULT_TIMEOUT = 5000
+
+// Utility: format bytes
+function formatBytes(bytes, decimals = 2) {
+const k = 1024
+const dm = decimals < 0 ? 0 : decimals
+const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+if (bytes === 0) return '0 Bytes'
+const i = Math.floor(Math.log(bytes) / Math.log(k))
+return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
+}
+
+// API Client
+class APIClient {
+constructor(baseURL, timeout) {
+this.baseURL = baseURL
+this.timeout = timeout || DEFAULT_TIMEOUT
+this.cache = new Map()
+}
+
+async get(endpoint, options = {}) {
+const cacheKey = endpoint + JSON.stringify(options)
+if (this.cache.has(cacheKey)) {
+console.log('Cache hit:', cacheKey)
+return this.cache.get(cacheKey)
+}
+try {
+const response = await axios.get(this.baseURL + endpoint, {timeout: this.timeout, ...options})
+this.cache.set(cacheKey, response.data)
+return response.data
+} catch (error) {
+console.error('API Error:', error.message)
+throw error
+}
+}
+
+clearCache() {
+this.cache.clear()
+console.log('Cache cleared')
+}
+}
+
+// Custom hook
+function useDataFetcher(endpoint) {
+const [data, setData] = useState(null)
+const [loading, setLoading] = useState(false)
+const [error, setError] = useState(null)
+const client = new APIClient(API_BASE)
+
+const fetch = useCallback(async () => {
+setLoading(true)
+setError(null)
+try {
+const result = await client.get(endpoint)
+setData(result)
+} catch(e) {
+setError(e.message)
+} finally {
+setLoading(false)
+}
+}, [endpoint])
+
+useEffect(() => {fetch()}, [fetch])
+return {data, loading, error, refetch: fetch}
+}
+
+// Arrow functions
+const multiply = (a, b) => a * b
+const greet = name => \`Hello, \${name}!\`
+const pipe = (...fns) => x => fns.reduce((v, f) => f(v), x)
+
+export {APIClient, useDataFetcher, formatBytes, multiply, greet, pipe}`;
+  onInputChange();
+  showToast('Sample code loaded!', 'ok');
+  state.others++;
+  addTimeline('Loaded sample code', 'copy', '');
+  updateBars();
+}
+
+// ═══════════════════════════════════════════════════════
+//  DIFF
+// ═══════════════════════════════════════════════════════
+function toggleDiff() {
+  state.diffVisible = !state.diffVisible;
+  const panel = document.getElementById('diffPanel');
+
+  if (state.diffVisible) {
+    const inp = state.lastInput || document.getElementById('inputJS').value;
+    const out = state.lastOutput || document.getElementById('outputJS').value;
+    if (!out) { showToast('Format first to see diff!', 'err'); state.diffVisible = false; return; }
+    renderDiff(inp, out);
+    panel.classList.add('show');
+  } else {
+    panel.classList.remove('show');
+  }
+}
+
+function renderDiff(a, b) {
+  const aLines = a.split('\n');
+  const bLines = b.split('\n');
+  let html = '';
+  const maxLen = Math.max(aLines.length, bLines.length);
+
+  for (let i = 0; i < maxLen; i++) {
+    const al = aLines[i], bl = bLines[i];
+    if (al === undefined) html += `<div class="diff-line add">+ ${esc(bl)}</div>`;
+    else if (bl === undefined) html += `<div class="diff-line rem">− ${esc(al)}</div>`;
+    else if (al !== bl) {
+      html += `<div class="diff-line rem">− ${esc(al)}</div>`;
+      html += `<div class="diff-line add">+ ${esc(bl)}</div>`;
+    } else {
+      html += `<div class="diff-line ctx">  ${esc(al)}</div>`;
+    }
+  }
+  document.getElementById('diffBody').innerHTML = html || '<div style="padding:8px;color:var(--ink4)">No differences.</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+//  AUTO FORMAT
+// ═══════════════════════════════════════════════════════
+function autoFormat() {
+  state.autoMode = !state.autoMode;
+  const btn = document.querySelector('[onclick="autoFormat()"]');
+  btn.textContent = state.autoMode ? '⟳ Auto ON' : '⟳ Auto';
+  btn.style.background = state.autoMode ? 'var(--amber)' : '';
+  btn.style.color = state.autoMode ? '#fff' : '';
+  btn.style.borderColor = state.autoMode ? 'var(--amber)' : '';
+  showToast('Auto-format ' + (state.autoMode ? 'enabled (800ms debounce)' : 'disabled'), 'info');
+}
+
+// ═══════════════════════════════════════════════════════
+//  HISTORY
+// ═══════════════════════════════════════════════════════
+function addHistory(input, output, type) {
+  const item = { input, output, type, time: new Date(), lines: output ? output.split('\n').length : 0 };
+  state.history.unshift(item);
+  if (state.history.length > 50) state.history.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const body = document.getElementById('historyBody');
+  if (!state.history.length) {
+    body.innerHTML = '<div class="history-empty">No format history yet. Format some JavaScript to see it here!</div>';
+    return;
+  }
+  body.innerHTML = state.history.slice(0,15).map((item,i) => `
+    <div class="history-item">
+      <span class="history-meta">${timeAgo(item.time)}</span>
+      <span class="history-info">${item.lines ? item.lines+' lines' : '—'} · ${formatBytes(byteSize(item.input))}</span>
+      <span class="history-badge">${item.type}</span>
+      <div class="history-acts">
+        <button class="btn" onclick="restoreHistory(${i})" style="font-size:10px;padding:4px 8px">Restore</button>
+        ${item.output ? `<button class="btn green" onclick="copyHistoryResult(${i})" style="font-size:10px;padding:4px 8px">Copy</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function restoreHistory(i) {
+  document.getElementById('inputJS').value = state.history[i].input;
+  if (state.history[i].output) document.getElementById('outputJS').value = state.history[i].output;
+  onInputChange();
+  showToast('History item restored', 'info');
+}
+
+function copyHistoryResult(i) {
+  navigator.clipboard.writeText(state.history[i].output).then(() => showToast('Copied!', 'ok'));
+}
+
+function clearHistory() {
+  state.history = [];
+  renderHistory();
+  showToast('History cleared', 'info');
+}
+
+function exportHistory() {
+  if (!state.history.length) { showToast('No history to export!', 'err'); return; }
+  const data = JSON.stringify(state.history, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'format-history.json';
+  a.click();
+  showToast('History exported!', 'ok');
+}
+
+// ═══════════════════════════════════════════════════════
+//  ANALYTICS
+// ═══════════════════════════════════════════════════════
+function updateDashboard() {
+  const num = n => n >= 1000 ? (n/1000).toFixed(1)+'k' : String(n);
+  document.getElementById('dFormats').textContent = state.formats;
+  document.getElementById('dLines').textContent = num(state.totalLines);
+  document.getElementById('dChars').textContent = num(state.totalChars);
+  document.getElementById('dErrors').textContent = state.totalErrors;
+  document.getElementById('dTime').textContent = state.timeSaved > 60 ? Math.floor(state.timeSaved/60)+'m' : state.timeSaved+'s';
+}
+
+function updateBars() {
+  const ops = [
+    {id:'barFormat', v:state.formats},
+    {id:'barValidate', v:state.validates},
+    {id:'barMinify', v:state.minifies},
+    {id:'barCopy', v:state.copies},
+    {id:'barOther', v:state.others},
+  ];
+  const max = Math.max(...ops.map(o=>o.v), 1);
+  ops.forEach(o => {
+    document.getElementById(o.id).style.width = (o.v/max*100)+'%';
+    document.getElementById(o.id+'Val').textContent = o.v;
+  });
+}
+
+function addTimeline(action, tag, detail) {
+  const item = { action, tag, detail, time: new Date() };
+  if (!window._timeline) window._timeline = [];
+  window._timeline.unshift(item);
+  if (window._timeline.length > 30) window._timeline.pop();
+  renderTimeline();
+}
+
+function renderTimeline() {
+  const el = document.getElementById('timeline');
+  if (!window._timeline?.length) return;
+  el.innerHTML = window._timeline.slice(0,12).map(item => `
+    <div class="timeline-item">
+      <span class="timeline-time">${formatTime(item.time)}</span>
+      <span class="timeline-action">${item.action}${item.detail ? ' — '+item.detail : ''}</span>
+      <span class="timeline-tag tag-${item.tag}">${item.tag}</span>
+    </div>
+  `).join('');
+}
+
+function drawSparkline() {
+  const canvas = document.getElementById('sparkline');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth * devicePixelRatio || 300;
+  const H = canvas.offsetHeight * devicePixelRatio || 60;
+  canvas.width = W; canvas.height = H;
+  ctx.clearRect(0,0,W,H);
+
+  const data = state.sparkData;
+  if (data.length < 2) return;
+  const max = Math.max(...data, 1);
+  const step = W / (data.length - 1);
+
+  const isDark = document.body.classList.contains('dark');
+  const amber = isDark ? '#f5a623' : '#d4870a';
+
+  ctx.strokeStyle = amber;
+  ctx.lineWidth = 2 * devicePixelRatio;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  data.forEach((v,i) => {
+    const x = i * step;
+    const y = H - (v/max) * (H * 0.8) - H * 0.1;
+    i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  // Fill
+  ctx.lineTo((data.length-1)*step, H);
+  ctx.lineTo(0, H);
+  const grad = ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0, amber + '44');
+  grad.addColorStop(1, amber + '00');
+  ctx.fillStyle = grad;
+  ctx.fill();
+}
+
+function renderHeatmap() {
+  const el = document.getElementById('heatmap');
+  const now = new Date().getHours();
+  el.innerHTML = state.hourly.map((v, i) => {
+    const hr = (now - 11 + i + 24) % 24;
+    const label = hr + ':00 — ' + v + ' ops';
+    const intensity = v === 0 ? 0 : Math.min(v / Math.max(...state.hourly, 1), 1);
+    const alpha = Math.round(intensity * 200);
+    const isDark = document.body.classList.contains('dark');
+    const color = isDark ? `rgba(245,166,35,${intensity*0.8})` : `rgba(212,135,10,${intensity*0.7})`;
+    return `<div class="heat-cell" data-tip="${label}" style="background:${v>0?color:''}"></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════
+function setBusy(busy) {
+  const btn = document.getElementById('formatBtn');
+  const txt = document.getElementById('formatBtnTxt');
+  btn.disabled = busy;
+  txt.textContent = busy ? 'Formatting…' : 'Format JavaScript';
+}
+
+function showError(msg) {
+  const p = document.getElementById('errorPanel');
+  document.getElementById('errorMsg').textContent = msg;
+  p.classList.add('show');
+  document.getElementById('inStatus').className = 'status-pill err';
+  document.getElementById('inStatus').textContent = '✕ Error';
+}
+
+function hideError() {
+  document.getElementById('errorPanel').classList.remove('show');
+}
+
+function toggleShortcuts() {
+  state.shortcutsVisible = !state.shortcutsVisible;
+  document.getElementById('shortcutsPanel').classList.toggle('show', state.shortcutsVisible);
+}
+
+function setTheme(t) {
+  document.body.classList.toggle('dark', t === 'dark');
+  document.getElementById('themeLight').classList.toggle('active', t === 'light');
+  document.getElementById('themeDark').classList.toggle('active', t === 'dark');
+  localStorage.setItem('jsfmt-theme', t);
+  setTimeout(() => { drawSparkline(); renderHeatmap(); }, 50);
+}
+
+function showToast(msg, type='info') {
+  const wrap = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  wrap.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(16px)'; t.style.transition='all 0.3s'; setTimeout(()=>t.remove(),300); }, 3000);
+}
+
+// ═══════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════
+function byteSize(s){ return new Blob([s]).size }
+function formatBytes(b){ return b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(2)+' MB' }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+function timeAgo(d){ const s=Math.floor((Date.now()-d)/1000); return s<60?'just now':s<3600?Math.floor(s/60)+'m ago':Math.floor(s/3600)+'h ago' }
+function formatTime(d){ return d.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) }
+
+// ═══════════════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && e.key === 'Enter')         { e.preventDefault(); formatJS(); }
+  if (mod && e.shiftKey && e.key === 'C') { e.preventDefault(); copyOutput(); }
+  if (mod && e.shiftKey && e.key === 'X') { e.preventDefault(); clearAll(); }
+  if (mod && e.shiftKey && e.key === 'M') { e.preventDefault(); minifyDirect(); }
+  if (mod && e.shiftKey && e.key === 'V') { e.preventDefault(); validateOnly(); }
+  if (mod && e.shiftKey && e.key === 'D') { e.preventDefault(); toggleDiff(); }
+  if (mod && e.shiftKey && e.key === 'S') { e.preventDefault(); loadSample(); }
+  if (mod && e.key === 's')              { e.preventDefault(); downloadOutput(); }
+});
+
+document.getElementById('inputJS').addEventListener('click', updateCursor);
+document.getElementById('inputJS').addEventListener('keyup', updateCursor);
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+(function init() {
+  const savedTheme = localStorage.getItem('jsfmt-theme') || 'light';
+  setTheme(savedTheme);
+  updateInputStats();
+  renderHistory();
+  renderHeatmap();
+
+  // Check URL for shared code
+  const params = new URLSearchParams(location.search);
+  if (params.get('code')) {
+    try {
+      const code = decodeURIComponent(escape(atob(params.get('code'))));
+      document.getElementById('inputJS').value = code;
+      onInputChange();
+      showToast('Shared snippet loaded!', 'ok');
+    } catch(e) {}
+  }
+})();
+</script>
+</body>
+</html>

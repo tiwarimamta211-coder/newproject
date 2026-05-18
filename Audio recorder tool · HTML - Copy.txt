@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoundForge AI — Audio Recorder Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #09090f;
+    --bg2: #0e0e1a;
+    --bg3: #141425;
+    --surface: #1a1a2e;
+    --surface2: #1f1f35;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(255,255,255,0.12);
+    --accent: #7c5cfc;
+    --accent2: #a07ef8;
+    --accent-glow: rgba(124,92,252,0.3);
+    --red: #ff4d6d;
+    --red-glow: rgba(255,77,109,0.3);
+    --green: #39d98a;
+    --amber: #fbbf24;
+    --cyan: #22d3ee;
+    --text: #f0f0f8;
+    --text2: #9090b0;
+    --text3: #5a5a80;
+    --radius: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Ambient Background */
+  .ambient {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 800px 600px at 20% 0%, rgba(124,92,252,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 600px 400px at 80% 100%, rgba(34,211,238,0.05) 0%, transparent 70%);
+  }
+
+  /* Header */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(9,9,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+  }
+  .header-inner {
+    max-width: 1400px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px; gap: 1.5rem;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.25rem;
+    color: var(--text); text-decoration: none;
+  }
+  .logo-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), #22d3ee);
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .logo span { color: var(--accent2); }
+
+  nav { display: flex; gap: 0.25rem; }
+  nav a {
+    padding: 6px 14px; border-radius: 8px;
+    color: var(--text2); font-size: 0.875rem; text-decoration: none;
+    transition: all 0.2s;
+  }
+  nav a:hover, nav a.active {
+    color: var(--text); background: var(--surface);
+  }
+  nav a.active { color: var(--accent2); }
+
+  .header-right { display: flex; align-items: center; gap: 12px; }
+
+  .credits-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 6px 14px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .credits-badge:hover { border-color: var(--accent); }
+  .credits-icon { font-size: 14px; }
+  .credits-count {
+    font-family: 'DM Mono', monospace; font-size: 0.875rem;
+    font-weight: 500; color: var(--amber);
+  }
+  .credits-label { font-size: 0.75rem; color: var(--text3); }
+
+  .btn-upgrade {
+    background: linear-gradient(135deg, var(--accent), #5e3ee8);
+    color: #fff; border: none; border-radius: 10px;
+    padding: 8px 18px; font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .btn-upgrade:hover { transform: translateY(-1px); box-shadow: 0 4px 30px var(--accent-glow); }
+
+  /* Main Layout */
+  main {
+    position: relative; z-index: 1;
+    max-width: 1400px; margin: 0 auto; padding: 2rem;
+  }
+
+  /* Page Header */
+  .page-header {
+    text-align: center; padding: 2.5rem 0 2rem;
+  }
+  .page-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(124,92,252,0.15); border: 1px solid rgba(124,92,252,0.3);
+    border-radius: 100px; padding: 5px 14px;
+    font-size: 0.75rem; color: var(--accent2); font-weight: 500;
+    margin-bottom: 1rem; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif; font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800; line-height: 1.15; margin-bottom: 0.75rem;
+    background: linear-gradient(135deg, #fff 0%, var(--accent2) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .page-desc { color: var(--text2); font-size: 1rem; max-width: 500px; margin: 0 auto; }
+
+  /* Main Grid */
+  .recorder-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 1000px) {
+    .recorder-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Cards */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--surface); display: flex; align-items: center;
+    justify-content: center; font-size: 13px;
+  }
+  .card-body { padding: 1.5rem; }
+
+  /* Recorder Core */
+  .recorder-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-xl); }
+  .recorder-body { padding: 2rem; }
+
+  /* Visualizer */
+  .visualizer-wrap {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); height: 160px;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; position: relative; margin-bottom: 2rem;
+  }
+  #waveCanvas { width: 100%; height: 100%; display: block; }
+  .vis-idle {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 8px; pointer-events: none;
+  }
+  .vis-idle-icon {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 2px dashed var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text3); font-size: 20px;
+  }
+  .vis-idle-text { font-size: 0.8rem; color: var(--text3); }
+
+  /* Timer */
+  .timer-section {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 0.5rem; margin-bottom: 2rem;
+  }
+  .timer-display {
+    font-family: 'DM Mono', monospace; font-size: clamp(2.5rem, 8vw, 4rem);
+    font-weight: 300; color: var(--text); letter-spacing: 0.05em;
+    line-height: 1;
+  }
+  .timer-display.recording { color: var(--red); }
+  .timer-display.paused { color: var(--amber); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 0%,49% { opacity:1; } 50%,100% { opacity:0.3; } }
+
+  .timer-status {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.75rem; font-weight: 500; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text3);
+  }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--text3);
+  }
+  .status-dot.rec { background: var(--red); animation: pulse-dot 1s ease-in-out infinite; }
+  .status-dot.paused { background: var(--amber); }
+  .status-dot.done { background: var(--green); }
+  @keyframes pulse-dot {
+    0%,100% { opacity:1; transform: scale(1); }
+    50% { opacity:0.4; transform: scale(0.7); }
+  }
+
+  /* Controls */
+  .controls-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 1rem; margin-bottom: 1.5rem;
+  }
+
+  .btn-ctrl {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text2); transition: all 0.2s;
+  }
+  .btn-ctrl:hover { color: var(--text); }
+  .btn-ctrl:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .ctrl-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; transition: all 0.2s;
+  }
+  .btn-ctrl:not(:disabled):hover .ctrl-icon {
+    background: var(--surface2); border-color: var(--border2);
+    transform: translateY(-1px);
+  }
+  .ctrl-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* Main Record Button */
+  .btn-record-wrap { position: relative; }
+  .btn-record {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--red), #c0303f);
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; transition: all 0.25s;
+    box-shadow: 0 0 0 0 var(--red-glow);
+  }
+  .btn-record.recording {
+    background: linear-gradient(135deg, #ff8c00, #e65c00);
+    animation: record-pulse 2s ease-in-out infinite;
+  }
+  .btn-record.paused { background: linear-gradient(135deg, var(--amber), #d97706); }
+  .btn-record:not(:disabled):hover { transform: scale(1.06); box-shadow: 0 0 30px var(--red-glow); }
+  @keyframes record-pulse {
+    0%,100% { box-shadow: 0 0 0 0 var(--red-glow), 0 0 30px var(--red-glow); }
+    50% { box-shadow: 0 0 0 15px rgba(255,77,109,0), 0 0 40px var(--red-glow); }
+  }
+
+  .record-ring {
+    position: absolute; inset: -6px; border-radius: 50%;
+    border: 2px solid transparent; pointer-events: none;
+  }
+  .recording .record-ring {
+    border-color: rgba(255,77,109,0.4);
+    animation: ring-spin 3s linear infinite;
+  }
+  @keyframes ring-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Progress Bar */
+  .limit-bar-wrap { margin-bottom: 1.5rem; }
+  .limit-bar-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px;
+  }
+  .limit-bar-label { font-size: 0.75rem; color: var(--text3); }
+  .limit-bar-val { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--text2); }
+  .limit-bar {
+    height: 4px; background: var(--surface);
+    border-radius: 100px; overflow: hidden;
+  }
+  .limit-bar-fill {
+    height: 100%; border-radius: 100px;
+    background: linear-gradient(90deg, var(--accent), var(--cyan));
+    transition: width 0.5s ease;
+  }
+  .limit-bar-fill.warn { background: linear-gradient(90deg, var(--amber), var(--red)); }
+
+  /* Settings Row */
+  .settings-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1rem; margin-bottom: 1.5rem;
+  }
+  .setting-group label {
+    display: block; font-size: 0.7rem; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;
+  }
+  .setting-select, .setting-input {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 8px 12px;
+    color: var(--text); font-family: 'Outfit', sans-serif; font-size: 0.875rem;
+    outline: none; transition: border-color 0.2s;
+  }
+  .setting-select:focus, .setting-input:focus { border-color: var(--accent); }
+  .setting-select option { background: var(--bg2); }
+
+  /* Noise reduction toggle */
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; background: var(--bg3);
+    border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 0.75rem; cursor: pointer;
+  }
+  .toggle-info { display: flex; flex-direction: column; gap: 2px; }
+  .toggle-name { font-size: 0.875rem; font-weight: 500; }
+  .toggle-desc { font-size: 0.7rem; color: var(--text3); }
+  .toggle-sw {
+    width: 36px; height: 20px; background: var(--surface2);
+    border-radius: 100px; position: relative;
+    transition: background 0.2s; flex-shrink: 0;
+  }
+  .toggle-sw.on { background: var(--accent); }
+  .toggle-sw::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; transition: transform 0.2s;
+  }
+  .toggle-sw.on::after { transform: translateX(16px); }
+
+  /* Recordings List */
+  .recordings-list { display: flex; flex-direction: column; gap: 0.75rem; }
+  .recording-item {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem;
+    transition: border-color 0.2s;
+  }
+  .recording-item:hover { border-color: var(--border2); }
+  .rec-item-top {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem;
+  }
+  .rec-item-info { flex: 1; min-width: 0; }
+  .rec-item-name {
+    font-size: 0.875rem; font-weight: 600; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 2px; cursor: pointer;
+  }
+  .rec-item-name:hover { color: var(--accent2); }
+  .rec-item-meta {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--text3);
+    display: flex; gap: 10px;
+  }
+  .rec-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .rec-action {
+    width: 30px; height: 30px; border-radius: 7px;
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text2); cursor: pointer; display: flex;
+    align-items: center; justify-content: center; font-size: 12px;
+    transition: all 0.2s;
+  }
+  .rec-action:hover { border-color: var(--accent); color: var(--accent2); }
+  .rec-action.danger:hover { border-color: var(--red); color: var(--red); }
+  .rec-action:disabled { opacity: 0.35; cursor: not-allowed; }
+  .rec-action:disabled:hover { border-color: var(--border2); color: var(--text2); }
+
+  /* Mini Player */
+  .mini-player { display: flex; align-items: center; gap: 8px; }
+  .mini-play {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); border: none; color: #fff;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; transition: all 0.2s; flex-shrink: 0;
+  }
+  .mini-play:hover { background: var(--accent2); }
+  .mini-seek {
+    flex: 1; height: 3px; background: var(--surface2);
+    border-radius: 100px; cursor: pointer; position: relative;
+  }
+  .mini-seek-fill {
+    height: 100%; border-radius: 100px;
+    background: var(--accent); width: 0%;
+    pointer-events: none; transition: width 0.1s;
+  }
+  .mini-time {
+    font-family: 'DM Mono', monospace; font-size: 0.65rem;
+    color: var(--text3); flex-shrink: 0;
+  }
+
+  /* Locked overlay */
+  .locked-overlay {
+    position: relative; overflow: hidden; border-radius: inherit;
+  }
+  .lock-mask {
+    position: absolute; inset: 0; z-index: 10;
+    background: rgba(9,9,15,0.88); backdrop-filter: blur(4px);
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 1rem; border-radius: inherit;
+  }
+  .lock-icon { font-size: 2rem; }
+  .lock-text { text-align: center; }
+  .lock-text h4 { font-family: 'Syne', sans-serif; font-weight: 700; margin-bottom: 4px; }
+  .lock-text p { font-size: 0.8rem; color: var(--text2); }
+  .btn-unlock {
+    background: linear-gradient(135deg, var(--accent), #5e3ee8);
+    color: #fff; border: none; border-radius: 8px;
+    padding: 9px 20px; font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-unlock:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-glow); }
+
+  /* Plan Card */
+  .plans-grid { display: flex; flex-direction: column; gap: 0.75rem; }
+  .plan-card {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem 1.25rem;
+    cursor: pointer; transition: all 0.2s; position: relative;
+  }
+  .plan-card:hover { border-color: var(--border2); }
+  .plan-card.popular { border-color: rgba(124,92,252,0.4); }
+  .plan-popular-badge {
+    position: absolute; top: -10px; right: 12px;
+    background: var(--accent); color: #fff;
+    font-size: 0.65rem; font-weight: 700;
+    padding: 3px 10px; border-radius: 100px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .plan-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .plan-name { font-weight: 700; font-size: 0.95rem; }
+  .plan-price { font-family: 'DM Mono', monospace; font-size: 1rem; color: var(--accent2); }
+  .plan-price span { font-size: 0.7rem; color: var(--text3); }
+  .plan-features { display: flex; flex-direction: column; gap: 4px; }
+  .plan-feat {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.78rem; color: var(--text2);
+  }
+  .plan-feat-icon { color: var(--green); font-size: 10px; }
+  .btn-plan {
+    width: 100%; margin-top: 12px;
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 8px; padding: 8px;
+    font-family: 'Outfit', sans-serif; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-plan:hover { background: var(--surface2); }
+  .plan-card.popular .btn-plan {
+    background: linear-gradient(135deg, var(--accent), #5e3ee8);
+    border-color: transparent; color: #fff;
+  }
+  .plan-card.popular .btn-plan:hover { box-shadow: 0 4px 20px var(--accent-glow); }
+
+  /* Waveform Peaks (for playback) */
+  .waveform-peaks {
+    display: flex; align-items: center; justify-content: center;
+    gap: 2px; height: 30px; padding: 0 4px;
+  }
+  .peak-bar {
+    width: 3px; border-radius: 2px;
+    background: var(--accent); opacity: 0.6;
+    transition: opacity 0.1s;
+  }
+
+  /* Toast Notifications */
+  #toast-area {
+    position: fixed; bottom: 2rem; right: 2rem; z-index: 9999;
+    display: flex; flex-direction: column; gap: 0.5rem;
+    pointer-events: none;
+  }
+  .toast {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 12px 18px;
+    font-size: 0.875rem; color: var(--text);
+    display: flex; align-items: center; gap: 10px;
+    animation: slideIn 0.3s ease forwards;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    pointer-events: all;
+  }
+  .toast.success { border-color: rgba(57,217,138,0.3); }
+  .toast.error { border-color: rgba(255,77,109,0.3); }
+  .toast.warning { border-color: rgba(251,191,36,0.3); }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(30px); }
+  }
+  .toast.out { animation: slideOut 0.3s ease forwards; }
+
+  /* Upload Zone */
+  .upload-zone {
+    border: 2px dashed var(--border2); border-radius: var(--radius);
+    padding: 2rem; text-align: center; cursor: pointer;
+    transition: all 0.2s; position: relative;
+  }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(124,92,252,0.05); }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .upload-text { font-size: 0.875rem; color: var(--text2); }
+  .upload-sub { font-size: 0.75rem; color: var(--text3); margin-top: 4px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); }
+  .tab {
+    padding: 10px 18px; font-size: 0.875rem; font-weight: 500;
+    color: var(--text3); cursor: pointer; transition: all 0.2s;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .tab.active { color: var(--accent2); border-bottom-color: var(--accent); }
+  .tab-content { display: none; padding: 1.25rem 1.5rem; }
+  .tab-content.active { display: block; }
+
+  /* Modal */
+  .modal-bg {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center; padding: 1rem;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: var(--radius-xl); max-width: 440px; width: 100%;
+    animation: modalIn 0.3s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.94) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-head {
+    padding: 1.5rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-head h3 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; }
+  .modal-close {
+    width: 30px; height: 30px; border-radius: 7px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text2); cursor: pointer; display: flex;
+    align-items: center; justify-content: center; font-size: 14px;
+    transition: all 0.2s;
+  }
+  .modal-close:hover { background: var(--surface2); color: var(--text); }
+  .modal-body { padding: 1.5rem; }
+
+  /* Credits packages */
+  .credit-pkgs { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .credit-pkg {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem; text-align: center;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .credit-pkg:hover { border-color: var(--accent); }
+  .credit-pkg.selected { border-color: var(--accent); background: rgba(124,92,252,0.1); }
+  .pkg-credits { font-family: 'DM Mono', monospace; font-size: 1.5rem; color: var(--amber); font-weight: 500; }
+  .pkg-label { font-size: 0.7rem; color: var(--text3); margin-bottom: 4px; }
+  .pkg-price { font-size: 0.875rem; font-weight: 600; color: var(--text); }
+  .pkg-badge { font-size: 0.65rem; color: var(--green); margin-top: 2px; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    main { padding: 1rem; }
+    .header-inner { padding: 0; }
+    nav { display: none; }
+    .settings-grid { grid-template-columns: 1fr; }
+    .credit-pkgs { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 100px; }
+
+  /* Volume meter */
+  .vol-meter {
+    display: flex; align-items: flex-end; justify-content: center;
+    gap: 2px; height: 24px; margin-top: 0.5rem;
+  }
+  .vol-bar {
+    width: 4px; border-radius: 2px;
+    background: var(--surface2); min-height: 4px;
+    transition: height 0.08s ease, background 0.08s ease;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 2rem 1rem;
+    color: var(--text3);
+  }
+  .empty-icon { font-size: 2.5rem; margin-bottom: 0.5rem; opacity: 0.5; }
+  .empty-text { font-size: 0.875rem; }
+
+  /* Chips */
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 100px; padding: 3px 10px;
+    font-size: 0.7rem; color: var(--text2);
+  }
+  .chip.green { border-color: rgba(57,217,138,0.3); color: var(--green); background: rgba(57,217,138,0.08); }
+  .chip.red { border-color: rgba(255,77,109,0.3); color: var(--red); background: rgba(255,77,109,0.08); }
+  .chip.amber { border-color: rgba(251,191,36,0.3); color: var(--amber); background: rgba(251,191,36,0.08); }
+
+  /* Input name inline */
+  .inline-edit {
+    background: none; border: none; border-bottom: 1px dashed var(--border2);
+    color: var(--text); font-family: 'Outfit', sans-serif; font-size: 0.875rem;
+    font-weight: 600; outline: none; width: 100%; padding: 0;
+  }
+  .inline-edit:focus { border-bottom-color: var(--accent); }
+
+  /* Mic selector */
+  .mic-selector {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 10px 14px; margin-bottom: 1rem;
+    cursor: pointer;
+  }
+  .mic-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); flex-shrink: 0;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  .mic-dot.off { background: var(--text3); animation: none; }
+  .mic-name { flex: 1; font-size: 0.875rem; color: var(--text2); }
+  .mic-arrow { color: var(--text3); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+
+<!-- Header -->
+<header>
+  <div class="header-inner">
+    <a href="#" class="logo">
+      <div class="logo-icon">🎙</div>
+      Sound<span>Forge</span> AI
+    </a>
+    <nav>
+      <a href="#" class="active">🎙 Recorder</a>
+      <a href="#">✂️ Editor</a>
+      <a href="#">🔊 Enhancer</a>
+      <a href="#">📝 Transcribe</a>
+      <a href="#">🎵 Mixer</a>
+    </nav>
+    <div class="header-right">
+      <div class="credits-badge" onclick="openCreditsModal()">
+        <span class="credits-icon">⚡</span>
+        <span class="credits-count" id="creditsBadgeCount">85</span>
+        <span class="credits-label">credits</span>
+      </div>
+      <button class="btn-upgrade" onclick="openUpgradeModal()">✦ Upgrade</button>
+    </div>
+  </div>
+</header>
+
+<!-- Main -->
+<main>
+  <div class="page-header">
+    <div class="page-tag">🎙 AI Multi-Tool · Recorder</div>
+    <h1 class="page-title">Professional Audio Recorder</h1>
+    <p class="page-desc">Record, enhance, and export studio-quality audio directly from your browser</p>
+  </div>
+
+  <div class="recorder-grid">
+    <!-- Left Column -->
+    <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+      <!-- Main Recorder Card -->
+      <div class="recorder-card">
+        <!-- Tabs -->
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab('record')">⏺ Record</div>
+          <div class="tab" onclick="switchTab('import')">📂 Import</div>
+        </div>
+
+        <!-- Record Tab -->
+        <div class="tab-content active" id="tab-record">
+          <div class="recorder-body" style="padding-top:1.5rem;">
+
+            <!-- Mic Selector -->
+            <div class="mic-selector" onclick="requestMicAccess()">
+              <div class="mic-dot off" id="micDot"></div>
+              <span class="mic-name" id="micName">Click to connect microphone</span>
+              <span class="mic-arrow">▾</span>
+            </div>
+
+            <!-- Settings -->
+            <div class="settings-grid" style="margin-bottom:1rem;">
+              <div class="setting-group">
+                <label>Format</label>
+                <select class="setting-select" id="formatSelect">
+                  <option value="webm">WebM (Default)</option>
+                  <option value="wav">WAV (Lossless)</option>
+                  <option value="mp3">MP3 (Compressed)</option>
+                </select>
+              </div>
+              <div class="setting-group">
+                <label>Quality</label>
+                <select class="setting-select" id="qualitySelect">
+                  <option value="128">128 kbps (Standard)</option>
+                  <option value="256">256 kbps (High) ✦</option>
+                  <option value="320">320 kbps (Pro) ✦</option>
+                </select>
+              </div>
+              <div class="setting-group">
+                <label>Max Duration</label>
+                <select class="setting-select" id="durationSelect">
+                  <option value="300">5 min (Free)</option>
+                  <option value="1800">30 min ✦</option>
+                  <option value="7200">2 hours ✦</option>
+                </select>
+              </div>
+              <div class="setting-group">
+                <label>Channels</label>
+                <select class="setting-select" id="channelsSelect">
+                  <option value="mono">Mono</option>
+                  <option value="stereo">Stereo ✦</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Toggles -->
+            <div class="toggle-row" onclick="toggleFeature('noise')">
+              <div class="toggle-info">
+                <span class="toggle-name">🔇 Noise Reduction</span>
+                <span class="toggle-desc">AI-powered background noise removal</span>
+              </div>
+              <div class="toggle-sw" id="noiseToggle"></div>
+            </div>
+            <div class="toggle-row" onclick="toggleFeature('echo')">
+              <div class="toggle-info">
+                <span class="toggle-name">🔁 Echo Cancellation</span>
+                <span class="toggle-desc">Remove room reverb and echo</span>
+              </div>
+              <div class="toggle-sw" id="echoToggle"></div>
+            </div>
+
+            <!-- Visualizer -->
+            <div class="visualizer-wrap" style="margin-top:1.25rem;">
+              <canvas id="waveCanvas"></canvas>
+              <div class="vis-idle" id="visIdle">
+                <div class="vis-idle-icon">🎙</div>
+                <span class="vis-idle-text">Waveform will appear here</span>
+              </div>
+            </div>
+
+            <!-- Volume Meter -->
+            <div class="vol-meter" id="volMeter">
+              <!-- bars injected by JS -->
+            </div>
+
+            <!-- Timer -->
+            <div class="timer-section">
+              <div class="timer-display" id="timerDisplay">00:00:00</div>
+              <div class="timer-status">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Ready to Record</span>
+              </div>
+            </div>
+
+            <!-- Limit Bar -->
+            <div class="limit-bar-wrap">
+              <div class="limit-bar-header">
+                <span class="limit-bar-label">Session limit</span>
+                <span class="limit-bar-val" id="limitVal">0:00 / 5:00</span>
+              </div>
+              <div class="limit-bar">
+                <div class="limit-bar-fill" id="limitBarFill" style="width:0%"></div>
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls-row">
+              <button class="btn-ctrl" id="btnRestart" disabled onclick="restartRecording()" title="Restart">
+                <div class="ctrl-icon">↺</div>
+                <span class="ctrl-label">Restart</span>
+              </button>
+              <button class="btn-ctrl" id="btnSkipBack" disabled onclick="skipBack()" title="−5s">
+                <div class="ctrl-icon">⏮</div>
+                <span class="ctrl-label">−5 sec</span>
+              </button>
+
+              <div class="btn-record-wrap" id="recordWrap">
+                <button class="btn-record" id="btnRecord" onclick="toggleRecord()" title="Record">
+                  ⏺
+                </button>
+                <div class="record-ring"></div>
+              </div>
+
+              <button class="btn-ctrl" id="btnPause" disabled onclick="togglePause()" title="Pause">
+                <div class="ctrl-icon">⏸</div>
+                <span class="ctrl-label">Pause</span>
+              </button>
+              <button class="btn-ctrl" id="btnStop" disabled onclick="stopRecording()" title="Stop">
+                <div class="ctrl-icon" style="background:rgba(255,77,109,0.15);border-color:rgba(255,77,109,0.3);">⏹</div>
+                <span class="ctrl-label">Stop</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Import Tab -->
+        <div class="tab-content" id="tab-import">
+          <div style="padding:1rem 0;">
+            <div class="upload-zone" id="uploadZone">
+              <input type="file" accept="audio/*" id="audioFileInput" onchange="handleFileImport(event)">
+              <div class="upload-icon">📁</div>
+              <div class="upload-text">Drop audio file here or click to browse</div>
+              <div class="upload-sub">MP3, WAV, OGG, M4A, FLAC · Max 50MB (Free) · 500MB ✦</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recordings List -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-title-icon">📼</div>
+            My Recordings
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="chip" id="recCountChip">0 / 5 Free</span>
+            <button class="rec-action" onclick="clearAllRecordings()" title="Clear all" style="color:var(--red);border-color:rgba(255,77,109,0.2);">🗑</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding:1rem;">
+          <div id="recordingsList">
+            <div class="empty-state">
+              <div class="empty-icon">🎙</div>
+              <div class="empty-text">No recordings yet. Hit record to get started!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column -->
+    <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+      <!-- Usage Stats -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-title-icon">📊</div>
+            Usage Today
+          </div>
+          <span class="chip green">Free Plan</span>
+        </div>
+        <div class="card-body" style="padding:1rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem;">
+            <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center;">
+              <div style="font-family:'DM Mono',monospace;font-size:1.4rem;font-weight:500;color:var(--accent2);" id="statRecs">0</div>
+              <div style="font-size:0.7rem;color:var(--text3);margin-top:2px;">Recordings</div>
+            </div>
+            <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center;">
+              <div style="font-family:'DM Mono',monospace;font-size:1.4rem;font-weight:500;color:var(--cyan);" id="statMin">0m</div>
+              <div style="font-size:0.7rem;color:var(--text3);margin-top:2px;">Recorded</div>
+            </div>
+            <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center;">
+              <div style="font-family:'DM Mono',monospace;font-size:1.4rem;font-weight:500;color:var(--amber);" id="statCredits">85</div>
+              <div style="font-size:0.7rem;color:var(--text3);margin-top:2px;">Credits Left</div>
+            </div>
+            <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:center;">
+              <div style="font-family:'DM Mono',monospace;font-size:1.4rem;font-weight:500;color:var(--green);" id="statDownloads">3</div>
+              <div style="font-size:0.7rem;color:var(--text3);margin-top:2px;">Downloads Left</div>
+            </div>
+          </div>
+
+          <!-- Credit limit bars -->
+          <div style="margin-bottom:10px;">
+            <div class="limit-bar-header">
+              <span class="limit-bar-label">Downloads (Free)</span>
+              <span class="limit-bar-val" id="dlLimitLabel">3 / 3 used</span>
+            </div>
+            <div class="limit-bar">
+              <div class="limit-bar-fill" id="dlLimitBar" style="width:0%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="limit-bar-header">
+              <span class="limit-bar-label">Credits Used</span>
+              <span class="limit-bar-val" id="creditLimitLabel">15 / 100</span>
+            </div>
+            <div class="limit-bar">
+              <div class="limit-bar-fill" style="width:15%"></div>
+            </div>
+          </div>
+
+          <button class="btn-upgrade" style="width:100%;margin-top:1rem;padding:10px;" onclick="openCreditsModal()">
+            ⚡ Buy Credits
+          </button>
+        </div>
+      </div>
+
+      <!-- Upgrade Plans -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-title-icon">✦</div>
+            Upgrade Plan
+          </div>
+        </div>
+        <div class="card-body" style="padding:1rem;">
+          <div class="plans-grid">
+            <div class="plan-card">
+              <div class="plan-header">
+                <span class="plan-name">Free</span>
+                <span class="plan-price">₹0<span>/mo</span></span>
+              </div>
+              <div class="plan-features">
+                <div class="plan-feat"><span class="plan-feat-icon">✓</span>5 min recordings</div>
+                <div class="plan-feat"><span class="plan-feat-icon">✓</span>3 downloads/day</div>
+                <div class="plan-feat"><span class="plan-feat-icon">✓</span>WebM format only</div>
+                <div class="plan-feat" style="color:var(--text3);">✗ Noise reduction</div>
+              </div>
+              <button class="btn-plan" disabled>Current Plan</button>
+            </div>
+            <div class="plan-card popular">
+              <div class="plan-popular-badge">Popular</div>
+              <div class="plan-header">
+                <span class="plan-name">Pro</span>
+                <span class="plan-price">₹299<span>/mo</span></span>
+              </div>
+              <div class="plan-features">
+                <div class="plan-feat"><span class="plan-feat-icon">✓</span>30 min recordings</div>
+                <div class="plan-feat"><span class="plan-feat-icon">✓</span>Unlimited downloads</div>
+                <div class="plan-feat"><span class="plan-feat-icon">✓</span>MP3/WAV/FLAC</div>
+                <div class="plan-feat"><span class="plan-feat-icon">✓</span>AI noise reduction</div>
+              </div>
+              <button class="btn-plan" onclick="openUpgradeModal()">Upgrade → Pro</button>
+            </div>
+            <div class="plan-card" style="grid-column:1/-1;">
+              <div class="plan-header">
+                <span class="plan-name">Studio</span>
+                <span class="plan-price">₹799<span>/mo</span></span>
+              </div>
+              <div class="plan-features" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+                <div class="plan-feat"><span class="plan-feat-icon">✓</span>2-hour recordings</div>
+                <div class="plan-feat"><span class="plan-feat-icon">✓</span>Multi-track mixing</div>
+                <div class="plan-feat"><span class="plan-feat-icon">✓</span>API access</div>
+                <div class="plan-feat"><span class="plan-feat-icon">✓</span>Priority support</div>
+              </div>
+              <button class="btn-plan" onclick="openUpgradeModal()">Upgrade → Studio</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pro Features (Locked) -->
+      <div class="card locked-overlay">
+        <div class="lock-mask">
+          <div class="lock-icon">🔒</div>
+          <div class="lock-text">
+            <h4>Pro Features</h4>
+            <p>AI transcription, noise reduction,<br>and advanced export settings</p>
+          </div>
+          <button class="btn-unlock" onclick="openUpgradeModal()">Unlock with Pro →</button>
+        </div>
+        <div class="card-header" style="filter:blur(2px);">
+          <div class="card-title"><div class="card-title-icon">🤖</div>AI Enhance</div>
+        </div>
+        <div class="card-body" style="filter:blur(2px);padding:1rem;">
+          <div style="background:var(--bg3);border-radius:8px;padding:10px;margin-bottom:8px;">🔇 AI Noise Removal</div>
+          <div style="background:var(--bg3);border-radius:8px;padding:10px;margin-bottom:8px;">📝 Auto Transcription</div>
+          <div style="background:var(--bg3);border-radius:8px;padding:10px;">🎚 Voice Normalization</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- Toast Area -->
+<div id="toast-area"></div>
+
+<!-- Credits Modal -->
+<div class="modal-bg" id="creditsModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>⚡ Buy Credits</h3>
+      <button class="modal-close" onclick="closeModal('creditsModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.875rem;color:var(--text2);margin-bottom:1rem;">
+        Credits unlock extra recordings, downloads, and AI features. 1 credit = 1 download or 1 AI action.
+      </p>
+      <div class="credit-pkgs">
+        <div class="credit-pkg selected" onclick="selectPkg(this, 49)">
+          <div class="pkg-label">Starter</div>
+          <div class="pkg-credits">50</div>
+          <div class="pkg-label">credits</div>
+          <div class="pkg-price">₹49</div>
+        </div>
+        <div class="credit-pkg" onclick="selectPkg(this, 99)">
+          <div class="pkg-label">Popular</div>
+          <div class="pkg-credits">150</div>
+          <div class="pkg-label">credits</div>
+          <div class="pkg-price">₹99</div>
+          <div class="pkg-badge">▲ Best value</div>
+        </div>
+        <div class="credit-pkg" onclick="selectPkg(this, 199)">
+          <div class="pkg-label">Power</div>
+          <div class="pkg-credits">400</div>
+          <div class="pkg-label">credits</div>
+          <div class="pkg-price">₹199</div>
+        </div>
+        <div class="credit-pkg" onclick="selectPkg(this, 499)">
+          <div class="pkg-label">Studio</div>
+          <div class="pkg-credits">1200</div>
+          <div class="pkg-label">credits</div>
+          <div class="pkg-price">₹499</div>
+          <div class="pkg-badge">▲ 20% bonus</div>
+        </div>
+      </div>
+      <button class="btn-upgrade" style="width:100%;margin-top:1.25rem;padding:12px;font-size:0.95rem;" onclick="purchaseCredits()">
+        Pay with Razorpay / UPI →
+      </button>
+      <p style="text-align:center;font-size:0.7rem;color:var(--text3);margin-top:10px;">
+        Credits never expire · Secure payment via Razorpay
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Upgrade Modal -->
+<div class="modal-bg" id="upgradeModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>✦ Upgrade to Pro</h3>
+      <button class="modal-close" onclick="closeModal('upgradeModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align:center;padding:1rem 0;">
+        <div style="font-size:3rem;margin-bottom:0.5rem;">🚀</div>
+        <h4 style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;margin-bottom:0.5rem;">
+          Go Pro, Go Unlimited
+        </h4>
+        <p style="font-size:0.875rem;color:var(--text2);margin-bottom:1.5rem;">
+          Remove all limits and unlock AI-powered audio tools
+        </p>
+        <div style="background:var(--bg3);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;text-align:left;">
+          <div class="plan-feat" style="margin-bottom:8px;"><span class="plan-feat-icon" style="font-size:14px;">✓</span> 30-minute recording sessions</div>
+          <div class="plan-feat" style="margin-bottom:8px;"><span class="plan-feat-icon" style="font-size:14px;">✓</span> Unlimited downloads (MP3, WAV, FLAC)</div>
+          <div class="plan-feat" style="margin-bottom:8px;"><span class="plan-feat-icon" style="font-size:14px;">✓</span> AI Noise Reduction & Cancellation</div>
+          <div class="plan-feat" style="margin-bottom:8px;"><span class="plan-feat-icon" style="font-size:14px;">✓</span> Auto Transcription (50 langs)</div>
+          <div class="plan-feat"><span class="plan-feat-icon" style="font-size:14px;">✓</span> Priority customer support</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn-upgrade" style="flex:1;padding:12px;font-size:1rem;" onclick="closeModal('upgradeModal');showToast('Redirecting to checkout...','success')">
+            ₹299/mo — Start Pro
+          </button>
+        </div>
+        <p style="font-size:0.7rem;color:var(--text3);margin-top:10px;">7-day free trial · Cancel anytime</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+const FREE_LIMIT_SEC = 300; // 5 min
+const FREE_DOWNLOADS = 3;
+const FREE_RECS = 5;
+
+let state = {
+  mediaRecorder: null,
+  audioChunks: [],
+  isRecording: false,
+  isPaused: false,
+  stream: null,
+  analyser: null,
+  animFrame: null,
+  timerInterval: null,
+  elapsedSec: 0,
+  recordings: [],
+  credits: 85,
+  downloadsLeft: 3,
+  totalSeconds: 0,
+  micConnected: false,
+  selectedPkgPrice: 49,
+  selectedPkgCredits: 50,
+  features: { noise: false, echo: false },
+  audioCtx: null,
+  source: null,
+};
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  buildVolMeter();
+  buildIdleWave();
+  loadFromStorage();
+  renderRecordings();
+  updateStats();
+  updateDlLimit();
+
+  // Upload drag
+  const zone = document.getElementById('uploadZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('audio/')) processImportedFile(file);
+    else showToast('Please drop a valid audio file', 'error');
+  });
+});
+
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem('sf_recordings');
+    if (saved) state.recordings = JSON.parse(saved);
+    const credits = localStorage.getItem('sf_credits');
+    if (credits) state.credits = parseInt(credits);
+    const dl = localStorage.getItem('sf_dl');
+    if (dl) state.downloadsLeft = parseInt(dl);
+  } catch(e) {}
+}
+
+function saveToStorage() {
+  try {
+    // Only save metadata, not blobs (since blobs can't be serialized)
+    const meta = state.recordings.map(r => ({
+      id: r.id, name: r.name, duration: r.duration,
+      size: r.size, format: r.format, createdAt: r.createdAt
+    }));
+    localStorage.setItem('sf_recordings', JSON.stringify(meta));
+    localStorage.setItem('sf_credits', state.credits);
+    localStorage.setItem('sf_dl', state.downloadsLeft);
+  } catch(e) {}
+}
+
+// ─────────────────────────────────────────────
+// TABS
+// ─────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', i === (tab==='record'?0:1));
+  });
+  document.getElementById('tab-record').classList.toggle('active', tab==='record');
+  document.getElementById('tab-import').classList.toggle('active', tab==='import');
+}
+
+// ─────────────────────────────────────────────
+// MIC
+// ─────────────────────────────────────────────
+async function requestMicAccess() {
+  if (state.micConnected) return;
+  try {
+    const constraints = {
+      audio: {
+        echoCancellation: state.features.echo,
+        noiseSuppression: state.features.noise,
+        sampleRate: 44100,
+      }
+    };
+    state.stream = await navigator.mediaDevices.getUserMedia(constraints);
+    state.micConnected = true;
+    document.getElementById('micDot').classList.remove('off');
+
+    // Get device name
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const mic = devices.find(d => d.kind === 'audioinput');
+    document.getElementById('micName').textContent = mic?.label || 'Default Microphone';
+
+    // Setup analyser
+    state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    state.analyser = state.audioCtx.createAnalyser();
+    state.analyser.fftSize = 1024;
+    state.source = state.audioCtx.createMediaStreamSource(state.stream);
+    state.source.connect(state.analyser);
+
+    showToast('Microphone connected!', 'success');
+    startIdleVisualize();
+  } catch(err) {
+    showToast('Microphone access denied. Please allow in browser.', 'error');
+  }
+}
+
+// ─────────────────────────────────────────────
+// RECORDING
+// ─────────────────────────────────────────────
+async function toggleRecord() {
+  if (!state.micConnected) {
+    await requestMicAccess();
+    if (!state.micConnected) return;
+  }
+  if (state.isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+function startRecording() {
+  if (state.recordings.length >= FREE_RECS) {
+    showToast('Free limit: 5 recordings. Upgrade for more!', 'warning');
+    openUpgradeModal(); return;
+  }
+  if (state.credits < 5) {
+    showToast('Not enough credits! Buy credits to record.', 'warning');
+    openCreditsModal(); return;
+  }
+
+  state.audioChunks = [];
+  const mimeType = getSupportedMime();
+
+  try {
+    state.mediaRecorder = new MediaRecorder(state.stream, { mimeType });
+  } catch(e) {
+    state.mediaRecorder = new MediaRecorder(state.stream);
+  }
+
+  state.mediaRecorder.ondataavailable = e => {
+    if (e.data.size > 0) state.audioChunks.push(e.data);
+  };
+
+  state.mediaRecorder.onstop = () => saveRecording();
+  state.mediaRecorder.start(100);
+
+  state.isRecording = true;
+  state.isPaused = false;
+  state.elapsedSec = 0;
+
+  // Deduct credits
+  state.credits = Math.max(0, state.credits - 5);
+  updateCreditsUI();
+
+  // UI
+  document.getElementById('btnRecord').classList.add('recording');
+  document.getElementById('btnRecord').textContent = '⏹';
+  document.getElementById('btnPause').disabled = false;
+  document.getElementById('btnStop').disabled = false;
+  document.getElementById('btnRestart').disabled = false;
+  document.getElementById('statusDot').className = 'status-dot rec';
+  document.getElementById('statusText').textContent = 'Recording...';
+  document.getElementById('timerDisplay').className = 'timer-display recording';
+  document.getElementById('visIdle').style.display = 'none';
+
+  startTimer();
+  startWaveform();
+  showToast('Recording started! 5 credits used.', 'success');
+}
+
+function stopRecording() {
+  if (!state.mediaRecorder) return;
+  state.mediaRecorder.stop();
+  state.isRecording = false;
+  state.isPaused = false;
+  stopTimer();
+  stopWaveform();
+  resetControls();
+  showToast('Recording stopped & saved!', 'success');
+}
+
+function togglePause() {
+  if (!state.isRecording) return;
+  if (state.isPaused) {
+    state.mediaRecorder.resume();
+    state.isPaused = false;
+    startTimer();
+    startWaveform();
+    document.getElementById('btnPause').querySelector('.ctrl-icon').textContent = '⏸';
+    document.getElementById('statusDot').className = 'status-dot rec';
+    document.getElementById('statusText').textContent = 'Recording...';
+    document.getElementById('timerDisplay').className = 'timer-display recording';
+    showToast('Resumed', 'success');
+  } else {
+    state.mediaRecorder.pause();
+    state.isPaused = true;
+    stopTimer();
+    stopWaveform();
+    document.getElementById('btnPause').querySelector('.ctrl-icon').textContent = '▶';
+    document.getElementById('statusDot').className = 'status-dot paused';
+    document.getElementById('statusText').textContent = 'Paused';
+    document.getElementById('timerDisplay').className = 'timer-display paused';
+    showToast('Paused', 'warning');
+  }
+}
+
+function restartRecording() {
+  if (state.isRecording) {
+    state.mediaRecorder.stop();
+    state.audioChunks = [];
+    stopTimer();
+    stopWaveform();
+  }
+  state.isRecording = false;
+  state.isPaused = false;
+  state.elapsedSec = 0;
+  updateTimer();
+  resetControls();
+  showToast('Restarted — ready to record again', 'warning');
+}
+
+function skipBack() {
+  state.elapsedSec = Math.max(0, state.elapsedSec - 5);
+  updateTimer();
+}
+
+function resetControls() {
+  const rec = document.getElementById('btnRecord');
+  rec.classList.remove('recording', 'paused');
+  rec.textContent = '⏺';
+  document.getElementById('btnPause').disabled = true;
+  document.getElementById('btnStop').disabled = true;
+  document.getElementById('btnRestart').disabled = true;
+  document.getElementById('btnPause').querySelector('.ctrl-icon').textContent = '⏸';
+  document.getElementById('statusDot').className = 'status-dot';
+  document.getElementById('statusText').textContent = 'Ready to Record';
+  document.getElementById('timerDisplay').className = 'timer-display';
+  document.getElementById('visIdle').style.display = '';
+  document.getElementById('limitBarFill').style.width = '0%';
+  document.getElementById('limitVal').textContent = '0:00 / 5:00';
+}
+
+function saveRecording() {
+  const blob = new Blob(state.audioChunks, { type: getSupportedMime() });
+  const url = URL.createObjectURL(blob);
+  const id = Date.now();
+  const rec = {
+    id, url, blob,
+    name: `Recording ${state.recordings.length + 1}`,
+    duration: state.elapsedSec,
+    size: blob.size,
+    format: 'webm',
+    createdAt: new Date().toISOString(),
+  };
+  state.recordings.unshift(rec);
+  state.totalSeconds += state.elapsedSec;
+  saveToStorage();
+  renderRecordings();
+  updateStats();
+}
+
+// ─────────────────────────────────────────────
+// TIMER
+// ─────────────────────────────────────────────
+function startTimer() {
+  state.timerInterval = setInterval(() => {
+    state.elapsedSec++;
+    updateTimer();
+
+    // Free limit enforcement
+    const maxSec = FREE_LIMIT_SEC;
+    const pct = Math.min((state.elapsedSec / maxSec) * 100, 100);
+    const fill = document.getElementById('limitBarFill');
+    fill.style.width = pct + '%';
+    fill.classList.toggle('warn', pct > 75);
+    document.getElementById('limitVal').textContent =
+      `${fmtShort(state.elapsedSec)} / ${fmtShort(maxSec)}`;
+
+    if (state.elapsedSec >= maxSec) {
+      showToast('Free 5-min limit reached! Upgrade for longer sessions.', 'warning');
+      stopRecording();
+      setTimeout(openUpgradeModal, 800);
+    }
+  }, 1000);
+}
+
+function stopTimer() { clearInterval(state.timerInterval); }
+
+function updateTimer() {
+  document.getElementById('timerDisplay').textContent = fmtTime(state.elapsedSec);
+}
+
+function fmtTime(sec) {
+  const h = Math.floor(sec/3600).toString().padStart(2,'0');
+  const m = Math.floor((sec%3600)/60).toString().padStart(2,'0');
+  const s = (sec%60).toString().padStart(2,'0');
+  return `${h}:${m}:${s}`;
+}
+
+function fmtShort(sec) {
+  const m = Math.floor(sec/60);
+  const s = (sec%60).toString().padStart(2,'0');
+  return `${m}:${s}`;
+}
+
+// ─────────────────────────────────────────────
+// WAVEFORM
+// ─────────────────────────────────────────────
+const canvas = document.getElementById('waveCanvas');
+const ctx2d = canvas.getContext('2d');
+let waveData = [];
+
+function startWaveform() {
+  if (!state.analyser) return;
+  const draw = () => {
+    if (!state.isRecording || state.isPaused) return;
+    state.animFrame = requestAnimationFrame(draw);
+    drawWave();
+    drawVolMeter();
+  };
+  draw();
+}
+
+function stopWaveform() {
+  cancelAnimationFrame(state.animFrame);
+  // Draw flat line
+  const w = canvas.offsetWidth, h = canvas.offsetHeight;
+  canvas.width = w; canvas.height = h;
+  ctx2d.clearRect(0,0,w,h);
+  ctx2d.beginPath();
+  ctx2d.moveTo(0, h/2);
+  ctx2d.lineTo(w, h/2);
+  ctx2d.strokeStyle = 'rgba(124,92,252,0.3)';
+  ctx2d.lineWidth = 1.5;
+  ctx2d.stroke();
+  resetVolMeter();
+}
+
+function drawWave() {
+  const w = canvas.offsetWidth, h = canvas.offsetHeight;
+  canvas.width = w; canvas.height = h;
+  const bufLen = state.analyser.fftSize;
+  const data = new Uint8Array(bufLen);
+  state.analyser.getByteTimeDomainData(data);
+
+  ctx2d.clearRect(0,0,w,h);
+
+  // Gradient line
+  const grad = ctx2d.createLinearGradient(0,0,w,0);
+  grad.addColorStop(0, 'rgba(124,92,252,0.5)');
+  grad.addColorStop(0.5, 'rgba(124,92,252,1)');
+  grad.addColorStop(1, 'rgba(34,211,238,0.7)');
+
+  ctx2d.beginPath();
+  ctx2d.lineWidth = 2;
+  ctx2d.strokeStyle = grad;
+
+  for (let i = 0; i < bufLen; i++) {
+    const x = (i / bufLen) * w;
+    const y = ((data[i] / 128) - 1) * (h/2) + h/2;
+    i === 0 ? ctx2d.moveTo(x, y) : ctx2d.lineTo(x, y);
+  }
+  ctx2d.stroke();
+
+  // Mirror fill
+  ctx2d.beginPath();
+  ctx2d.fillStyle = 'rgba(124,92,252,0.05)';
+  for (let i = 0; i < bufLen; i++) {
+    const x = (i/bufLen)*w;
+    const y = ((data[i]/128)-1)*(h/2)+h/2;
+    i===0 ? ctx2d.moveTo(x,y) : ctx2d.lineTo(x,y);
+  }
+  ctx2d.lineTo(w, h/2);
+  ctx2d.lineTo(0, h/2);
+  ctx2d.fill();
+}
+
+function buildIdleWave() {
+  // Dotted idle animation
+  const w = canvas.offsetWidth || 600;
+  const h = canvas.offsetHeight || 160;
+  canvas.width = w; canvas.height = h;
+  let t = 0;
+  function animIdle() {
+    if (state.isRecording) return;
+    requestAnimationFrame(animIdle);
+    t += 0.02;
+    ctx2d.clearRect(0,0,w,h);
+    ctx2d.beginPath();
+    ctx2d.setLineDash([4, 8]);
+    ctx2d.strokeStyle = 'rgba(124,92,252,0.2)';
+    ctx2d.lineWidth = 1.5;
+    ctx2d.moveTo(0, h/2 + Math.sin(t)*3);
+    for (let x=0;x<=w;x+=5) {
+      const y = h/2 + Math.sin((x/w)*Math.PI*4 + t)*4;
+      ctx2d.lineTo(x,y);
+    }
+    ctx2d.stroke();
+    ctx2d.setLineDash([]);
+  }
+  animIdle();
+}
+
+function startIdleVisualize() {
+  // Volume-responsive idle (before recording)
+  if (!state.analyser) return;
+  const tick = () => {
+    if (state.isRecording) return;
+    requestAnimationFrame(tick);
+    drawVolMeter();
+  };
+  tick();
+}
+
+// ─────────────────────────────────────────────
+// VOL METER
+// ─────────────────────────────────────────────
+function buildVolMeter() {
+  const el = document.getElementById('volMeter');
+  el.innerHTML = '';
+  for (let i=0;i<20;i++) {
+    const bar = document.createElement('div');
+    bar.className = 'vol-bar';
+    bar.style.height = '4px';
+    el.appendChild(bar);
+  }
+}
+
+function drawVolMeter() {
+  if (!state.analyser) return;
+  const data = new Uint8Array(state.analyser.frequencyBinCount);
+  state.analyser.getByteFrequencyData(data);
+  const bars = document.querySelectorAll('.vol-bar');
+  const step = Math.floor(data.length / bars.length);
+  bars.forEach((bar, i) => {
+    const val = data[i * step] / 255;
+    const h = Math.max(4, val * 24);
+    bar.style.height = h + 'px';
+    const r = val > 0.7 ? 'var(--red)' : val > 0.4 ? 'var(--accent)' : 'var(--accent)';
+    bar.style.background = r;
+    bar.style.opacity = 0.4 + val * 0.6;
+  });
+}
+
+function resetVolMeter() {
+  document.querySelectorAll('.vol-bar').forEach(b => {
+    b.style.height = '4px'; b.style.opacity = '0.3';
+  });
+}
+
+// ─────────────────────────────────────────────
+// RECORDINGS LIST
+// ─────────────────────────────────────────────
+function renderRecordings() {
+  const list = document.getElementById('recordingsList');
+  const chip = document.getElementById('recCountChip');
+  chip.textContent = `${state.recordings.length} / ${FREE_RECS} Free`;
+
+  if (state.recordings.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🎙</div>
+      <div class="empty-text">No recordings yet. Hit record to get started!</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = state.recordings.map(r => `
+    <div class="recording-item" id="rec-${r.id}">
+      <div class="rec-item-top">
+        <div class="rec-item-info">
+          <input class="inline-edit" value="${r.name}"
+            onblur="renameRec('${r.id}', this.value)"
+            onkeydown="if(event.key==='Enter')this.blur()">
+          <div class="rec-item-meta">
+            <span>⏱ ${fmtTime(r.duration || 0)}</span>
+            <span>📦 ${fmtSize(r.size || 0)}</span>
+            <span>📅 ${fmtDate(r.createdAt)}</span>
+          </div>
+        </div>
+        <div class="rec-item-actions">
+          <button class="rec-action" onclick="shareRec('${r.id}')" title="Share">⬆</button>
+          <button class="rec-action ${r.url?'':'disabled'}" onclick="downloadRec('${r.id}')" title="Download" ${r.url?'':'disabled'}>⬇</button>
+          <button class="rec-action danger" onclick="deleteRec('${r.id}')" title="Delete">✕</button>
+        </div>
+      </div>
+      ${r.url ? `
+      <div class="mini-player">
+        <button class="mini-play" id="play-${r.id}" onclick="playRec('${r.id}')">▶</button>
+        <div class="mini-seek" id="seek-${r.id}" onclick="seekRec(event,'${r.id}')">
+          <div class="mini-seek-fill" id="fill-${r.id}"></div>
+        </div>
+        <span class="mini-time" id="time-${r.id}">${fmtTime(r.duration||0)}</span>
+      </div>` : `
+      <div style="font-size:0.75rem;color:var(--text3);padding:4px 0;">
+        ⚠ Audio not available (session reloaded)
+      </div>`}
+    </div>
+  `).join('');
+}
+
+// Audio players map
+const players = {};
+
+function playRec(id) {
+  const rec = state.recordings.find(r => r.id == id);
+  if (!rec || !rec.url) return;
+
+  if (!players[id]) {
+    players[id] = new Audio(rec.url);
+    players[id].ontimeupdate = () => {
+      const pct = (players[id].currentTime / players[id].duration) * 100;
+      const fill = document.getElementById(`fill-${id}`);
+      const time = document.getElementById(`time-${id}`);
+      if (fill) fill.style.width = pct + '%';
+      if (time) time.textContent = fmtTime(Math.floor(players[id].currentTime));
+    };
+    players[id].onended = () => {
+      document.getElementById(`play-${id}`).textContent = '▶';
+    };
+  }
+
+  const audio = players[id];
+  const btn = document.getElementById(`play-${id}`);
+  if (audio.paused) {
+    // Pause all others
+    Object.entries(players).forEach(([pid, p]) => {
+      if (pid != id && !p.paused) {
+        p.pause();
+        const ob = document.getElementById(`play-${pid}`);
+        if (ob) ob.textContent = '▶';
+      }
+    });
+    audio.play();
+    btn.textContent = '⏸';
+  } else {
+    audio.pause();
+    btn.textContent = '▶';
+  }
+}
+
+function seekRec(e, id) {
+  const rec = state.recordings.find(r => r.id == id);
+  if (!rec || !players[id]) return;
+  const seek = document.getElementById(`seek-${id}`);
+  const pct = e.offsetX / seek.offsetWidth;
+  players[id].currentTime = pct * players[id].duration;
+}
+
+function downloadRec(id) {
+  if (state.downloadsLeft <= 0) {
+    showToast('Daily download limit reached! Buy credits or upgrade.', 'warning');
+    openCreditsModal(); return;
+  }
+  const rec = state.recordings.find(r => r.id == id);
+  if (!rec || !rec.url) { showToast('Audio not available in current session', 'error'); return; }
+
+  const a = document.createElement('a');
+  a.href = rec.url;
+  a.download = `${rec.name}.${rec.format || 'webm'}`;
+  a.click();
+
+  state.downloadsLeft = Math.max(0, state.downloadsLeft - 1);
+  saveToStorage();
+  updateStats();
+  updateDlLimit();
+  showToast(`Downloaded! ${state.downloadsLeft} downloads left today.`, 'success');
+}
+
+function shareRec(id) {
+  const rec = state.recordings.find(r => r.id == id);
+  if (!rec) return;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(`Recording: ${rec.name} (${fmtTime(rec.duration||0)})`);
+    showToast('Recording info copied to clipboard!', 'success');
+  }
+}
+
+function deleteRec(id) {
+  const idx = state.recordings.findIndex(r => r.id == id);
+  if (idx === -1) return;
+  if (players[id]) { players[id].pause(); delete players[id]; }
+  state.recordings.splice(idx, 1);
+  saveToStorage();
+  renderRecordings();
+  updateStats();
+  showToast('Recording deleted', 'warning');
+}
+
+function renameRec(id, name) {
+  const rec = state.recordings.find(r => r.id == id);
+  if (rec) { rec.name = name || rec.name; saveToStorage(); }
+}
+
+function clearAllRecordings() {
+  if (!state.recordings.length) return;
+  if (!confirm('Delete all recordings?')) return;
+  Object.values(players).forEach(p => p.pause());
+  state.recordings = [];
+  saveToStorage();
+  renderRecordings();
+  updateStats();
+  showToast('All recordings cleared', 'warning');
+}
+
+// ─────────────────────────────────────────────
+// IMPORT
+// ─────────────────────────────────────────────
+function handleFileImport(e) {
+  const file = e.target.files[0];
+  if (file) processImportedFile(file);
+}
+
+function processImportedFile(file) {
+  if (file.size > 50 * 1024 * 1024) {
+    showToast('File too large! Free limit: 50MB. Upgrade for 500MB.', 'error');
+    return;
+  }
+  const url = URL.createObjectURL(file);
+  const audio = new Audio(url);
+  audio.addEventListener('loadedmetadata', () => {
+    const rec = {
+      id: Date.now(),
+      url, blob: file,
+      name: file.name.replace(/\.[^.]+$/, ''),
+      duration: Math.floor(audio.duration),
+      size: file.size,
+      format: file.name.split('.').pop(),
+      createdAt: new Date().toISOString(),
+    };
+    state.recordings.unshift(rec);
+    saveToStorage();
+    renderRecordings();
+    updateStats();
+    showToast(`Imported: ${rec.name}`, 'success');
+    switchTab('record');
+  });
+}
+
+// ─────────────────────────────────────────────
+// TOGGLES
+// ─────────────────────────────────────────────
+function toggleFeature(feat) {
+  state.features[feat] = !state.features[feat];
+  const el = document.getElementById(feat + 'Toggle');
+  el.classList.toggle('on', state.features[feat]);
+  if (state.features[feat]) {
+    showToast(`${feat === 'noise' ? 'Noise reduction' : 'Echo cancellation'} enabled`, 'success');
+  }
+}
+
+// ─────────────────────────────────────────────
+// STATS & UI
+// ─────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('statRecs').textContent = state.recordings.length;
+  const totalMin = Math.floor(state.totalSeconds / 60);
+  document.getElementById('statMin').textContent = totalMin + 'm';
+  updateCreditsUI();
+  document.getElementById('statDownloads').textContent = state.downloadsLeft;
+}
+
+function updateCreditsUI() {
+  document.getElementById('statCredits').textContent = state.credits;
+  document.getElementById('creditsBadgeCount').textContent = state.credits;
+  document.getElementById('creditLimitLabel').textContent = `${100-state.credits} / 100`;
+}
+
+function updateDlLimit() {
+  const used = FREE_DOWNLOADS - state.downloadsLeft;
+  const pct = (used / FREE_DOWNLOADS) * 100;
+  document.getElementById('dlLimitBar').style.width = pct + '%';
+  document.getElementById('dlLimitLabel').textContent = `${used} / ${FREE_DOWNLOADS} used`;
+  if (pct >= 100) document.getElementById('dlLimitBar').classList.add('warn');
+}
+
+// ─────────────────────────────────────────────
+// MIME
+// ─────────────────────────────────────────────
+function getSupportedMime() {
+  const types = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg','audio/mp4'];
+  for (const t of types) {
+    if (MediaRecorder.isTypeSupported(t)) return t;
+  }
+  return '';
+}
+
+// ─────────────────────────────────────────────
+// FORMAT HELPERS
+// ─────────────────────────────────────────────
+function fmtSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(2) + ' MB';
+}
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short' });
+}
+
+// ─────────────────────────────────────────────
+// MODALS
+// ─────────────────────────────────────────────
+function openCreditsModal() {
+  document.getElementById('creditsModal').classList.add('show');
+}
+function openUpgradeModal() {
+  document.getElementById('upgradeModal').classList.add('show');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// Close on bg click
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('show'); });
+});
+
+function selectPkg(el, price) {
+  document.querySelectorAll('.credit-pkg').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedPkgPrice = price;
+  const map = {49:50, 99:150, 199:400, 499:1200};
+  state.selectedPkgCredits = map[price] || 50;
+}
+
+function purchaseCredits() {
+  // Simulated purchase
+  state.credits += state.selectedPkgCredits;
+  saveToStorage();
+  updateCreditsUI();
+  closeModal('creditsModal');
+  showToast(`✦ ${state.selectedPkgCredits} credits added! ₹${state.selectedPkgPrice} (simulated)`, 'success');
+  updateStats();
+}
+
+// ─────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────
+function showToast(msg, type='success') {
+  const area = document.getElementById('toast-area');
+  const icons = {success:'✓', error:'✕', warning:'⚠'};
+  const colors = {success:'var(--green)', error:'var(--red)', warning:'var(--amber)'};
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span style="color:${colors[type]};font-weight:700;">${icons[type]}</span><span>${msg}</span>`;
+  area.appendChild(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+// Quality/duration locked options
+document.getElementById('qualitySelect').addEventListener('change', function() {
+  if (this.value !== '128') {
+    showToast('High quality requires Pro. Upgrade to unlock!', 'warning');
+    this.value = '128';
+    openUpgradeModal();
+  }
+});
+
+document.getElementById('durationSelect').addEventListener('change', function() {
+  if (this.value !== '300') {
+    showToast('Longer sessions require Pro. Upgrade to unlock!', 'warning');
+    this.value = '300';
+    openUpgradeModal();
+  }
+});
+
+document.getElementById('channelsSelect').addEventListener('change', function() {
+  if (this.value !== 'mono') {
+    showToast('Stereo requires Pro. Upgrade to unlock!', 'warning');
+    this.value = 'mono';
+    openUpgradeModal();
+  }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+  if (e.code === 'Space') { e.preventDefault(); toggleRecord(); }
+  if (e.code === 'KeyP') togglePause();
+  if (e.code === 'KeyS') stopRecording();
+  if (e.code === 'KeyR') restartRecording();
+});
+</script>
+</body>
+</html>

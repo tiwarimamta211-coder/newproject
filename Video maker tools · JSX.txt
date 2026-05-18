@@ -1,0 +1,622 @@
+import { useState } from "react";
+
+const TOOLS = {
+  script: {
+    label: "Script Writer",
+    icon: "📝",
+    color: "#6c63ff",
+    gradient: "linear-gradient(135deg,#6c63ff,#a855f7)",
+    desc: "AI से full video script generate करें",
+  },
+  hook: {
+    label: "Hook Generator",
+    icon: "🎯",
+    color: "#ff4d6d",
+    gradient: "linear-gradient(135deg,#ff4d6d,#ff9a3c)",
+    desc: "Attention-grabbing opening lines",
+  },
+  title: {
+    label: "Title & SEO",
+    icon: "🏷️",
+    color: "#00c9a7",
+    gradient: "linear-gradient(135deg,#00c9a7,#00b4d8)",
+    desc: "Viral titles + tags + description",
+  },
+  thumbnail: {
+    label: "Thumbnail Ideas",
+    icon: "🖼️",
+    color: "#f7b731",
+    gradient: "linear-gradient(135deg,#f7b731,#fd9644)",
+    desc: "Click-worthy thumbnail concepts",
+  },
+  voiceover: {
+    label: "Voiceover Script",
+    icon: "🎙️",
+    color: "#26de81",
+    gradient: "linear-gradient(135deg,#26de81,#20bf6b)",
+    desc: "Narration-ready voiceover text",
+  },
+  chapters: {
+    label: "Chapter Timestamps",
+    icon: "⏱️",
+    color: "#45aaf2",
+    gradient: "linear-gradient(135deg,#45aaf2,#2d98da)",
+    desc: "Auto-generate YouTube chapters",
+  },
+  cta: {
+    label: "CTA Builder",
+    icon: "📣",
+    color: "#fc5c65",
+    gradient: "linear-gradient(135deg,#fc5c65,#eb3b5a)",
+    desc: "Subscribe, like & share CTAs",
+  },
+  repurpose: {
+    label: "Content Repurposer",
+    icon: "♻️",
+    color: "#a55eea",
+    gradient: "linear-gradient(135deg,#a55eea,#8854d0)",
+    desc: "Shorts, Reels, Twitter thread से video idea",
+  },
+};
+
+const NICHE_OPTIONS = ["Tech & AI", "Finance & CA", "Health", "Education", "Business", "Lifestyle", "Gaming", "Travel", "Cooking"];
+const TONE_OPTIONS = ["Professional", "Casual", "Motivational", "Funny", "Educational", "Storytelling"];
+
+const PROMPTS = {
+  script: (topic, niche, tone, audience, keywords) =>
+    `Write a complete, detailed YouTube video script.
+Topic: ${topic}
+Niche: ${niche}
+Tone: ${tone}
+Audience: ${audience || "General"}
+Keywords: ${keywords || "auto"}
+
+Include: Hook, Intro, 3 main sections, Case Study, Tips, Outro + CTA.
+Write full sentences ready to speak on camera. Add [B-Roll] cues in brackets. Add timestamps. Make it 15-20 minutes long.`,
+
+  hook: (topic, niche, tone) =>
+    `Generate 10 powerful YouTube video hooks for this topic:
+Topic: ${topic}
+Niche: ${niche}
+Tone: ${tone}
+
+Each hook should be 2-3 sentences max. Include:
+- Curiosity hooks
+- Shocking stat hooks
+- Story hooks
+- Question hooks
+- Controversy hooks
+Number them and explain why each works.`,
+
+  title: (topic, niche, keywords) =>
+    `Generate YouTube SEO package for:
+Topic: ${topic}
+Niche: ${niche}
+Keywords: ${keywords || "auto-select"}
+
+Provide:
+1. 5 viral title options (with emojis, power words)
+2. Full YouTube description (500+ words) with timestamps placeholder
+3. 25 SEO tags
+4. 3 hashtags
+5. Suggested category and language`,
+
+  thumbnail: (topic, niche) =>
+    `Generate 5 detailed YouTube thumbnail concepts for:
+Topic: ${topic}
+Niche: ${niche}
+
+For each thumbnail describe:
+- Background style and colors
+- Text overlay (max 5 words)
+- Facial expression / gesture (if person shown)
+- Props or visual elements
+- Overall mood/emotion
+- Why it will get high CTR`,
+
+  voiceover: (topic, tone, audience) =>
+    `Write a complete voiceover script for a faceless YouTube video:
+Topic: ${topic}
+Tone: ${tone}
+Audience: ${audience || "General"}
+
+Write in natural spoken language. Include:
+- Smooth transitions
+- Pause indicators [PAUSE]
+- Emphasis markers [STRESS]
+- Stock footage suggestions [FOOTAGE: ...]
+- Duration estimate per section
+Make it 10-12 minutes of content.`,
+
+  chapters: (topic) =>
+    `Create YouTube chapter timestamps for a 20-minute video about:
+Topic: ${topic}
+
+Format exactly like this:
+0:00 Introduction
+1:30 [Section Name]
+...
+
+Include 8-12 chapters. Make chapter names punchy and descriptive. Also suggest which chapter is best for a short clip/reel.`,
+
+  cta: (topic, niche) =>
+    `Write 10 creative CTAs (Call-to-Actions) for a YouTube video about:
+Topic: ${topic}
+Niche: ${niche}
+
+Include CTAs for:
+- Subscribe (mid-video)
+- Like button
+- Comment engagement question
+- Notification bell
+- End screen
+- Community post
+- Next video suggestion
+
+Make them natural, not robotic. Vary the style.`,
+
+  repurpose: (topic, niche) =>
+    `Create a full content repurposing plan for:
+Topic: ${topic}
+Niche: ${niche}
+
+Generate:
+1. YouTube Short script (60 sec)
+2. Instagram Reel caption + hook
+3. Twitter/X thread (8 tweets)
+4. LinkedIn post
+5. Blog post outline (H2 headings)
+6. Pinterest pin description
+7. WhatsApp status text
+
+Each should be platform-optimized.`,
+};
+
+export default function VideoMakerTools() {
+  const [activeTool, setActiveTool] = useState("script");
+  const [topic, setTopic] = useState("");
+  const [niche, setNiche] = useState("Tech & AI");
+  const [tone, setTone] = useState("Educational");
+  const [audience, setAudience] = useState("");
+  const [keywords, setKeywords] = useState("");
+  const [output, setOutput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [history, setHistory] = useState([]);
+
+  const tool = TOOLS[activeTool];
+
+  const buildPrompt = () => PROMPTS[activeTool](topic, niche, tone, audience, keywords);
+
+  const handleGenerate = async () => {
+    if (!topic.trim()) return;
+    setLoading(true);
+    setOutput("");
+    setProgress(0);
+
+    const interval = setInterval(() => {
+      setProgress(p => Math.min(p + Math.random() * 12, 90));
+    }, 600);
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 4000,
+          stream: true,
+          messages: [{ role: "user", content: buildPrompt() }],
+        }),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let full = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        for (const line of chunk.split("\n")) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.type === "content_block_delta" && data.delta?.text) {
+                full += data.delta.text;
+                setOutput(full);
+              }
+            } catch {}
+          }
+        }
+      }
+
+      clearInterval(interval);
+      setProgress(100);
+      setHistory(h => [{ tool: activeTool, topic, output: full, time: new Date().toLocaleTimeString() }, ...h.slice(0, 4)]);
+    } catch (err) {
+      clearInterval(interval);
+      setOutput("❌ Error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(output);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownload = () => {
+    const blob = new Blob([output], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${activeTool}_${topic.slice(0, 20)}.txt`;
+    a.click();
+  };
+
+  const wordCount = output.split(/\s+/).filter(Boolean).length;
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "#0b0b13",
+      fontFamily: "'Outfit', 'Segoe UI', sans-serif",
+      color: "#e2e2f0",
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #0b0b13; }
+        ::-webkit-scrollbar-thumb { background: #2a2a3e; border-radius: 3px; }
+        input, select, textarea {
+          background: rgba(255,255,255,0.04) !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+          border-radius: 10px;
+          color: #e2e2f0 !important;
+          padding: 10px 14px;
+          font-family: 'Outfit', sans-serif;
+          font-size: 13px;
+          outline: none;
+          width: 100%;
+          transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { border-color: rgba(108,99,255,0.5) !important; }
+        select option { background: #1a1a2e; }
+        label { display: block; font-size: 10px; font-weight: 700; color: #555; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        .tool-card {
+          border-radius: 14px;
+          padding: 14px;
+          cursor: pointer;
+          border: 1.5px solid transparent;
+          transition: all 0.2s;
+          background: rgba(255,255,255,0.03);
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .tool-card:hover { background: rgba(255,255,255,0.06); transform: translateX(3px); }
+        .tool-card.active { border-color: rgba(108,99,255,0.4); background: rgba(108,99,255,0.08); }
+        .gen-btn {
+          width: 100%;
+          padding: 13px;
+          border: none;
+          border-radius: 12px;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          font-family: 'Outfit', sans-serif;
+          letter-spacing: 0.3px;
+          transition: all 0.2s;
+          position: relative;
+          overflow: hidden;
+        }
+        .gen-btn:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .gen-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .icon-box {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          flex-shrink: 0;
+        }
+        .output-text {
+          white-space: pre-wrap;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 12.5px;
+          line-height: 1.85;
+          color: #c8c8e0;
+          animation: fadeIn 0.3s ease;
+        }
+        .action-btn {
+          padding: 7px 16px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          font-family: 'Outfit', sans-serif;
+          transition: all 0.15s;
+          border: 1px solid;
+        }
+        .history-item {
+          padding: 10px 12px;
+          background: rgba(255,255,255,0.03);
+          border-radius: 8px;
+          border: 1px solid rgba(255,255,255,0.05);
+          cursor: pointer;
+          transition: all 0.15s;
+          margin-bottom: 6px;
+        }
+        .history-item:hover { background: rgba(255,255,255,0.06); }
+        .stat-box {
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 10px;
+          padding: 10px 14px;
+          text-align: center;
+        }
+      `}</style>
+
+      {/* TOP BAR */}
+      <div style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "14px 24px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 100 }}>
+        <div style={{ width: 36, height: 36, background: "linear-gradient(135deg,#6c63ff,#a855f7)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🎬</div>
+        <div>
+          <div style={{ fontWeight: 800, fontSize: 16, letterSpacing: "-0.3px" }}>Video Maker Tools</div>
+          <div style={{ fontSize: 10, color: "#555", letterSpacing: "0.8px" }}>8 AI-POWERED TOOLS FOR YOUTUBE CREATORS</div>
+        </div>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+          {["🎬 Script", "🎯 Hook", "📣 SEO"].map(t => (
+            <span key={t} style={{ background: "rgba(108,99,255,0.12)", border: "1px solid rgba(108,99,255,0.25)", color: "#9d97ff", padding: "3px 10px", borderRadius: 20, fontSize: 10, fontWeight: 700 }}>{t}</span>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "240px 1fr 260px", minHeight: "calc(100vh - 65px)" }}>
+
+        {/* LEFT — Tools List */}
+        <div style={{ borderRight: "1px solid rgba(255,255,255,0.06)", padding: "16px 12px", overflowY: "auto" }}>
+          <div style={{ fontSize: 10, color: "#444", fontWeight: 700, letterSpacing: "1px", marginBottom: 10, paddingLeft: 4 }}>SELECT TOOL</div>
+          {Object.entries(TOOLS).map(([key, t]) => (
+            <div
+              key={key}
+              className={`tool-card ${activeTool === key ? "active" : ""}`}
+              onClick={() => { setActiveTool(key); setOutput(""); }}
+            >
+              <div className="icon-box" style={{ background: `${t.color}22` }}>
+                {t.icon}
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: activeTool === key ? "#a0a0ff" : "#ccc" }}>{t.label}</div>
+                <div style={{ fontSize: 10, color: "#555", marginTop: 1 }}>{t.desc}</div>
+              </div>
+              {activeTool === key && <div style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: tool.color, flexShrink: 0 }} />}
+            </div>
+          ))}
+
+          {/* Quick Stats */}
+          {output && (
+            <div style={{ marginTop: 20, borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 16 }}>
+              <div style={{ fontSize: 10, color: "#444", fontWeight: 700, letterSpacing: "1px", marginBottom: 8 }}>OUTPUT STATS</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                <div className="stat-box">
+                  <div style={{ fontSize: 18, fontWeight: 800, color: tool.color }}>{wordCount}</div>
+                  <div style={{ fontSize: 9, color: "#555", marginTop: 2 }}>WORDS</div>
+                </div>
+                <div className="stat-box">
+                  <div style={{ fontSize: 18, fontWeight: 800, color: tool.color }}>{Math.round(wordCount / 130)}</div>
+                  <div style={{ fontSize: 9, color: "#555", marginTop: 2 }}>MIN READ</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* CENTER — Input + Output */}
+        <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          {/* Tool Header */}
+          <div style={{ padding: "18px 24px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(0,0,0,0.2)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ fontSize: 28 }}>{tool.icon}</div>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 800 }}>{tool.label}</div>
+                <div style={{ fontSize: 12, color: "#666" }}>{tool.desc}</div>
+              </div>
+              {output && (
+                <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+                  <button className="action-btn" onClick={handleCopy} style={{ background: copied ? "rgba(38,222,129,0.1)" : "rgba(255,255,255,0.05)", borderColor: copied ? "rgba(38,222,129,0.3)" : "rgba(255,255,255,0.1)", color: copied ? "#26de81" : "#aaa" }}>
+                    {copied ? "✅ Copied" : "📋 Copy"}
+                  </button>
+                  <button className="action-btn" onClick={handleDownload} style={{ background: "rgba(108,99,255,0.1)", borderColor: "rgba(108,99,255,0.3)", color: "#9d97ff" }}>
+                    ⬇️ Download
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Inputs */}
+          <div style={{ padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.01)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 10, alignItems: "end" }}>
+              <div>
+                <label>Video Topic *</label>
+                <input
+                  placeholder={`e.g. ${activeTool === "hook" ? "5 mistakes new investors make" : activeTool === "repurpose" ? "How to file GST online in India" : "How to start a YouTube channel in 2025"}`}
+                  value={topic}
+                  onChange={e => setTopic(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleGenerate()}
+                />
+              </div>
+              <div style={{ width: 140 }}>
+                <label>Niche</label>
+                <select value={niche} onChange={e => setNiche(e.target.value)}>
+                  {NICHE_OPTIONS.map(n => <option key={n}>{n}</option>)}
+                </select>
+              </div>
+              <button
+                className="gen-btn"
+                onClick={handleGenerate}
+                disabled={loading || !topic.trim()}
+                style={{
+                  background: loading ? "rgba(108,99,255,0.3)" : tool.gradient,
+                  color: "white",
+                  width: 140,
+                  padding: "11px 20px",
+                }}
+              >
+                {loading ? (
+                  <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                    <span style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }} />
+                    Generating...
+                  </span>
+                ) : `Generate ${tool.icon}`}
+              </button>
+            </div>
+
+            {/* Extra inputs row */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 10 }}>
+              <div>
+                <label>Tone</label>
+                <select value={tone} onChange={e => setTone(e.target.value)}>
+                  {TONE_OPTIONS.map(t => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label>Target Audience</label>
+                <input placeholder="e.g. Beginners, students" value={audience} onChange={e => setAudience(e.target.value)} />
+              </div>
+              <div>
+                <label>Keywords (optional)</label>
+                <input placeholder="e.g. YouTube growth, views" value={keywords} onChange={e => setKeywords(e.target.value)} />
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            {loading && (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${progress}%`, background: tool.gradient, borderRadius: 2, transition: "width 0.5s ease" }} />
+                </div>
+                <div style={{ fontSize: 10, color: "#555", marginTop: 4, textAlign: "right", animation: "pulse 1.5s infinite" }}>
+                  AI writing your {tool.label}...
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Output */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
+            {output ? (
+              <div className="output-text">
+                {output}
+                {loading && <span style={{ animation: "pulse 1s infinite", color: tool.color }}>▌</span>}
+              </div>
+            ) : (
+              <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, opacity: 0.35 }}>
+                <div style={{ fontSize: 56 }}>{tool.icon}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#888" }}>Ready to generate {tool.label}</div>
+                <div style={{ fontSize: 12, color: "#555", textAlign: "center", maxWidth: 280 }}>Topic fill करें और Generate button दबाएं</div>
+                <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+                  {["Enter key works ↵", "Streaming output ✓", "Download .txt ✓"].map(t => (
+                    <span key={t} style={{ fontSize: 10, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", padding: "4px 10px", borderRadius: 20, color: "#666" }}>{t}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT — Guide + History */}
+        <div style={{ borderLeft: "1px solid rgba(255,255,255,0.06)", padding: "16px 14px", overflowY: "auto", background: "rgba(0,0,0,0.15)" }}>
+
+          {/* Current tool guide */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 10, color: "#444", fontWeight: 700, letterSpacing: "1px", marginBottom: 10 }}>TOOL GUIDE</div>
+            <div style={{ background: `${TOOLS[activeTool].color}11`, border: `1px solid ${TOOLS[activeTool].color}33`, borderRadius: 12, padding: "14px" }}>
+              <div style={{ fontSize: 22, marginBottom: 6 }}>{tool.icon}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#ddd", marginBottom: 6 }}>{tool.label}</div>
+              <div style={{ fontSize: 11, color: "#777", lineHeight: 1.7 }}>
+                {activeTool === "script" && "Full ready-to-record script with B-roll cues, timestamps, and CTA. Best for 10-30 min videos."}
+                {activeTool === "hook" && "First 30 seconds are everything. Get 10 hook options to A/B test for maximum retention."}
+                {activeTool === "title" && "SEO-optimized titles that rank + get clicks. Includes description, tags & hashtags."}
+                {activeTool === "thumbnail" && "Get visual concepts you can recreate in Canva. High CTR designs tailored to your niche."}
+                {activeTool === "voiceover" && "Faceless channel के लिए perfect. AI voice tools like ElevenLabs में directly use करें."}
+                {activeTool === "chapters" && "YouTube chapters add करने से watch time बढ़ता है. Copy-paste ready format."}
+                {activeTool === "cta" && "Natural CTAs जो viewers को actually engage करें. Mid-video और end screen दोनों."}
+                {activeTool === "repurpose" && "एक video idea से 7 platforms का content। Maximum reach, minimum effort."}
+              </div>
+            </div>
+          </div>
+
+          {/* All tools grid */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 10, color: "#444", fontWeight: 700, letterSpacing: "1px", marginBottom: 10 }}>ALL TOOLS</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+              {Object.entries(TOOLS).map(([key, t]) => (
+                <div
+                  key={key}
+                  onClick={() => { setActiveTool(key); setOutput(""); }}
+                  style={{
+                    background: activeTool === key ? `${t.color}22` : "rgba(255,255,255,0.03)",
+                    border: `1px solid ${activeTool === key ? t.color + "44" : "rgba(255,255,255,0.06)"}`,
+                    borderRadius: 10,
+                    padding: "10px 10px",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                    textAlign: "center",
+                  }}
+                >
+                  <div style={{ fontSize: 20, marginBottom: 3 }}>{t.icon}</div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: activeTool === key ? "#ddd" : "#666" }}>{t.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* History */}
+          {history.length > 0 && (
+            <div>
+              <div style={{ fontSize: 10, color: "#444", fontWeight: 700, letterSpacing: "1px", marginBottom: 10 }}>RECENT OUTPUTS</div>
+              {history.map((h, i) => (
+                <div
+                  key={i}
+                  className="history-item"
+                  onClick={() => { setActiveTool(h.tool); setOutput(h.output); setTopic(h.topic); }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                    <span style={{ fontSize: 12 }}>{TOOLS[h.tool]?.icon}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#aaa" }}>{TOOLS[h.tool]?.label}</span>
+                    <span style={{ marginLeft: "auto", fontSize: 9, color: "#444" }}>{h.time}</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: "#555", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.topic}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Tips */}
+          <div style={{ marginTop: 16, background: "rgba(247,183,49,0.06)", border: "1px solid rgba(247,183,49,0.15)", borderRadius: 12, padding: 14 }}>
+            <div style={{ fontSize: 10, color: "#f7b731", fontWeight: 700, marginBottom: 8, letterSpacing: "0.5px" }}>⚡ PRO WORKFLOW</div>
+            <div style={{ fontSize: 10, color: "#666", lineHeight: 1.9 }}>
+              1️⃣ Hook Generator<br />
+              2️⃣ Script Writer<br />
+              3️⃣ Title & SEO<br />
+              4️⃣ Thumbnail Ideas<br />
+              5️⃣ Chapter Timestamps<br />
+              6️⃣ Repurpose Content
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

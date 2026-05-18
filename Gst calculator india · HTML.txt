@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GST Calculator India</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2230;
+    --border: #2a3244;
+    --accent: #f0a500;
+    --accent2: #ff6b35;
+    --green: #3fb950;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --card-glow: 0 0 0 1px #2a3244, 0 8px 32px rgba(0,0,0,0.4);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(240,165,0,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(240,165,0,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 20px 80px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 52px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(240,165,0,0.1);
+    border: 1px solid rgba(240,165,0,0.3);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 24px;
+  }
+
+  .badge-dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  h1 {
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 400;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--card-glow);
+    padding: 36px;
+    margin-bottom: 24px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Toggle */
+  .toggle-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    gap: 4px;
+    margin-bottom: 32px;
+    border: 1px solid var(--border);
+  }
+
+  .toggle-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .toggle-btn.active {
+    background: var(--accent);
+    color: #0d1117;
+    box-shadow: 0 4px 12px rgba(240,165,0,0.35);
+  }
+
+  /* Form Grid */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .card { padding: 24px 18px; }
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  input[type="number"], input[type="text"] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    padding: 14px 18px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus, input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(240,165,0,0.15);
+  }
+
+  /* Tax Rate Selector */
+  .rate-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+
+  @media (max-width: 600px) {
+    .rate-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  .rate-btn {
+    padding: 12px 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+  }
+
+  .rate-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .rate-btn.active {
+    background: rgba(240,165,0,0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 700;
+    box-shadow: 0 0 0 1px rgba(240,165,0,0.3);
+  }
+
+  /* Transaction Type */
+  .tx-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .tx-btn {
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tx-btn .tx-icon { font-size: 20px; }
+  .tx-btn .tx-label { font-size: 12px; color: var(--muted); font-weight: 400; }
+
+  .tx-btn.active {
+    border-color: #3fb950;
+    background: rgba(63,185,80,0.08);
+    color: var(--green);
+  }
+
+  .tx-btn.active .tx-label { color: rgba(63,185,80,0.7); }
+
+  /* Calculate Button */
+  .calc-btn {
+    width: 100%;
+    padding: 18px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #0d1117;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .calc-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(240,165,0,0.4);
+  }
+
+  .calc-btn:active { transform: translateY(0); }
+
+  /* Results */
+  .results-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--card-glow);
+    overflow: hidden;
+    display: none;
+    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .results-card.visible { display: block; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .results-header {
+    padding: 20px 36px;
+    background: linear-gradient(135deg, rgba(240,165,0,0.08), rgba(255,107,53,0.05));
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .results-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .results-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .results-body { padding: 36px; }
+
+  /* Big Total */
+  .total-display {
+    text-align: center;
+    padding: 32px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .total-display::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 60%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .total-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .total-amount {
+    font-family: 'DM Mono', monospace;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+
+  /* Breakdown Grid */
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 540px) {
+    .breakdown-grid { grid-template-columns: 1fr; }
+  }
+
+  .breakdown-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: border-color 0.2s;
+  }
+
+  .breakdown-item:hover { border-color: rgba(240,165,0,0.3); }
+
+  .bi-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .bi-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .bi-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .bi-value.green { color: var(--green); }
+  .bi-value.orange { color: var(--accent); }
+  .bi-value.blue { color: #79c0ff; }
+
+  /* GST Split Row */
+  .split-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 480px) {
+    .split-row { grid-template-columns: 1fr; }
+  }
+
+  .split-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    text-align: center;
+  }
+
+  .si-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 100px;
+    margin-bottom: 10px;
+  }
+
+  .si-tag.cgst { background: rgba(121,192,255,0.15); color: #79c0ff; }
+  .si-tag.sgst { background: rgba(63,185,80,0.15); color: var(--green); }
+  .si-tag.igst { background: rgba(240,165,0,0.15); color: var(--accent); }
+
+  .si-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .si-pct {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-top: 4px;
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  /* Action Buttons */
+  .action-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 400px) {
+    .action-row { grid-template-columns: 1fr; }
+  }
+
+  .action-btn {
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .action-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(240,165,0,0.06);
+  }
+
+  .action-btn.primary {
+    background: rgba(240,165,0,0.1);
+    border-color: rgba(240,165,0,0.4);
+    color: var(--accent);
+  }
+
+  .action-btn.primary:hover {
+    background: rgba(240,165,0,0.2);
+    box-shadow: 0 4px 16px rgba(240,165,0,0.25);
+  }
+
+  /* History */
+  .history-section {
+    margin-top: 24px;
+  }
+
+  .history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    gap: 12px;
+    flex-wrap: wrap;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .history-item:hover { border-color: rgba(240,165,0,0.3); }
+
+  .hi-base { color: var(--muted); }
+  .hi-rate { color: var(--accent); font-weight: 500; }
+  .hi-total { color: var(--text); font-weight: 500; }
+  .hi-type {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    background: rgba(240,165,0,0.1);
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: 'Syne', sans-serif;
+  }
+
+  .clear-history-btn {
+    margin-top: 12px;
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .clear-history-btn:hover { color: var(--accent2); border-color: var(--accent2); }
+
+  /* Notes input */
+  .notes-wrapper { grid-column: 1 / -1; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 52px;
+    color: var(--muted);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    line-height: 1.8;
+  }
+
+  .footer a { color: var(--accent); text-decoration: none; }
+
+  /* No history */
+  .no-history {
+    text-align: center;
+    padding: 24px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .results-header { padding: 16px 20px; }
+    .results-body { padding: 20px; }
+    .total-amount { font-size: 2rem; }
+  }
+
+  /* Tooltip */
+  .info-tip {
+    display: inline-block;
+    width: 16px; height: 16px;
+    background: var(--border);
+    border-radius: 50%;
+    text-align: center;
+    line-height: 16px;
+    font-size: 10px;
+    color: var(--muted);
+    cursor: help;
+    margin-left: 6px;
+    position: relative;
+  }
+
+  .info-tip:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1c2230;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* Rupee symbol */
+  .rupee::before { content: '₹'; margin-right: 2px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      India Tax Tool
+    </div>
+    <h1>GST <span>Calculator</span></h1>
+    <p class="subtitle">Goods & Services Tax · India · FY 2024–25</p>
+  </div>
+
+  <!-- Input Card -->
+  <div class="card">
+    <div class="card-title">Configuration</div>
+
+    <!-- Inclusive / Exclusive Toggle -->
+    <div class="toggle-group">
+      <button class="toggle-btn active" id="btn-exclusive" onclick="setMode('exclusive')">
+        <span>➕</span> GST Exclusive
+      </button>
+      <button class="toggle-btn" id="btn-inclusive" onclick="setMode('inclusive')">
+        <span>🔄</span> GST Inclusive
+      </button>
+    </div>
+
+    <div class="form-grid">
+
+      <!-- Amount -->
+      <div class="form-group full">
+        <label>
+          Amount (₹)
+          <span class="info-tip" data-tip="Enter the base price or final price depending on mode">?</span>
+        </label>
+        <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" oninput="autoCalculate()"/>
+      </div>
+
+      <!-- Tax Rate -->
+      <div class="form-group full">
+        <label>GST Rate</label>
+        <div class="rate-grid">
+          <button class="rate-btn" onclick="setRate(0)">0%</button>
+          <button class="rate-btn active" onclick="setRate(5)">5%</button>
+          <button class="rate-btn" onclick="setRate(12)">12%</button>
+          <button class="rate-btn" onclick="setRate(18)">18%</button>
+          <button class="rate-btn" onclick="setRate(28)">28%</button>
+          <button class="rate-btn" onclick="setRate(40)">40%</button>
+          <button class="rate-btn" id="custom-rate-btn" onclick="setRate('custom')">⚙️</button>
+        </div>
+        <input type="number" id="custom-rate-input" placeholder="Custom rate %" min="0" max="100" step="0.01"
+          style="display:none;margin-top:10px;" oninput="autoCalculate()"/>
+      </div>
+
+      <!-- Transaction Type -->
+      <div class="form-group full">
+        <label>
+          Transaction Type
+          <span class="info-tip" data-tip="Intra-state: CGST+SGST split. Inter-state: IGST applies.">?</span>
+        </label>
+        <div class="tx-grid">
+          <button class="tx-btn active" id="btn-intra" onclick="setTxType('intra')">
+            <span class="tx-icon">🏙️</span>
+            Intra-State
+            <span class="tx-label">CGST + SGST</span>
+          </button>
+          <button class="tx-btn" id="btn-inter" onclick="setTxType('inter')">
+            <span class="tx-icon">🗺️</span>
+            Inter-State
+            <span class="tx-label">IGST Only</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group full notes-wrapper">
+        <label>Invoice Notes (optional)</label>
+        <input type="text" id="notes" placeholder="e.g. Product description, customer name…"/>
+      </div>
+
+    </div>
+
+    <button class="calc-btn" onclick="calculate()">
+      <span>⚡</span> Calculate GST
+    </button>
+  </div>
+
+  <!-- Results Card -->
+  <div class="results-card" id="results-card">
+    <div class="results-header">
+      <div class="results-title">📊 Calculation Result</div>
+      <div class="results-meta" id="results-meta">—</div>
+    </div>
+    <div class="results-body">
+
+      <div class="total-display">
+        <div class="total-label" id="total-label">Total Amount Payable</div>
+        <div class="total-amount" id="total-amount">₹0.00</div>
+      </div>
+
+      <div class="breakdown-grid">
+        <div class="breakdown-item">
+          <div class="bi-label">Base Amount</div>
+          <div class="bi-value" id="base-amount">₹0.00</div>
+          <div class="bi-sub">Pre-tax value</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="bi-label">Total GST</div>
+          <div class="bi-value orange" id="gst-amount">₹0.00</div>
+          <div class="bi-sub" id="gst-rate-display">@ 5%</div>
+        </div>
+      </div>
+
+      <!-- CGST / SGST / IGST Split -->
+      <div class="split-row" id="split-row">
+        <div class="split-item" id="cgst-block">
+          <div class="si-tag cgst">CGST</div>
+          <div class="si-value" id="cgst-val">₹0.00</div>
+          <div class="si-pct" id="cgst-pct">2.5%</div>
+        </div>
+        <div class="split-item" id="sgst-block">
+          <div class="si-tag sgst">SGST</div>
+          <div class="si-value" id="sgst-val">₹0.00</div>
+          <div class="si-pct" id="sgst-pct">2.5%</div>
+        </div>
+        <div class="split-item" id="igst-block" style="display:none; grid-column: 1/-1;">
+          <div class="si-tag igst">IGST</div>
+          <div class="si-value" id="igst-val">₹0.00</div>
+          <div class="si-pct" id="igst-pct">5%</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="action-row">
+        <button class="action-btn primary" onclick="downloadPDF()">
+          📄 Download PDF
+        </button>
+        <button class="action-btn" onclick="copyResults()">
+          📋 Copy Summary
+        </button>
+        <button class="action-btn" onclick="resetAll()">
+          🔄 Reset
+        </button>
+        <button class="action-btn" onclick="printPage()">
+          🖨️ Print
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="card history-section">
+    <div class="card-title">Calculation History</div>
+    <div id="history-list">
+      <div class="no-history">No calculations yet. Results will appear here.</div>
+    </div>
+    <button class="clear-history-btn" onclick="clearHistory()">✕ Clear History</button>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    GST rates as per CGST Act, 2017 &nbsp;·&nbsp; For reference only<br/>
+    Consult a tax professional for official filings
+  </div>
+
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────
+  let mode = 'exclusive';      // exclusive | inclusive
+  let txType = 'intra';        // intra | inter
+  let selectedRate = 5;        // numeric GST %
+  let history = JSON.parse(localStorage.getItem('gst_history') || '[]');
+
+  // ── Setters ────────────────────────────────────────────────────
+  function setMode(m) {
+    mode = m;
+    document.getElementById('btn-exclusive').classList.toggle('active', m === 'exclusive');
+    document.getElementById('btn-inclusive').classList.toggle('active', m === 'inclusive');
+    autoCalculate();
+  }
+
+  function setRate(r) {
+    const customInput = document.getElementById('custom-rate-input');
+    if (r === 'custom') {
+      customInput.style.display = 'block';
+      selectedRate = parseFloat(customInput.value) || 0;
+    } else {
+      customInput.style.display = 'none';
+      selectedRate = r;
+    }
+    document.querySelectorAll('.rate-btn').forEach(b => b.classList.remove('active'));
+    if (r !== 'custom') {
+      const rates = [0, 5, 12, 18, 28, 40];
+      const idx = rates.indexOf(r);
+      if (idx !== -1) document.querySelectorAll('.rate-btn')[idx].classList.add('active');
+    } else {
+      document.getElementById('custom-rate-btn').classList.add('active');
+    }
+    autoCalculate();
+  }
+
+  function setTxType(t) {
+    txType = t;
+    document.getElementById('btn-intra').classList.toggle('active', t === 'intra');
+    document.getElementById('btn-inter').classList.toggle('active', t === 'inter');
+    autoCalculate();
+  }
+
+  // ── Core Calculation ───────────────────────────────────────────
+  function getRate() {
+    const customInput = document.getElementById('custom-rate-input');
+    if (customInput.style.display !== 'none') {
+      return parseFloat(customInput.value) || 0;
+    }
+    return selectedRate;
+  }
+
+  function compute(amount, rate, mode) {
+    let base, gst, total;
+    if (mode === 'exclusive') {
+      base  = amount;
+      gst   = base * (rate / 100);
+      total = base + gst;
+    } else {
+      total = amount;
+      base  = total / (1 + rate / 100);
+      gst   = total - base;
+    }
+    return { base, gst, total };
+  }
+
+  function fmt(n) {
+    return '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function calculate() {
+    const amtVal = parseFloat(document.getElementById('amount').value);
+    if (isNaN(amtVal) || amtVal < 0) {
+      alert('Please enter a valid positive amount.');
+      return;
+    }
+
+    const rate = getRate();
+    const { base, gst, total } = compute(amtVal, rate, mode);
+
+    // GST Split
+    let cgst = 0, sgst = 0, igst = 0;
+    if (txType === 'intra') {
+      cgst = gst / 2;
+      sgst = gst / 2;
+    } else {
+      igst = gst;
+    }
+
+    // Render
+    document.getElementById('total-label').textContent =
+      mode === 'exclusive' ? 'Total Amount Payable (incl. GST)' : 'Base Amount (excl. GST)';
+    document.getElementById('total-amount').textContent =
+      mode === 'exclusive' ? fmt(total) : fmt(base);
+
+    document.getElementById('base-amount').textContent  = fmt(base);
+    document.getElementById('gst-amount').textContent   = fmt(gst);
+    document.getElementById('gst-rate-display').textContent = `@ ${rate}% GST`;
+
+    // Split blocks
+    const cgstBlock = document.getElementById('cgst-block');
+    const sgstBlock = document.getElementById('sgst-block');
+    const igstBlock = document.getElementById('igst-block');
+
+    if (txType === 'intra') {
+      cgstBlock.style.display = ''; sgstBlock.style.display = '';
+      igstBlock.style.display = 'none';
+      document.getElementById('cgst-val').textContent = fmt(cgst);
+      document.getElementById('sgst-val').textContent = fmt(sgst);
+      document.getElementById('cgst-pct').textContent = `${rate/2}%`;
+      document.getElementById('sgst-pct').textContent = `${rate/2}%`;
+      igstBlock.style.gridColumn = '';
+    } else {
+      cgstBlock.style.display = 'none'; sgstBlock.style.display = 'none';
+      igstBlock.style.display = '';
+      igstBlock.style.gridColumn = '1 / -1';
+      document.getElementById('igst-val').textContent = fmt(igst);
+      document.getElementById('igst-pct').textContent = `${rate}%`;
+    }
+
+    // Meta
+    const now = new Date();
+    document.getElementById('results-meta').textContent =
+      `${txType === 'intra' ? 'Intra-State' : 'Inter-State'} · ${mode === 'exclusive' ? 'Exclusive' : 'Inclusive'} · ${now.toLocaleTimeString('en-IN')}`;
+
+    // Show results
+    const card = document.getElementById('results-card');
+    card.classList.add('visible');
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Add to history
+    addHistory({ amtVal, rate, mode, txType, base, gst, total, cgst, sgst, igst, time: now.toLocaleString('en-IN') });
+  }
+
+  function autoCalculate() {
+    const v = document.getElementById('amount').value;
+    if (v && parseFloat(v) >= 0) calculate();
+  }
+
+  // ── History ────────────────────────────────────────────────────
+  function addHistory(entry) {
+    history.unshift(entry);
+    if (history.length > 10) history.pop();
+    localStorage.setItem('gst_history', JSON.stringify(history));
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const el = document.getElementById('history-list');
+    if (!history.length) {
+      el.innerHTML = '<div class="no-history">No calculations yet. Results will appear here.</div>';
+      return;
+    }
+    el.innerHTML = history.map((h, i) => `
+      <div class="history-item" onclick="loadHistory(${i})">
+        <span class="hi-base">₹${h.amtVal.toLocaleString('en-IN')}</span>
+        <span class="hi-rate">${h.rate}% GST</span>
+        <span class="hi-type">${h.txType === 'intra' ? 'Intra' : 'Inter'}</span>
+        <span style="color:var(--muted);font-size:11px;">${h.time}</span>
+        <span class="hi-total">Total: ${fmt(h.total)}</span>
+      </div>
+    `).join('');
+  }
+
+  function loadHistory(i) {
+    const h = history[i];
+    document.getElementById('amount').value = h.amtVal;
+    setMode(h.mode);
+    setTxType(h.txType);
+    setRate(h.rate);
+    calculate();
+  }
+
+  function clearHistory() {
+    history = [];
+    localStorage.removeItem('gst_history');
+    renderHistory();
+  }
+
+  // ── PDF Download ───────────────────────────────────────────────
+  function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+    const amtVal = parseFloat(document.getElementById('amount').value) || 0;
+    const rate   = getRate();
+    const { base, gst, total } = compute(amtVal, rate, mode);
+    const notes = document.getElementById('notes').value;
+    const now   = new Date().toLocaleString('en-IN');
+
+    const W = doc.internal.pageSize.getWidth();
+
+    // Header bar
+    doc.setFillColor(240, 165, 0);
+    doc.rect(0, 0, W, 28, 'F');
+
+    doc.setTextColor(13, 17, 23);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text('GST CALCULATOR', 14, 14);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('India Tax Computation Summary', 14, 22);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(13, 17, 23);
+    doc.text(`Generated: ${now}`, W - 14, 14, { align: 'right' });
+
+    // Body
+    doc.setTextColor(30, 30, 30);
+    let y = 40;
+
+    function row(label, value, bold = false, color = [30,30,30]) {
+      doc.setFont('helvetica', bold ? 'bold' : 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(...color);
+      doc.text(label, 14, y);
+      doc.text(value, W - 14, y, { align: 'right' });
+      y += 8;
+    }
+
+    function section(title) {
+      y += 4;
+      doc.setFillColor(245, 245, 240);
+      doc.rect(14, y - 5, W - 28, 8, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(120, 120, 120);
+      doc.text(title.toUpperCase(), 16, y);
+      y += 8;
+    }
+
+    section('Transaction Details');
+    row('Mode', mode === 'exclusive' ? 'GST Exclusive' : 'GST Inclusive');
+    row('Transaction Type', txType === 'intra' ? 'Intra-State (CGST + SGST)' : 'Inter-State (IGST)');
+    row('GST Rate', `${rate}%`);
+    if (notes) row('Notes', notes);
+
+    section('Amount Breakdown');
+    row('Base Amount (excl. GST)', fmt(base));
+    row('Total GST Amount', fmt(gst), false, [200, 120, 0]);
+
+    if (txType === 'intra') {
+      row(`  CGST (${rate/2}%)`, fmt(gst/2));
+      row(`  SGST (${rate/2}%)`, fmt(gst/2));
+    } else {
+      row(`  IGST (${rate}%)`, fmt(gst));
+    }
+
+    y += 4;
+    doc.setFillColor(240, 165, 0);
+    doc.rect(14, y, W - 28, 0.5, 'F');
+    y += 8;
+
+    row('TOTAL AMOUNT (incl. GST)', fmt(total), true, [13, 17, 23]);
+
+    // Footer
+    const pageH = doc.internal.pageSize.getHeight();
+    doc.setFillColor(240, 165, 0);
+    doc.rect(0, pageH - 14, W, 14, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(13, 17, 23);
+    doc.text('This document is for reference only. Consult a tax professional for official filings.', W/2, pageH - 6, { align: 'center' });
+
+    doc.save('GST-Calculation.pdf');
+  }
+
+  // ── Copy Summary ───────────────────────────────────────────────
+  function copyResults() {
+    const amtVal = parseFloat(document.getElementById('amount').value) || 0;
+    const rate   = getRate();
+    const { base, gst, total } = compute(amtVal, rate, mode);
+    const lines = [
+      `GST Calculation Summary`,
+      `─────────────────────`,
+      `Mode: ${mode === 'exclusive' ? 'GST Exclusive' : 'GST Inclusive'}`,
+      `Type: ${txType === 'intra' ? 'Intra-State' : 'Inter-State'}`,
+      `Rate: ${rate}%`,
+      `Base Amount : ${fmt(base)}`,
+      `GST Amount  : ${fmt(gst)}`,
+      txType === 'intra' ? `  CGST (${rate/2}%): ${fmt(gst/2)}\n  SGST (${rate/2}%): ${fmt(gst/2)}` : `  IGST (${rate}%): ${fmt(gst)}`,
+      `Total Amount: ${fmt(total)}`,
+    ].join('\n');
+    navigator.clipboard.writeText(lines).then(() => alert('✅ Copied to clipboard!'));
+  }
+
+  function printPage() { window.print(); }
+
+  function resetAll() {
+    document.getElementById('amount').value = '';
+    document.getElementById('notes').value  = '';
+    document.getElementById('results-card').classList.remove('visible');
+    setMode('exclusive');
+    setTxType('intra');
+    setRate(5);
+  }
+
+  // ── Init ───────────────────────────────────────────────────────
+  renderHistory();
+  setRate(5);
+</script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FormFlow Pro | Drag & Drop Builder</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; color: #0f172a; padding: 16px; }
+  .wrap { max-width: 980px; margin: 0 auto; display: flex; gap: 16px; align-items: flex-start; }
+
+  /* TOOLBAR */
+  .toolbar { flex: 0 0 200px; background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 6px; }
+  .logo { font-size: 15px; font-weight: 800; color: #4f46e5; display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
+  .tool-category { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px; margin: 8px 0 4px; }
+  .field-btn { width: 100%; padding: 10px 12px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; font-family: inherit; color: #334155; transition: border-color 0.2s, background 0.2s, color 0.2s; }
+  .field-btn:hover { border-color: #4f46e5; background: #eff0fe; color: #4f46e5; }
+  .field-icon { font-size: 14px; }
+  .storage-note { margin-top: auto; padding: 12px; background: #eff0fe; border-radius: 10px; }
+  .storage-note p:first-child { font-size: 10px; color: #4f46e5; font-weight: 800; }
+  .storage-note p:last-child  { font-size: 10px; color: #64748b; margin-top: 3px; }
+
+  /* WORKSPACE */
+  .workspace { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0; }
+  .ws-header { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px 14px 0 0; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: none; }
+  .form-title-input { font-weight: 800; font-size: 15px; border: none; outline: none; font-family: inherit; color: #0f172a; background: transparent; width: 200px; }
+  .btn-primary { background: #4f46e5; color: #fff; border: none; padding: 9px 20px; border-radius: 9px; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .btn-primary:hover { background: #4338ca; }
+
+  .canvas { background: #fff; border: 1px solid #e2e8f0; border-radius: 0 0 14px 14px; padding: 28px 28px 32px; min-height: 420px; }
+  .empty-state { text-align: center; color: #cbd5e1; padding: 60px 20px; font-size: 14px; }
+  .empty-state div { font-size: 36px; margin-bottom: 10px; }
+
+  /* FORM FIELDS */
+  .form-field-wrapper { padding: 14px; border: 2px dashed transparent; border-radius: 12px; margin-bottom: 14px; position: relative; transition: border-color 0.2s, background 0.2s; }
+  .form-field-wrapper:hover { border-color: #c7d2fe; background: #fafbff; }
+  .delete-btn { position: absolute; right: 10px; top: 10px; background: none; border: none; cursor: pointer; font-size: 15px; color: #fca5a5; opacity: 0; transition: opacity 0.2s; padding: 0; line-height: 1; }
+  .form-field-wrapper:hover .delete-btn { opacity: 1; }
+  .delete-btn:hover { color: #ef4444; }
+  .field-label { display: block; font-weight: 700; font-size: 12px; color: #334155; margin-bottom: 7px; outline: none; min-width: 80px; }
+  .field-input { width: 100%; padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; outline: none; font-family: inherit; font-size: 13px; color: #334155; background: #f8fafc; transition: border-color 0.2s; }
+  .field-input:focus { border-color: #4f46e5; background: #fff; }
+  textarea.field-input { resize: vertical; min-height: 70px; }
+
+  /* LEADS PANEL */
+  .leads-panel { flex: 0 0 220px; background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 10px; max-height: 600px; }
+  .leads-title { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px; }
+  .leads-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .lead-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; font-size: 12px; }
+  .lead-id { color: #4f46e5; font-weight: 800; margin-bottom: 6px; }
+  .lead-row { color: #334155; margin-bottom: 3px; word-break: break-word; }
+  .lead-row strong { color: #0f172a; }
+  .lead-time { font-size: 10px; color: #94a3b8; margin-top: 6px; }
+  .empty-leads { text-align: center; color: #cbd5e1; font-size: 12px; padding: 20px 10px; }
+  .btn-clear { width: 100%; padding: 9px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 9px; font-weight: 700; font-size: 12px; cursor: pointer; font-family: inherit; color: #64748b; }
+  .btn-clear:hover { background: #fee2e2; color: #ef4444; border-color: #fca5a5; }
+
+  .success-toast { display: none; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 14px; font-size: 12px; font-weight: 700; margin-top: 10px; text-align: center; }
+
+  @media (max-width: 700px) {
+    .wrap { flex-direction: column; }
+    .toolbar, .leads-panel { flex: 0 0 auto; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- TOOLBAR -->
+  <aside class="toolbar">
+    <div class="logo">📋 FormFlow</div>
+    <div class="tool-category">Standard Fields</div>
+    <button class="field-btn" onclick="addField('text')"><span class="field-icon">✏️</span> Short Text</button>
+    <button class="field-btn" onclick="addField('email')"><span class="field-icon">📧</span> Email Address</button>
+    <button class="field-btn" onclick="addField('number')"><span class="field-icon">🔢</span> Number</button>
+    <button class="field-btn" onclick="addField('textarea')"><span class="field-icon">📝</span> Long Text</button>
+    <button class="field-btn" onclick="addField('select')"><span class="field-icon">📂</span> Dropdown</button>
+    <button class="field-btn" onclick="addField('date')"><span class="field-icon">📅</span> Date Picker</button>
+    <div class="storage-note">
+      <p>SESSION ENGINE</p>
+      <p>In-memory storage active</p>
+    </div>
+  </aside>
+
+  <!-- WORKSPACE -->
+  <main class="workspace">
+    <div class="ws-header">
+      <input type="text" class="form-title-input" id="formTitle" value="Untitled Form">
+      <button class="btn-primary" onclick="submitForm()">▶ Test Submit</button>
+    </div>
+    <div class="canvas" id="formCanvas">
+      <div class="empty-state" id="emptyState">
+        <div>＋</div>
+        Click a field type on the left to start building your form.
+      </div>
+    </div>
+    <div class="success-toast" id="toast">✅ Lead captured successfully!</div>
+  </main>
+
+  <!-- LEADS PANEL -->
+  <aside class="leads-panel">
+    <div class="leads-title">Recent Leads</div>
+    <div class="leads-scroll" id="leadsContainer">
+      <div class="empty-leads">No leads yet.<br>Submit the form to capture data.</div>
+    </div>
+    <button class="btn-clear" onclick="clearLeads()">🗑 Clear All Leads</button>
+  </aside>
+
+</div>
+
+<script>
+  var fieldCount = 0;
+  var leads = [];   // in-memory only — no localStorage
+
+  var fieldConfig = {
+    text:     { label: 'Short Text',    html: '<input type="text"   class="field-input" placeholder="Your answer">' },
+    email:    { label: 'Email Address', html: '<input type="email"  class="field-input" placeholder="email@example.com">' },
+    number:   { label: 'Number',        html: '<input type="number" class="field-input" placeholder="0">' },
+    textarea: { label: 'Long Text',     html: '<textarea class="field-input" placeholder="Write here..." rows="3"></textarea>' },
+    select:   { label: 'Dropdown',      html: '<select class="field-input"><option>Option 1</option><option>Option 2</option><option>Option 3</option></select>' },
+    date:     { label: 'Date',          html: '<input type="date" class="field-input">' }
+  };
+
+  function addField(type) {
+    document.getElementById('emptyState').style.display = 'none';
+    fieldCount++;
+    var id  = 'field-' + fieldCount;
+    var cfg = fieldConfig[type];
+    var wrapper = document.createElement('div');
+    wrapper.className = 'form-field-wrapper';
+    wrapper.id = id;
+    wrapper.innerHTML =
+      '<button class="delete-btn" onclick="removeField(\'' + id + '\')" title="Delete">✕</button>' +
+      '<span class="field-label" contenteditable="true">' + cfg.label + '</span>' +
+      cfg.html;
+    document.getElementById('formCanvas').appendChild(wrapper);
+  }
+
+  function removeField(id) {
+    var el = document.getElementById(id);
+    if (el) el.remove();
+    if (document.querySelectorAll('.form-field-wrapper').length === 0) {
+      document.getElementById('emptyState').style.display = 'block';
+    }
+  }
+
+  function submitForm() {
+    var fields = document.querySelectorAll('.form-field-wrapper');
+    if (fields.length === 0) { alert('Please add some fields first!'); return; }
+
+    var submission = { id: Date.now(), time: new Date().toLocaleTimeString(), data: {} };
+    fields.forEach(function(f) {
+      var labelEl = f.querySelector('.field-label');
+      var inputEl = f.querySelector('input, select, textarea');
+      var key = labelEl ? labelEl.innerText.trim() : 'Field';
+      var val = inputEl ? (inputEl.value || '(empty)') : '(empty)';
+      submission.data[key] = val;
+    });
+
+    leads.unshift(submission);
+    renderLeads();
+    showToast();
+  }
+
+  function renderLeads() {
+    var container = document.getElementById('leadsContainer');
+    if (leads.length === 0) {
+      container.innerHTML = '<div class="empty-leads">No leads yet.<br>Submit the form to capture data.</div>';
+      return;
+    }
+    container.innerHTML = '';
+    leads.forEach(function(lead, idx) {
+      var card = document.createElement('div');
+      card.className = 'lead-card';
+      var rows = '';
+      for (var key in lead.data) {
+        rows += '<div class="lead-row"><strong>' + escHtml(key) + ':</strong> ' + escHtml(lead.data[key]) + '</div>';
+      }
+      card.innerHTML =
+        '<div class="lead-id">Lead #' + (leads.length - idx) + '</div>' +
+        rows +
+        '<div class="lead-time">Captured at ' + lead.time + '</div>';
+      container.appendChild(card);
+    });
+  }
+
+  function clearLeads() {
+    leads = [];
+    renderLeads();
+  }
+
+  function showToast() {
+    var t = document.getElementById('toast');
+    t.style.display = 'block';
+    setTimeout(function(){ t.style.display = 'none'; }, 2500);
+  }
+
+  function escHtml(t) {
+    return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>

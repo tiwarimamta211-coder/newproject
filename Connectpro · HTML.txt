@@ -1,0 +1,2613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ConnectPro — All-in-One Tool Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c14;
+  --bg2: #0d1320;
+  --bg3: #121929;
+  --card: #141d2e;
+  --card2: #1a2540;
+  --border: #1e2d47;
+  --border2: #253352;
+  --accent: #3b82f6;
+  --accent2: #60a5fa;
+  --accent3: #93c5fd;
+  --gold: #f59e0b;
+  --gold2: #fbbf24;
+  --green: #10b981;
+  --red: #ef4444;
+  --purple: #8b5cf6;
+  --cyan: #06b6d4;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --radius: 12px;
+  --radius2: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --glow: 0 0 30px rgba(59,130,246,0.15);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius:3px; }
+
+/* ─── SCREENS ─── */
+.screen { display:none; min-height:100vh; }
+.screen.active { display:block; }
+
+/* ══════════════════════════════════════════
+   AUTH SCREEN
+══════════════════════════════════════════ */
+#authScreen {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-bg {
+  position: absolute; inset:0;
+  background: radial-gradient(ellipse 80% 60% at 20% 50%, rgba(59,130,246,0.12) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 80% at 80% 80%, rgba(139,92,246,0.08) 0%, transparent 60%),
+              var(--bg);
+}
+
+.auth-grid {
+  position: absolute; inset:0;
+  background-image: linear-gradient(var(--border) 1px, transparent 1px),
+                    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.3;
+}
+
+.auth-left {
+  flex:1; display:flex; flex-direction:column;
+  justify-content:center; align-items:center;
+  padding:60px 40px; position:relative; z-index:2;
+}
+
+.auth-brand {
+  text-align:center; margin-bottom:48px;
+}
+
+.auth-logo {
+  width:64px; height:64px;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  border-radius:16px; display:flex; align-items:center; justify-content:center;
+  font-size:28px; margin:0 auto 16px; box-shadow: 0 8px 32px rgba(59,130,246,0.4);
+}
+
+.auth-brand h1 { font-size:32px; font-weight:800; letter-spacing:-0.5px; }
+.auth-brand span { color:var(--accent); }
+.auth-brand p { color:var(--text2); margin-top:8px; font-size:14px; }
+
+.auth-tabs {
+  display:flex; background:var(--bg3); border-radius:10px;
+  padding:4px; margin-bottom:28px; width:100%; max-width:380px;
+}
+
+.auth-tab {
+  flex:1; padding:10px; border:none; background:none;
+  color:var(--text2); font-family:inherit; font-size:14px; font-weight:500;
+  border-radius:7px; cursor:pointer; transition:all 0.2s;
+}
+.auth-tab.active { background:var(--accent); color:#fff; }
+
+.auth-form { width:100%; max-width:380px; }
+
+.form-group { margin-bottom:16px; }
+.form-group label {
+  display:block; font-size:12px; font-weight:500;
+  color:var(--text2); margin-bottom:6px; letter-spacing:0.5px; text-transform:uppercase;
+}
+.form-group input, .form-group select {
+  width:100%; padding:12px 16px;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius2); color:var(--text);
+  font-family:inherit; font-size:14px;
+  transition:border-color 0.2s, box-shadow 0.2s;
+  outline:none;
+}
+.form-group input:focus, .form-group select:focus {
+  border-color:var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+.form-group select option { background:var(--card2); }
+
+.btn-primary {
+  width:100%; padding:13px; background:var(--accent);
+  border:none; border-radius:var(--radius2); color:#fff;
+  font-family: 'Syne', sans-serif; font-size:15px; font-weight:700;
+  cursor:pointer; transition:all 0.2s; letter-spacing:0.3px;
+}
+.btn-primary:hover { background:#2563eb; transform:translateY(-1px); box-shadow:0 8px 20px rgba(59,130,246,0.35); }
+
+.form-footer { text-align:center; margin-top:16px; font-size:13px; color:var(--text2); }
+.form-footer a { color:var(--accent); text-decoration:none; cursor:pointer; }
+
+.auth-right {
+  flex:1; display:flex; flex-direction:column;
+  justify-content:center; align-items:center; padding:60px 40px;
+  position:relative; z-index:2;
+  border-left:1px solid var(--border);
+}
+
+.features-preview h2 { font-size:28px; font-weight:800; margin-bottom:8px; }
+.features-preview p { color:var(--text2); margin-bottom:36px; font-size:14px; }
+
+.feat-item {
+  display:flex; align-items:center; gap:14px;
+  padding:14px 18px; background:var(--card);
+  border:1px solid var(--border); border-radius:10px;
+  margin-bottom:12px; max-width:380px; width:100%;
+  transition:border-color 0.2s;
+}
+.feat-item:hover { border-color:var(--border2); }
+.feat-icon { font-size:22px; width:40px; text-align:center; }
+.feat-item h4 { font-size:14px; font-weight:600; margin-bottom:2px; }
+.feat-item p { font-size:12px; color:var(--text2); }
+
+/* Demo login hint */
+.demo-hint {
+  background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3);
+  border-radius:8px; padding:12px 16px; margin-bottom:20px;
+  font-size:12px; color:var(--accent2); line-height:1.6;
+}
+
+/* ══════════════════════════════════════════
+   MAIN APP LAYOUT
+══════════════════════════════════════════ */
+#appScreen { display:none; flex-direction:column; }
+#appScreen.active { display:flex; }
+
+/* TOP NAV */
+.topnav {
+  height:60px; background:var(--bg2); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 24px; gap:16px;
+  position:sticky; top:0; z-index:100;
+}
+
+.nav-logo { display:flex; align-items:center; gap:10px; }
+.nav-logo-icon {
+  width:32px; height:32px;
+  background:linear-gradient(135deg, var(--accent), var(--purple));
+  border-radius:8px; display:flex; align-items:center; justify-content:center;
+  font-size:14px;
+}
+.nav-logo span { font-family:'Syne',sans-serif; font-weight:800; font-size:16px; }
+
+.nav-search {
+  flex:1; max-width:380px; margin-left:24px; position:relative;
+}
+.nav-search input {
+  width:100%; padding:8px 16px 8px 36px;
+  background:var(--bg3); border:1px solid var(--border);
+  border-radius:20px; color:var(--text); font-family:inherit; font-size:13px;
+  outline:none; transition:border-color 0.2s;
+}
+.nav-search input:focus { border-color:var(--accent); }
+.nav-search-icon {
+  position:absolute; left:12px; top:50%; transform:translateY(-50%);
+  color:var(--text3); font-size:13px;
+}
+
+.nav-right { margin-left:auto; display:flex; align-items:center; gap:12px; }
+
+.nav-btn {
+  padding:7px 14px; border-radius:7px; border:none;
+  font-family:inherit; font-size:13px; cursor:pointer; font-weight:500;
+  transition:all 0.2s;
+}
+.nav-btn-ghost { background:none; color:var(--text2); }
+.nav-btn-ghost:hover { color:var(--text); background:var(--bg3); }
+
+.plan-badge {
+  padding:5px 12px; border-radius:20px; font-size:11px; font-weight:700;
+  letter-spacing:0.5px; text-transform:uppercase;
+}
+.plan-free { background:rgba(100,116,139,0.2); color:var(--text2); }
+.plan-pro { background:rgba(59,130,246,0.2); color:var(--accent2); }
+.plan-enterprise { background:rgba(245,158,11,0.2); color:var(--gold2); }
+
+.avatar {
+  width:34px; height:34px; border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--purple));
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Syne',sans-serif; font-weight:700; font-size:13px;
+  cursor:pointer;
+}
+
+.notification-btn {
+  width:34px; height:34px; border-radius:8px;
+  background:none; border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--text2); position:relative;
+  transition:all 0.2s;
+}
+.notification-btn:hover { background:var(--bg3); color:var(--text); }
+.notif-dot {
+  position:absolute; top:6px; right:6px;
+  width:7px; height:7px; background:var(--accent); border-radius:50%;
+}
+
+/* SIDEBAR + CONTENT */
+.app-body { display:flex; flex:1; overflow:hidden; height:calc(100vh - 60px); }
+
+.sidebar {
+  width:220px; background:var(--bg2); border-right:1px solid var(--border);
+  padding:16px 12px; overflow-y:auto; flex-shrink:0;
+  display:flex; flex-direction:column; gap:4px;
+}
+
+.sidebar-section { margin-bottom:8px; }
+.sidebar-section-label {
+  font-size:10px; font-weight:700; text-transform:uppercase;
+  letter-spacing:1px; color:var(--text3); padding:8px 12px 4px;
+}
+
+.nav-item {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 12px; border-radius:8px;
+  color:var(--text2); font-size:13px; font-weight:500;
+  cursor:pointer; transition:all 0.2s; border:none; background:none;
+  width:100%; text-align:left;
+}
+.nav-item:hover { background:var(--bg3); color:var(--text); }
+.nav-item.active { background:rgba(59,130,246,0.15); color:var(--accent2); }
+.nav-item-icon { font-size:16px; width:20px; text-align:center; }
+.nav-badge {
+  margin-left:auto; background:var(--accent); color:#fff;
+  font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px;
+}
+.nav-badge-red { background:var(--red); }
+
+.content {
+  flex:1; overflow-y:auto; padding:24px;
+  background:var(--bg);
+}
+
+/* ═══ PANELS ═══ */
+.panel { display:none; }
+.panel.active { display:block; }
+
+/* PAGE HEADER */
+.page-header { margin-bottom:24px; }
+.page-header h2 { font-size:24px; font-weight:800; margin-bottom:4px; }
+.page-header p { color:var(--text2); font-size:14px; }
+
+/* STAT CARDS */
+.stats-grid {
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+  gap:16px; margin-bottom:24px;
+}
+
+.stat-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius); padding:20px;
+  transition:border-color 0.2s, transform 0.2s;
+  position:relative; overflow:hidden;
+}
+.stat-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+}
+.stat-card.blue::before { background:var(--accent); }
+.stat-card.gold::before { background:var(--gold); }
+.stat-card.green::before { background:var(--green); }
+.stat-card.purple::before { background:var(--purple); }
+.stat-card.cyan::before { background:var(--cyan); }
+
+.stat-card:hover { border-color:var(--border2); transform:translateY(-2px); }
+.stat-icon { font-size:24px; margin-bottom:12px; }
+.stat-value { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; margin-bottom:4px; }
+.stat-label { font-size:12px; color:var(--text2); }
+.stat-change { font-size:11px; margin-top:8px; font-weight:500; }
+.stat-change.up { color:var(--green); }
+.stat-change.down { color:var(--red); }
+
+/* CARD */
+.card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius); padding:20px; margin-bottom:20px;
+}
+.card-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:16px;
+}
+.card-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; }
+.card-subtitle { font-size:12px; color:var(--text2); margin-top:2px; }
+
+/* GRID */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+
+/* TABLE */
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+th {
+  text-align:left; font-size:11px; font-weight:700; letter-spacing:0.5px;
+  text-transform:uppercase; color:var(--text3); padding:10px 14px;
+  border-bottom:1px solid var(--border);
+}
+td {
+  padding:12px 14px; font-size:13px; border-bottom:1px solid var(--border);
+  color:var(--text);
+}
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(255,255,255,0.02); }
+
+/* BADGE */
+.badge {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600;
+}
+.badge-green { background:rgba(16,185,129,0.15); color:var(--green); }
+.badge-red { background:rgba(239,68,68,0.15); color:var(--red); }
+.badge-blue { background:rgba(59,130,246,0.15); color:var(--accent2); }
+.badge-gold { background:rgba(245,158,11,0.15); color:var(--gold2); }
+.badge-gray { background:rgba(100,116,139,0.15); color:var(--text2); }
+.badge-purple { background:rgba(139,92,246,0.15); color:var(--purple); }
+
+/* PROGRESS BAR */
+.progress-bar { background:var(--bg3); border-radius:4px; height:6px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:4px; transition:width 0.5s ease; }
+
+/* BUTTONS */
+.btn {
+  padding:8px 16px; border-radius:7px; border:none;
+  font-family:inherit; font-size:13px; font-weight:500;
+  cursor:pointer; transition:all 0.2s; display:inline-flex;
+  align-items:center; gap:6px;
+}
+.btn-sm { padding:6px 12px; font-size:12px; }
+.btn-lg { padding:12px 24px; font-size:15px; font-family:'Syne',sans-serif; font-weight:700; }
+.btn-accent { background:var(--accent); color:#fff; }
+.btn-accent:hover { background:#2563eb; }
+.btn-outline { background:none; border:1px solid var(--border); color:var(--text2); }
+.btn-outline:hover { border-color:var(--accent); color:var(--accent); }
+.btn-gold { background:var(--gold); color:#000; }
+.btn-gold:hover { background:var(--gold2); }
+.btn-red { background:var(--red); color:#fff; }
+.btn-red:hover { background:#dc2626; }
+.btn-ghost { background:none; color:var(--text2); }
+.btn-ghost:hover { color:var(--text); }
+.btn-green { background:var(--green); color:#fff; }
+
+/* TOGGLE */
+.toggle { position:relative; display:inline-block; width:40px; height:22px; }
+.toggle input { opacity:0; width:0; height:0; }
+.toggle-slider {
+  position:absolute; cursor:pointer; inset:0;
+  background:var(--border2); border-radius:22px; transition:0.2s;
+}
+.toggle-slider::before {
+  content:''; position:absolute; height:16px; width:16px; left:3px; bottom:3px;
+  background:#fff; border-radius:50%; transition:0.2s;
+}
+.toggle input:checked + .toggle-slider { background:var(--accent); }
+.toggle input:checked + .toggle-slider::before { transform:translateX(18px); }
+
+/* MODAL */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.7);
+  display:flex; align-items:center; justify-content:center;
+  z-index:1000; backdrop-filter:blur(4px);
+  opacity:0; pointer-events:none; transition:opacity 0.2s;
+}
+.modal-overlay.open { opacity:1; pointer-events:all; }
+.modal {
+  background:var(--card); border:1px solid var(--border2);
+  border-radius:16px; width:90%; max-width:520px;
+  padding:28px; position:relative;
+  transform:scale(0.95) translateY(20px); transition:all 0.2s;
+  max-height:90vh; overflow-y:auto;
+}
+.modal-overlay.open .modal { transform:scale(1) translateY(0); }
+.modal-close {
+  position:absolute; top:16px; right:16px;
+  background:none; border:none; color:var(--text2);
+  font-size:18px; cursor:pointer;
+}
+.modal h3 { font-size:20px; font-weight:800; margin-bottom:6px; }
+.modal p { color:var(--text2); font-size:14px; margin-bottom:20px; }
+
+/* TOAST */
+.toast-container {
+  position:fixed; bottom:24px; right:24px; z-index:9999;
+  display:flex; flex-direction:column; gap:8px;
+}
+.toast {
+  padding:12px 18px; background:var(--card2); border:1px solid var(--border2);
+  border-radius:10px; font-size:13px; font-weight:500;
+  display:flex; align-items:center; gap:10px;
+  animation:slideIn 0.3s ease; max-width:320px;
+  box-shadow: var(--shadow);
+}
+.toast-success { border-left:3px solid var(--green); }
+.toast-error { border-left:3px solid var(--red); }
+.toast-info { border-left:3px solid var(--accent); }
+@keyframes slideIn { from { opacity:0; transform:translateX(20px); } }
+
+/* CHART PLACEHOLDER */
+.chart-area {
+  background:var(--bg3); border-radius:8px;
+  height:180px; position:relative; overflow:hidden;
+  display:flex; align-items:flex-end; padding:16px; gap:6px;
+}
+.chart-bar {
+  flex:1; background:var(--accent); border-radius:4px 4px 0 0;
+  opacity:0.7; transition:opacity 0.2s; cursor:pointer;
+  position:relative;
+}
+.chart-bar:hover { opacity:1; }
+.chart-bar-label {
+  position:absolute; bottom:-20px; left:50%; transform:translateX(-50%);
+  font-size:9px; color:var(--text3); white-space:nowrap;
+}
+
+.donut-chart {
+  width:120px; height:120px; position:relative;
+}
+.donut-chart svg { transform:rotate(-90deg); }
+.donut-center {
+  position:absolute; inset:0; display:flex;
+  flex-direction:column; align-items:center; justify-content:center;
+}
+.donut-center span { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; }
+.donut-center small { font-size:10px; color:var(--text2); }
+
+/* LINE CHART */
+.line-chart-svg { width:100%; height:140px; }
+
+/* ── FILE MANAGER ── */
+.file-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px;
+}
+.file-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:10px; padding:16px; text-align:center;
+  cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden;
+}
+.file-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+.file-card input[type=checkbox] {
+  position:absolute; top:8px; left:8px; accent-color:var(--accent);
+}
+.file-icon { font-size:36px; margin-bottom:8px; }
+.file-name { font-size:12px; font-weight:500; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.file-meta { font-size:10px; color:var(--text3); }
+
+/* DROP ZONE */
+.dropzone {
+  border:2px dashed var(--border2); border-radius:12px;
+  padding:48px; text-align:center; cursor:pointer;
+  transition:all 0.2s; margin-bottom:20px;
+}
+.dropzone:hover, .dropzone.drag-over {
+  border-color:var(--accent); background:rgba(59,130,246,0.05);
+}
+.dropzone-icon { font-size:48px; margin-bottom:12px; }
+.dropzone h3 { font-size:16px; margin-bottom:6px; }
+.dropzone p { font-size:13px; color:var(--text2); }
+
+/* STORAGE BAR */
+.storage-detail { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+.storage-item { display:flex; align-items:center; gap:10px; font-size:12px; }
+.storage-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+/* ── WATERMARK ── */
+.watermark-preview {
+  background:var(--bg3); border-radius:10px;
+  aspect-ratio:16/9; position:relative; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+}
+.watermark-preview img { max-width:100%; max-height:100%; object-fit:contain; }
+.watermark-overlay {
+  position:absolute; font-family:'Syne',sans-serif; font-weight:700;
+  pointer-events:none; user-select:none; transition:all 0.3s;
+}
+.wm-pos-center { top:50%; left:50%; transform:translate(-50%,-50%); }
+.wm-pos-tl { top:12px; left:12px; }
+.wm-pos-tr { top:12px; right:12px; }
+.wm-pos-bl { bottom:12px; left:12px; }
+.wm-pos-br { bottom:12px; right:12px; }
+
+/* SLIDER */
+.slider-group { display:flex; align-items:center; gap:10px; }
+.slider-group input[type=range] {
+  flex:1; -webkit-appearance:none; height:4px;
+  background:var(--border2); border-radius:2px; outline:none;
+}
+.slider-group input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:16px; height:16px;
+  background:var(--accent); border-radius:50%; cursor:pointer;
+}
+.slider-val { font-size:13px; font-weight:600; width:36px; text-align:right; color:var(--accent2); }
+
+/* COLOR PICKER */
+.color-options { display:flex; gap:8px; flex-wrap:wrap; }
+.color-opt {
+  width:28px; height:28px; border-radius:6px; cursor:pointer;
+  border:2px solid transparent; transition:all 0.2s;
+}
+.color-opt.selected { border-color:#fff; transform:scale(1.1); }
+
+/* ── PRICING ── */
+.pricing-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px; }
+
+.pricing-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:16px; padding:28px; position:relative;
+  transition:all 0.25s;
+}
+.pricing-card:hover { transform:translateY(-4px); box-shadow:var(--shadow); }
+.pricing-card.featured {
+  border-color:var(--accent); background:rgba(59,130,246,0.05);
+  box-shadow:0 0 40px rgba(59,130,246,0.15);
+}
+.pricing-popular {
+  position:absolute; top:-12px; left:50%; transform:translateX(-50%);
+  background:var(--accent); color:#fff;
+  font-size:11px; font-weight:700; padding:4px 14px; border-radius:20px;
+  letter-spacing:0.5px; text-transform:uppercase;
+}
+.pricing-name { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; color:var(--text2); }
+.pricing-price { font-family:'Syne',sans-serif; font-size:42px; font-weight:800; margin-bottom:4px; }
+.pricing-price span { font-size:16px; font-weight:400; color:var(--text2); }
+.pricing-desc { font-size:13px; color:var(--text2); margin-bottom:24px; }
+.pricing-features { list-style:none; margin-bottom:24px; }
+.pricing-features li {
+  display:flex; align-items:center; gap:8px;
+  font-size:13px; padding:5px 0; border-bottom:1px solid var(--border);
+}
+.pricing-features li:last-child { border:none; }
+.feat-check { color:var(--green); font-size:14px; }
+.feat-cross { color:var(--text3); font-size:14px; }
+
+/* ── ADMIN DASHBOARD ── */
+.admin-header {
+  background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(139,92,246,0.1));
+  border:1px solid rgba(59,130,246,0.2); border-radius:12px;
+  padding:20px; margin-bottom:20px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.admin-alert { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:12px 16px; font-size:13px; }
+
+.user-row-actions { display:flex; gap:6px; }
+
+/* ── SETTINGS ── */
+.settings-section { margin-bottom:28px; }
+.settings-section h3 { font-size:16px; font-weight:700; margin-bottom:4px; }
+.settings-section p { font-size:13px; color:var(--text2); margin-bottom:16px; }
+
+.setting-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 0; border-bottom:1px solid var(--border);
+}
+.setting-item:last-child { border:none; }
+.setting-item-info h4 { font-size:14px; font-weight:500; margin-bottom:2px; }
+.setting-item-info p { font-size:12px; color:var(--text2); }
+
+/* ── ANALYTICS ── */
+.analytics-metric {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:10px; padding:16px; text-align:center;
+}
+.analytics-metric .val { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; }
+.analytics-metric .lbl { font-size:11px; color:var(--text2); margin-top:4px; }
+
+/* ACTIVITY FEED */
+.activity-item {
+  display:flex; align-items:flex-start; gap:12px;
+  padding:10px 0; border-bottom:1px solid var(--border);
+}
+.activity-item:last-child { border:none; }
+.activity-avatar {
+  width:32px; height:32px; border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--purple));
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0;
+}
+.activity-text { font-size:13px; line-height:1.5; }
+.activity-text strong { color:var(--text); }
+.activity-time { font-size:11px; color:var(--text3); margin-top:2px; }
+
+/* QUICK ACTIONS */
+.quick-actions { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:12px; }
+.quick-action {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:10px; padding:16px; text-align:center;
+  cursor:pointer; transition:all 0.2s;
+}
+.quick-action:hover { border-color:var(--accent); background:rgba(59,130,246,0.05); }
+.qa-icon { font-size:24px; margin-bottom:8px; }
+.qa-label { font-size:12px; font-weight:500; }
+
+/* LIMIT INDICATOR */
+.limit-row { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.limit-header { display:flex; justify-content:space-between; font-size:12px; }
+.limit-name { color:var(--text2); }
+.limit-used { color:var(--text); font-weight:600; }
+
+/* PLAN COMPARE TABLE */
+.plan-compare th { background:var(--bg3); }
+.plan-compare .highlight td { background:rgba(59,130,246,0.05); }
+
+/* RESPONSIVE */
+@media (max-width:900px) {
+  .auth-right { display:none; }
+  .sidebar { width:200px; }
+  .grid-2, .grid-3 { grid-template-columns:1fr; }
+}
+@media (max-width:640px) {
+  .sidebar { display:none; }
+  .content { padding:16px; }
+  .stats-grid { grid-template-columns:1fr 1fr; }
+  .pricing-grid { grid-template-columns:1fr; }
+  .auth-left { padding:32px 20px; }
+}
+
+/* ANIMATED GRADIENT TEXT */
+.grad-text {
+  background:linear-gradient(90deg,var(--accent),var(--purple),var(--cyan));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+/* UPTIME DOTS */
+.uptime-dots { display:flex; gap:3px; flex-wrap:wrap; }
+.uptime-dot { width:10px; height:22px; border-radius:3px; background:var(--green); }
+.uptime-dot.down { background:var(--red); }
+.uptime-dot.partial { background:var(--gold); }
+
+/* ICON PILL */
+.icon-pill {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 10px; background:var(--bg3);
+  border-radius:20px; font-size:11px; color:var(--text2);
+}
+
+/* tag input  */
+.tag-list { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.tag {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:4px 10px; background:rgba(59,130,246,0.15);
+  border-radius:20px; font-size:12px; color:var(--accent2);
+}
+.tag button { background:none; border:none; color:var(--accent2); cursor:pointer; font-size:14px; line-height:1; }
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     AUTH SCREEN
+══════════════════════════════════════════ -->
+<div id="authScreen" class="screen active">
+  <div class="auth-bg"></div>
+  <div class="auth-grid"></div>
+
+  <!-- LEFT PANEL -->
+  <div class="auth-left">
+    <div class="auth-brand">
+      <div class="auth-logo">🔗</div>
+      <h1>Connect<span>Pro</span></h1>
+      <p>All-in-One Tool Platform for Teams</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm" class="auth-form">
+      <div class="demo-hint">
+        <strong>🎯 Demo Credentials</strong><br>
+        Admin: admin@connectpro.com / admin123<br>
+        User: user@demo.com / demo123
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="loginEmail" placeholder="your@email.com" value="admin@connectpro.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" value="admin123">
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Sign In →</button>
+      <div class="form-footer">
+        <a onclick="switchAuthTab('register')">Create an account</a> &nbsp;·&nbsp;
+        <a onclick="showToast('Password reset email sent!','info')">Forgot password?</a>
+      </div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm" class="auth-form" style="display:none">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="regName" placeholder="Mamta Sharma">
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="regEmail" placeholder="mamta@cafirm.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPassword" placeholder="Create strong password">
+      </div>
+      <div class="form-group">
+        <label>Account Type</label>
+        <select id="regPlan">
+          <option value="free">Free — ₹0/month</option>
+          <option value="pro">Pro — ₹999/month</option>
+          <option value="enterprise">Enterprise — ₹2999/month</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="doRegister()">Create Account →</button>
+      <div class="form-footer">Already have an account? <a onclick="switchAuthTab('login')">Sign in</a></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="auth-right">
+    <div class="features-preview">
+      <h2>Everything you need,<br><span class="grad-text">in one place.</span></h2>
+      <p>ConnectPro brings your entire workflow together.</p>
+      <div class="feat-item"><div class="feat-icon">☁️</div><div><h4>Cloud Storage</h4><p>Up to 1TB secure file storage with versioning</p></div></div>
+      <div class="feat-item"><div class="feat-icon">🔏</div><div><h4>Watermarking</h4><p>Auto-watermark documents and images</p></div></div>
+      <div class="feat-item"><div class="feat-icon">⬇️</div><div><h4>Download Controls</h4><p>Set limits, expiry and access rules per file</p></div></div>
+      <div class="feat-item"><div class="feat-icon">📊</div><div><h4>Analytics Dashboard</h4><p>Real-time insights on usage and engagement</p></div></div>
+      <div class="feat-item"><div class="feat-icon">🛡️</div><div><h4>Admin Control</h4><p>Full user management and audit logs</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MAIN APP SCREEN
+══════════════════════════════════════════ -->
+<div id="appScreen" class="screen">
+
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <div class="nav-logo">
+      <div class="nav-logo-icon">🔗</div>
+      <span>ConnectPro</span>
+    </div>
+    <div class="nav-search">
+      <span class="nav-search-icon">🔍</span>
+      <input type="text" placeholder="Search files, users, settings..." id="globalSearch">
+    </div>
+    <div class="nav-right">
+      <span id="currentPlanBadge" class="plan-badge plan-pro">Pro</span>
+      <button class="notification-btn" onclick="showToast('3 new notifications','info')">
+        🔔 <div class="notif-dot"></div>
+      </button>
+      <button class="nav-btn nav-btn-ghost" onclick="openModal('upgradeModal')">⬆ Upgrade</button>
+      <div class="avatar" id="userAvatar" onclick="navigateTo('settings')">MS</div>
+    </div>
+  </nav>
+
+  <div class="app-body">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Main</div>
+        <button class="nav-item active" onclick="navigateTo('dashboard')"><span class="nav-item-icon">🏠</span>Dashboard</button>
+        <button class="nav-item" onclick="navigateTo('files')"><span class="nav-item-icon">📁</span>Cloud Storage</button>
+        <button class="nav-item" onclick="navigateTo('watermark')"><span class="nav-item-icon">🔏</span>Watermarking</button>
+        <button class="nav-item" onclick="navigateTo('downloads')"><span class="nav-item-icon">⬇️</span>Downloads <span class="nav-badge">3</span></button>
+        <button class="nav-item" onclick="navigateTo('analytics')"><span class="nav-item-icon">📊</span>Analytics</button>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Commerce</div>
+        <button class="nav-item" onclick="navigateTo('pricing')"><span class="nav-item-icon">💎</span>Pricing Plans</button>
+        <button class="nav-item" onclick="navigateTo('billing')"><span class="nav-item-icon">💳</span>Billing</button>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Admin</div>
+        <button class="nav-item" onclick="navigateTo('admin')"><span class="nav-item-icon">🛡️</span>Admin Panel <span class="nav-badge nav-badge-red">!</span></button>
+        <button class="nav-item" onclick="navigateTo('users')"><span class="nav-item-icon">👥</span>Users</button>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Account</div>
+        <button class="nav-item" onclick="navigateTo('settings')"><span class="nav-item-icon">⚙️</span>Settings</button>
+        <button class="nav-item" onclick="doLogout()"><span class="nav-item-icon">🚪</span>Logout</button>
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      <!-- ── DASHBOARD ── -->
+      <div id="panel-dashboard" class="panel active">
+        <div class="page-header">
+          <h2>Welcome back, <span id="welcomeName">Mamta</span> 👋</h2>
+          <p>Here's what's happening with your account today.</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card blue">
+            <div class="stat-icon">☁️</div>
+            <div class="stat-value">14.3 GB</div>
+            <div class="stat-label">Cloud Storage Used</div>
+            <div class="stat-change up">▲ +2.1 GB this week</div>
+          </div>
+          <div class="stat-card gold">
+            <div class="stat-icon">⬇️</div>
+            <div class="stat-value">1,842</div>
+            <div class="stat-label">Total Downloads</div>
+            <div class="stat-change up">▲ +12% vs last month</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">🔏</div>
+            <div class="stat-value">348</div>
+            <div class="stat-label">Watermarked Files</div>
+            <div class="stat-change up">▲ +24 today</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value">89</div>
+            <div class="stat-label">Active Users</div>
+            <div class="stat-change up">▲ +7 this week</div>
+          </div>
+          <div class="stat-card cyan">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value">₹48,200</div>
+            <div class="stat-label">Monthly Revenue</div>
+            <div class="stat-change down">▼ -3% vs last month</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <!-- DOWNLOADS CHART -->
+          <div class="card">
+            <div class="card-header">
+              <div><div class="card-title">Download Activity</div><div class="card-subtitle">Last 7 days</div></div>
+              <span class="badge badge-blue">Live</span>
+            </div>
+            <div class="chart-area" id="downloadChart"></div>
+          </div>
+
+          <!-- STORAGE BREAKDOWN -->
+          <div class="card">
+            <div class="card-header">
+              <div><div class="card-title">Storage Breakdown</div><div class="card-subtitle">14.3 GB of 50 GB used</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:24px">
+              <div class="donut-chart">
+                <svg viewBox="0 0 120 120" width="120" height="120">
+                  <circle cx="60" cy="60" r="45" fill="none" stroke="#1e2d47" stroke-width="14"/>
+                  <circle cx="60" cy="60" r="45" fill="none" stroke="#3b82f6" stroke-width="14" stroke-dasharray="127 155" stroke-linecap="round"/>
+                  <circle cx="60" cy="60" r="45" fill="none" stroke="#8b5cf6" stroke-width="14" stroke-dasharray="56 226" stroke-dashoffset="-127" stroke-linecap="round"/>
+                  <circle cx="60" cy="60" r="45" fill="none" stroke="#10b981" stroke-width="14" stroke-dasharray="34 248" stroke-dashoffset="-183" stroke-linecap="round"/>
+                </svg>
+                <div class="donut-center"><span>28%</span><small>used</small></div>
+              </div>
+              <div class="storage-detail">
+                <div class="storage-item"><div class="storage-dot" style="background:var(--accent)"></div><span>Documents — 8.1 GB</span></div>
+                <div class="storage-item"><div class="storage-dot" style="background:var(--purple)"></div><span>Images — 3.5 GB</span></div>
+                <div class="storage-item"><div class="storage-dot" style="background:var(--green)"></div><span>Videos — 2.1 GB</span></div>
+                <div class="storage-item"><div class="storage-dot" style="background:var(--border2)"></div><span>Free — 35.7 GB</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <!-- RECENT FILES -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Recent Files</div>
+              <button class="btn btn-sm btn-outline" onclick="navigateTo('files')">View All</button>
+            </div>
+            <div id="recentFilesList"></div>
+          </div>
+
+          <!-- ACTIVITY FEED -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Recent Activity</div>
+              <button class="btn btn-sm btn-outline">View Log</button>
+            </div>
+            <div id="activityFeed"></div>
+          </div>
+        </div>
+
+        <!-- QUICK ACTIONS -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">Quick Actions</div>
+          <div class="quick-actions">
+            <div class="quick-action" onclick="navigateTo('files')"><div class="qa-icon">📤</div><div class="qa-label">Upload File</div></div>
+            <div class="quick-action" onclick="navigateTo('watermark')"><div class="qa-icon">🔏</div><div class="qa-label">Add Watermark</div></div>
+            <div class="quick-action" onclick="navigateTo('downloads')"><div class="qa-icon">🔗</div><div class="qa-label">Share Link</div></div>
+            <div class="quick-action" onclick="navigateTo('analytics')"><div class="qa-icon">📊</div><div class="qa-label">View Analytics</div></div>
+            <div class="quick-action" onclick="navigateTo('users')"><div class="qa-icon">👤</div><div class="qa-label">Add User</div></div>
+            <div class="quick-action" onclick="navigateTo('pricing')"><div class="qa-icon">💎</div><div class="qa-label">Upgrade Plan</div></div>
+            <div class="quick-action" onclick="navigateTo('admin')"><div class="qa-icon">🛡️</div><div class="qa-label">Admin Panel</div></div>
+            <div class="quick-action" onclick="navigateTo('settings')"><div class="qa-icon">⚙️</div><div class="qa-label">Settings</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CLOUD STORAGE ── -->
+      <div id="panel-files" class="panel">
+        <div class="page-header">
+          <h2>☁️ Cloud Storage</h2>
+          <p>Manage, share and organize your files securely.</p>
+        </div>
+
+        <!-- Storage Usage Bar -->
+        <div class="card" style="margin-bottom:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div>
+              <strong style="font-size:14px">Storage Usage</strong>
+              <span style="font-size:12px;color:var(--text2);margin-left:8px">14.3 GB of 50 GB used</span>
+            </div>
+            <button class="btn btn-sm btn-gold" onclick="navigateTo('pricing')">⬆ Get More Storage</button>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:28.6%;background:linear-gradient(90deg,var(--accent),var(--purple))"></div>
+          </div>
+          <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;color:var(--text2)">
+            <span style="color:var(--accent)">■ Docs 8.1 GB</span>
+            <span style="color:var(--purple)">■ Images 3.5 GB</span>
+            <span style="color:var(--green)">■ Videos 2.1 GB</span>
+            <span>■ Free 35.7 GB</span>
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+          <button class="btn btn-accent" onclick="openModal('uploadModal')">📤 Upload Files</button>
+          <button class="btn btn-outline" onclick="openModal('newFolderModal')">📁 New Folder</button>
+          <button class="btn btn-outline" id="bulkDeleteBtn" style="display:none" onclick="bulkDelete()">🗑 Delete Selected</button>
+          <div style="margin-left:auto;display:flex;gap:8px">
+            <input type="text" id="fileSearch" placeholder="Search files..." oninput="filterFiles(this.value)" style="padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;font-size:13px;outline:none;width:180px">
+            <div style="display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:7px;overflow:hidden">
+              <button class="btn btn-ghost btn-sm" onclick="setFileView('grid')" id="viewGrid" style="border-radius:0">⊞</button>
+              <button class="btn btn-ghost btn-sm" onclick="setFileView('list')" id="viewList" style="border-radius:0">☰</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter tabs -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <button class="btn btn-sm btn-accent" onclick="filterByType('all',this)">All Files</button>
+          <button class="btn btn-sm btn-outline" onclick="filterByType('doc',this)">📄 Documents</button>
+          <button class="btn btn-sm btn-outline" onclick="filterByType('img',this)">🖼 Images</button>
+          <button class="btn btn-sm btn-outline" onclick="filterByType('pdf',this)">📑 PDFs</button>
+          <button class="btn btn-sm btn-outline" onclick="filterByType('vid',this)">🎬 Videos</button>
+        </div>
+
+        <div id="fileGrid" class="file-grid"></div>
+        <div id="fileListView" style="display:none">
+          <div class="table-wrap"><table><thead><tr><th><input type="checkbox" onchange="selectAllFiles(this)"> Name</th><th>Type</th><th>Size</th><th>Downloads</th><th>Watermark</th><th>Actions</th></tr></thead><tbody id="fileTableBody"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- ── WATERMARKING ── -->
+      <div id="panel-watermark" class="panel">
+        <div class="page-header">
+          <h2>🔏 Watermarking Studio</h2>
+          <p>Add text or image watermarks to protect your documents and media.</p>
+        </div>
+
+        <div class="grid-2">
+          <!-- Controls -->
+          <div class="card">
+            <div class="card-title" style="margin-bottom:20px">Watermark Settings</div>
+
+            <div class="form-group">
+              <label>Watermark Text</label>
+              <input type="text" id="wmText" value="© ConnectPro Confidential" oninput="updateWatermarkPreview()" style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:10px 14px;color:var(--text);width:100%;font-family:inherit;outline:none">
+            </div>
+
+            <div class="form-group">
+              <label>Font Size</label>
+              <div class="slider-group">
+                <input type="range" id="wmSize" min="10" max="60" value="24" oninput="updateWatermarkPreview()">
+                <span class="slider-val" id="wmSizeVal">24px</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Opacity</label>
+              <div class="slider-group">
+                <input type="range" id="wmOpacity" min="5" max="100" value="35" oninput="updateWatermarkPreview()">
+                <span class="slider-val" id="wmOpacityVal">35%</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Rotation</label>
+              <div class="slider-group">
+                <input type="range" id="wmRotation" min="-90" max="90" value="-30" oninput="updateWatermarkPreview()">
+                <span class="slider-val" id="wmRotationVal">-30°</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Color</label>
+              <div class="color-options" id="wmColorOptions">
+                <div class="color-opt selected" style="background:#ffffff" data-color="#ffffff" onclick="selectWmColor(this)"></div>
+                <div class="color-opt" style="background:#ef4444" data-color="#ef4444" onclick="selectWmColor(this)"></div>
+                <div class="color-opt" style="background:#3b82f6" data-color="#3b82f6" onclick="selectWmColor(this)"></div>
+                <div class="color-opt" style="background:#10b981" data-color="#10b981" onclick="selectWmColor(this)"></div>
+                <div class="color-opt" style="background:#f59e0b" data-color="#f59e0b" onclick="selectWmColor(this)"></div>
+                <div class="color-opt" style="background:#8b5cf6" data-color="#8b5cf6" onclick="selectWmColor(this)"></div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Position</label>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px" id="wmPositionGrid">
+                <button class="btn btn-sm btn-outline" onclick="selectWmPos('tl',this)">↖ Top Left</button>
+                <button class="btn btn-sm btn-outline" onclick="selectWmPos('tc',this)">↑ Top Center</button>
+                <button class="btn btn-sm btn-outline" onclick="selectWmPos('tr',this)">↗ Top Right</button>
+                <button class="btn btn-sm btn-outline" onclick="selectWmPos('ml',this)">← Middle Left</button>
+                <button class="btn btn-sm btn-accent" onclick="selectWmPos('center',this)">● Center</button>
+                <button class="btn btn-sm btn-outline" onclick="selectWmPos('mr',this)">→ Middle Right</button>
+                <button class="btn btn-sm btn-outline" onclick="selectWmPos('bl',this)">↙ Bottom Left</button>
+                <button class="btn btn-sm btn-outline" onclick="selectWmPos('bc',this)">↓ Bottom Center</button>
+                <button class="btn btn-sm btn-outline" onclick="selectWmPos('br',this)">↘ Bottom Right</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label style="display:flex;justify-content:space-between">
+                Tile / Repeat Mode
+                <label class="toggle"><input type="checkbox" id="wmTile" onchange="updateWatermarkPreview()"><span class="toggle-slider"></span></label>
+              </label>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:16px">
+              <button class="btn btn-accent" onclick="applyWatermark()">🔏 Apply Watermark</button>
+              <button class="btn btn-outline" onclick="downloadWatermarked()">⬇ Download</button>
+            </div>
+          </div>
+
+          <!-- Preview -->
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">Live Preview</div>
+            <div class="watermark-preview" id="wmPreview">
+              <div style="text-align:center;color:var(--text3);font-size:13px">
+                <div style="font-size:48px;margin-bottom:8px">🖼️</div>
+                Sample Document Preview<br>
+                <small>Upload a file to see watermark applied</small>
+              </div>
+              <div id="wmOverlay" class="watermark-overlay wm-pos-center" style="color:#ffffff;opacity:0.35;font-size:24px;transform:translate(-50%,-50%) rotate(-30deg)">© ConnectPro Confidential</div>
+            </div>
+            <div style="margin-top:12px">
+              <button class="btn btn-sm btn-outline" onclick="document.getElementById('wmFileInput').click()">📎 Select File to Watermark</button>
+              <input type="file" id="wmFileInput" style="display:none" accept="image/*" onchange="loadWmFile(event)">
+            </div>
+
+            <div style="margin-top:20px">
+              <div class="card-title" style="font-size:14px;margin-bottom:12px">Bulk Watermark</div>
+              <div class="dropzone" id="bulkDropzone" onclick="showToast('Bulk watermark: select multiple files','info')">
+                <div class="dropzone-icon">📂</div>
+                <h3>Drop Files Here</h3>
+                <p>Supports PDF, PNG, JPG, DOCX</p>
+              </div>
+              <div id="bulkFileList" style="font-size:12px;color:var(--text2)"></div>
+            </div>
+
+            <!-- Preset Templates -->
+            <div style="margin-top:16px">
+              <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:8px;display:block">Quick Templates</label>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <button class="btn btn-sm btn-outline" onclick="applyTemplate('confidential')">🔒 Confidential</button>
+                <button class="btn btn-sm btn-outline" onclick="applyTemplate('draft')">📝 Draft</button>
+                <button class="btn btn-sm btn-outline" onclick="applyTemplate('approved')">✅ Approved</button>
+                <button class="btn btn-sm btn-outline" onclick="applyTemplate('sample')">🔍 Sample Only</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Watermark History -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Recent Watermarks</div>
+            <button class="btn btn-sm btn-outline">Export Log</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>File</th><th>Text</th><th>Position</th><th>Applied By</th><th>Date</th><th>Action</th></tr></thead>
+              <tbody id="wmHistoryTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DOWNLOAD LIMITS ── -->
+      <div id="panel-downloads" class="panel">
+        <div class="page-header">
+          <h2>⬇️ Download Controls</h2>
+          <p>Manage download limits, expiry, and access rules for your files.</p>
+        </div>
+
+        <!-- Global Limits -->
+        <div class="grid-2" style="margin-bottom:20px">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">Plan Limits Overview</div>
+            <div class="limit-row">
+              <div class="limit-header"><span class="limit-name">Downloads Today</span><span class="limit-used">47 / 500</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:9.4%;background:var(--green)"></div></div>
+            </div>
+            <div class="limit-row">
+              <div class="limit-header"><span class="limit-name">Monthly Downloads</span><span class="limit-used">1842 / 10000</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:18.4%;background:var(--accent)"></div></div>
+            </div>
+            <div class="limit-row">
+              <div class="limit-header"><span class="limit-name">Bandwidth Used</span><span class="limit-used">28.4 GB / 100 GB</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:28.4%;background:var(--purple)"></div></div>
+            </div>
+            <div class="limit-row">
+              <div class="limit-header"><span class="limit-name">Shared Links Active</span><span class="limit-used">12 / 50</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:24%;background:var(--gold)"></div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">Create Shareable Link</div>
+            <div class="form-group">
+              <label>Select File</label>
+              <select style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none">
+                <option>GST_Filing_Q3_2024.pdf</option>
+                <option>Balance_Sheet_FY24.xlsx</option>
+                <option>Tax_Computation.docx</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Download Limit (0 = unlimited)</label>
+              <input type="number" value="10" min="0" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none">
+            </div>
+            <div class="form-group">
+              <label>Expiry Date</label>
+              <input type="date" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none" id="expiryDate">
+            </div>
+            <div class="form-group">
+              <label style="display:flex;justify-content:space-between;align-items:center">
+                Require Password
+                <label class="toggle"><input type="checkbox" id="dlPassword"><span class="toggle-slider"></span></label>
+              </label>
+            </div>
+            <div class="form-group">
+              <label style="display:flex;justify-content:space-between;align-items:center">
+                Watermark on Download
+                <label class="toggle"><input type="checkbox" id="dlWatermark" checked><span class="toggle-slider"></span></label>
+              </label>
+            </div>
+            <button class="btn btn-accent" onclick="generateShareLink()">🔗 Generate Link</button>
+            <div id="generatedLink" style="display:none;margin-top:12px;padding:10px;background:var(--bg3);border-radius:7px;font-size:12px;word-break:break-all;color:var(--accent2)"></div>
+          </div>
+        </div>
+
+        <!-- Active Share Links -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Active Share Links</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm btn-outline" onclick="showToast('Links exported to CSV','success')">📊 Export</button>
+              <button class="btn btn-sm btn-accent" onclick="openModal('uploadModal')">+ Create Link</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>File</th><th>Downloads</th><th>Limit</th><th>Expires</th><th>Password</th><th>Watermark</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="linksTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Download Log -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Download Log</div><button class="btn btn-sm btn-outline">Clear Log</button></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>File</th><th>Downloaded By</th><th>IP Address</th><th>Time</th><th>Size</th></tr></thead>
+              <tbody id="downloadLog"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ANALYTICS ── -->
+      <div id="panel-analytics" class="panel">
+        <div class="page-header">
+          <h2>📊 Analytics</h2>
+          <p>Deep insights on file usage, user behavior, and platform performance.</p>
+        </div>
+
+        <!-- Date Range -->
+        <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:13px;color:var(--text2)">Date Range:</span>
+          <button class="btn btn-sm btn-accent" onclick="setRange('7d',this)">7 Days</button>
+          <button class="btn btn-sm btn-outline" onclick="setRange('30d',this)">30 Days</button>
+          <button class="btn btn-sm btn-outline" onclick="setRange('90d',this)">90 Days</button>
+          <button class="btn btn-sm btn-outline" onclick="setRange('1y',this)">1 Year</button>
+          <div style="margin-left:auto;display:flex;gap:8px">
+            <button class="btn btn-sm btn-outline" onclick="showToast('Report exported as PDF','success')">📤 Export PDF</button>
+            <button class="btn btn-sm btn-outline" onclick="showToast('Report exported as CSV','success')">📊 Export CSV</button>
+          </div>
+        </div>
+
+        <!-- KPI Metrics -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+          <div class="analytics-metric"><div class="val">14,382</div><div class="lbl">Page Views</div></div>
+          <div class="analytics-metric"><div class="val">1,842</div><div class="lbl">Downloads</div></div>
+          <div class="analytics-metric"><div class="val">89</div><div class="lbl">Active Users</div></div>
+          <div class="analytics-metric"><div class="val">4m 32s</div><div class="lbl">Avg Session</div></div>
+          <div class="analytics-metric"><div class="val">24.3%</div><div class="lbl">Bounce Rate</div></div>
+          <div class="analytics-metric"><div class="val">98.7%</div><div class="lbl">Uptime</div></div>
+        </div>
+
+        <div class="grid-2">
+          <!-- Downloads Over Time -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">Downloads Over Time</div><span class="badge badge-green">↑ 12%</span></div>
+            <div id="analyticsLineChart" style="width:100%;height:140px;position:relative;background:var(--bg3);border-radius:8px;overflow:hidden">
+              <svg id="lineChartSvg" class="line-chart-svg" viewBox="0 0 400 140" preserveAspectRatio="none"></svg>
+            </div>
+          </div>
+
+          <!-- Top Files -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">Top Downloaded Files</div></div>
+            <div id="topFilesList"></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <!-- User Geography -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">Downloads by Location</div></div>
+            <div id="geoList"></div>
+          </div>
+
+          <!-- Device Breakdown -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">Device Breakdown</div></div>
+            <div style="display:flex;flex-direction:column;gap:10px" id="deviceList"></div>
+          </div>
+        </div>
+
+        <!-- Uptime Monitor -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">System Uptime — Last 90 Days</div><span class="badge badge-green">● Operational</span></div>
+          <div class="uptime-dots" id="uptimeDots"></div>
+          <div style="font-size:11px;color:var(--text2);margin-top:8px">
+            <span style="color:var(--green)">■ Operational</span>&nbsp;&nbsp;
+            <span style="color:var(--gold)">■ Partial Outage</span>&nbsp;&nbsp;
+            <span style="color:var(--red)">■ Downtime</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PRICING ── -->
+      <div id="panel-pricing" class="panel">
+        <div class="page-header">
+          <h2>💎 Pricing Plans</h2>
+          <p>Choose the plan that fits your team. Upgrade or downgrade anytime.</p>
+        </div>
+
+        <!-- Toggle Annual/Monthly -->
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;justify-content:center">
+          <span style="font-size:14px;color:var(--text2)">Monthly</span>
+          <label class="toggle"><input type="checkbox" id="annualToggle" onchange="toggleAnnual()"><span class="toggle-slider"></span></label>
+          <span style="font-size:14px">Annual <span class="badge badge-green" style="font-size:10px">Save 20%</span></span>
+        </div>
+
+        <div class="pricing-grid">
+          <!-- FREE -->
+          <div class="pricing-card">
+            <div class="pricing-name">Free</div>
+            <div class="pricing-price">₹0<span>/mo</span></div>
+            <div class="pricing-desc">Perfect for individuals getting started.</div>
+            <ul class="pricing-features">
+              <li><span class="feat-check">✓</span> 5 GB Storage</li>
+              <li><span class="feat-check">✓</span> 100 Downloads/month</li>
+              <li><span class="feat-check">✓</span> Basic Watermarking</li>
+              <li><span class="feat-check">✓</span> 5 Share Links</li>
+              <li><span class="feat-cross">✗</span> Advanced Analytics</li>
+              <li><span class="feat-cross">✗</span> Admin Dashboard</li>
+              <li><span class="feat-cross">✗</span> API Access</li>
+              <li><span class="feat-cross">✗</span> Priority Support</li>
+            </ul>
+            <button class="btn btn-outline btn-lg" style="width:100%" onclick="selectPlan('free')">Current Plan</button>
+          </div>
+
+          <!-- PRO -->
+          <div class="pricing-card featured">
+            <div class="pricing-popular">Most Popular</div>
+            <div class="pricing-name" style="color:var(--accent2)">Pro</div>
+            <div class="pricing-price" id="proPrice">₹999<span>/mo</span></div>
+            <div class="pricing-desc">For growing teams and professionals.</div>
+            <ul class="pricing-features">
+              <li><span class="feat-check">✓</span> 50 GB Storage</li>
+              <li><span class="feat-check">✓</span> 10,000 Downloads/month</li>
+              <li><span class="feat-check">✓</span> Advanced Watermarking</li>
+              <li><span class="feat-check">✓</span> 50 Share Links</li>
+              <li><span class="feat-check">✓</span> Full Analytics</li>
+              <li><span class="feat-check">✓</span> Admin Dashboard</li>
+              <li><span class="feat-cross">✗</span> API Access</li>
+              <li><span class="feat-cross">✗</span> White-label</li>
+            </ul>
+            <button class="btn btn-accent btn-lg" style="width:100%" onclick="selectPlan('pro')">✓ Current Plan</button>
+          </div>
+
+          <!-- ENTERPRISE -->
+          <div class="pricing-card">
+            <div class="pricing-name" style="color:var(--gold2)">Enterprise</div>
+            <div class="pricing-price" id="entPrice">₹2999<span>/mo</span></div>
+            <div class="pricing-desc">For large organizations with full control.</div>
+            <ul class="pricing-features">
+              <li><span class="feat-check">✓</span> 1 TB Storage</li>
+              <li><span class="feat-check">✓</span> Unlimited Downloads</li>
+              <li><span class="feat-check">✓</span> Custom Watermarks + Branding</li>
+              <li><span class="feat-check">✓</span> Unlimited Share Links</li>
+              <li><span class="feat-check">✓</span> Advanced Analytics + Reports</li>
+              <li><span class="feat-check">✓</span> Full Admin Suite</li>
+              <li><span class="feat-check">✓</span> REST API Access</li>
+              <li><span class="feat-check">✓</span> White-label & SSO</li>
+            </ul>
+            <button class="btn btn-gold btn-lg" style="width:100%" onclick="selectPlan('enterprise')">Upgrade →</button>
+          </div>
+        </div>
+
+        <!-- Feature Comparison Table -->
+        <div class="card" style="margin-top:28px">
+          <div class="card-title" style="margin-bottom:16px">Full Feature Comparison</div>
+          <div class="table-wrap">
+            <table class="plan-compare">
+              <thead>
+                <tr><th>Feature</th><th>Free</th><th style="color:var(--accent2)">Pro</th><th style="color:var(--gold2)">Enterprise</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Storage</td><td>5 GB</td><td>50 GB</td><td>1 TB</td></tr>
+                <tr class="highlight"><td>Downloads/month</td><td>100</td><td>10,000</td><td>Unlimited</td></tr>
+                <tr><td>Share Links</td><td>5</td><td>50</td><td>Unlimited</td></tr>
+                <tr class="highlight"><td>Team Members</td><td>1</td><td>10</td><td>Unlimited</td></tr>
+                <tr><td>Watermarking</td><td>Basic</td><td>Advanced</td><td>Custom Branding</td></tr>
+                <tr class="highlight"><td>Analytics</td><td>Basic</td><td>Full</td><td>Advanced + Export</td></tr>
+                <tr><td>Admin Dashboard</td><td>✗</td><td>✓</td><td>✓ Full Suite</td></tr>
+                <tr class="highlight"><td>API Access</td><td>✗</td><td>✗</td><td>✓ REST + Webhooks</td></tr>
+                <tr><td>SSO / SAML</td><td>✗</td><td>✗</td><td>✓</td></tr>
+                <tr class="highlight"><td>White-label</td><td>✗</td><td>✗</td><td>✓</td></tr>
+                <tr><td>Support</td><td>Community</td><td>Email</td><td>24/7 Priority</td></tr>
+                <tr class="highlight"><td>SLA</td><td>None</td><td>99.5%</td><td>99.99%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BILLING ── -->
+      <div id="panel-billing" class="panel">
+        <div class="page-header">
+          <h2>💳 Billing & Invoices</h2>
+          <p>Manage your subscription, payment methods and download invoices.</p>
+        </div>
+
+        <div class="grid-2">
+          <!-- Current Plan -->
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">Current Subscription</div>
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+              <div style="width:48px;height:48px;background:rgba(59,130,246,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px">💎</div>
+              <div>
+                <div style="font-family:Syne;font-size:18px;font-weight:800">Pro Plan</div>
+                <div style="font-size:13px;color:var(--text2)">₹999/month · Renews May 24, 2026</div>
+              </div>
+              <span class="badge badge-green" style="margin-left:auto">Active</span>
+            </div>
+            <div class="progress-bar" style="margin-bottom:8px">
+              <div class="progress-fill" style="width:76%;background:linear-gradient(90deg,var(--accent),var(--purple))"></div>
+            </div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:16px">23 days remaining in billing period</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm btn-accent" onclick="navigateTo('pricing')">⬆ Upgrade Plan</button>
+              <button class="btn btn-sm btn-outline" onclick="openModal('cancelModal')">Cancel Plan</button>
+            </div>
+          </div>
+
+          <!-- Payment Method -->
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">Payment Method</div>
+            <div style="background:linear-gradient(135deg,#1a2540,#0f172a);border-radius:12px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden">
+              <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(59,130,246,0.1);border-radius:50%"></div>
+              <div style="font-size:11px;color:var(--text3);letter-spacing:2px;margin-bottom:16px">VISA</div>
+              <div style="font-family:Syne;font-size:18px;font-weight:700;letter-spacing:4px;margin-bottom:16px">•••• •••• •••• 4242</div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2)">
+                <span>Mamta Sharma</span><span>12/27</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm btn-outline" onclick="openModal('paymentModal')">✏ Update Card</button>
+              <button class="btn btn-sm btn-outline" onclick="showToast('Backup card added','success')">+ Add Backup</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Invoice History -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Invoice History</div><button class="btn btn-sm btn-outline" onclick="showToast('All invoices downloaded','success')">⬇ Download All</button></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Invoice #</th><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="invoiceTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ADMIN PANEL ── -->
+      <div id="panel-admin" class="panel">
+        <div class="page-header">
+          <h2>🛡️ Admin Dashboard</h2>
+          <p>Full system overview, user management, and platform controls.</p>
+        </div>
+
+        <div class="admin-header">
+          <div>
+            <h3 style="font-size:18px;margin-bottom:4px">System Status: <span style="color:var(--green)">● Operational</span></h3>
+            <div style="font-size:13px;color:var(--text2)">All 6 services running normally · Last checked 2 min ago</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm btn-outline" onclick="showToast('System diagnostics running...','info')">🔧 Diagnostics</button>
+            <button class="btn btn-sm btn-red" onclick="openModal('maintenanceModal')">⚠ Maintenance Mode</button>
+          </div>
+        </div>
+
+        <div class="admin-alert" style="margin-bottom:20px">
+          ⚠ <strong>Attention:</strong> 3 users have exceeded their storage quota. <a href="#" onclick="navigateTo('users');return false" style="color:var(--gold2)">Review now →</a>
+        </div>
+
+        <!-- Admin Stats -->
+        <div class="stats-grid" style="margin-bottom:20px">
+          <div class="stat-card blue"><div class="stat-icon">👥</div><div class="stat-value">247</div><div class="stat-label">Total Users</div><div class="stat-change up">▲ +12 this week</div></div>
+          <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-value">₹1.4L</div><div class="stat-label">Total Revenue</div><div class="stat-change up">▲ +8.3% MoM</div></div>
+          <div class="stat-card green"><div class="stat-icon">☁️</div><div class="stat-value">4.2 TB</div><div class="stat-label">Total Storage Used</div><div class="stat-change up">▲ +200 GB</div></div>
+          <div class="stat-card purple"><div class="stat-icon">⬇️</div><div class="stat-value">84,210</div><div class="stat-label">Total Downloads</div><div class="stat-change up">▲ +15% MoM</div></div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:20px">
+          <!-- Service Health -->
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px">Service Health</div>
+            <div id="serviceHealth"></div>
+          </div>
+
+          <!-- Revenue by Plan -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">Revenue by Plan</div><span class="badge badge-gold">This Month</span></div>
+            <div id="revenueByPlan"></div>
+          </div>
+        </div>
+
+        <!-- Platform Config -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title" style="margin-bottom:16px">Platform Configuration</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px">
+            <div class="setting-item" style="border:none;padding:0;flex-direction:column;align-items:flex-start;gap:8px">
+              <div class="setting-item-info"><h4>Maintenance Mode</h4><p>Block all user access</p></div>
+              <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-item" style="border:none;padding:0;flex-direction:column;align-items:flex-start;gap:8px">
+              <div class="setting-item-info"><h4>New Registrations</h4><p>Allow public sign-ups</p></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-item" style="border:none;padding:0;flex-direction:column;align-items:flex-start;gap:8px">
+              <div class="setting-item-info"><h4>Email Verification</h4><p>Require for new users</p></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-item" style="border:none;padding:0;flex-direction:column;align-items:flex-start;gap:8px">
+              <div class="setting-item-info"><h4>Force Watermark</h4><p>All downloads watermarked</p></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audit Log -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Audit Log</div><button class="btn btn-sm btn-outline" onclick="showToast('Audit log exported','success')">📤 Export</button></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Event</th><th>User</th><th>IP</th><th>Time</th><th>Severity</th></tr></thead>
+              <tbody id="auditTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── USERS ── -->
+      <div id="panel-users" class="panel">
+        <div class="page-header">
+          <h2>👥 User Management</h2>
+          <p>View, manage and control user accounts and permissions.</p>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <button class="btn btn-accent" onclick="openModal('inviteModal')">+ Invite User</button>
+          <input type="text" placeholder="Search users..." oninput="filterUsers(this.value)" style="padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;font-size:13px;outline:none;width:220px">
+          <select style="padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none" onchange="filterUsers(document.querySelector('#panel-users input').value)">
+            <option>All Plans</option>
+            <option>Free</option>
+            <option>Pro</option>
+            <option>Enterprise</option>
+          </select>
+          <div style="margin-left:auto;font-size:13px;color:var(--text2);display:flex;align-items:center">247 total users</div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>User</th><th>Plan</th><th>Storage</th><th>Downloads</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+              <tbody id="usersTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SETTINGS ── -->
+      <div id="panel-settings" class="panel">
+        <div class="page-header">
+          <h2>⚙️ Settings</h2>
+          <p>Manage your account, preferences and security settings.</p>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <!-- Profile -->
+            <div class="card settings-section">
+              <h3>Profile Information</h3>
+              <p>Update your personal details and public profile.</p>
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="settName" value="Mamta Sharma" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none">
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" value="mamta@cafirm.com" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none">
+              </div>
+              <div class="form-group">
+                <label>Company</label>
+                <input type="text" value="CA Office Automation Pvt Ltd" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none">
+              </div>
+              <div class="form-group">
+                <label>Phone</label>
+                <input type="text" value="+91 9876543210" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none">
+              </div>
+              <button class="btn btn-accent" onclick="showToast('Profile updated successfully!','success')">💾 Save Changes</button>
+            </div>
+
+            <!-- Notifications -->
+            <div class="card settings-section">
+              <h3>Notification Preferences</h3>
+              <p>Choose what you want to be notified about.</p>
+              <div class="setting-item"><div class="setting-item-info"><h4>Download Alerts</h4><p>When someone downloads your files</p></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="setting-item"><div class="setting-item-info"><h4>Storage Warnings</h4><p>When storage reaches 80%</p></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="setting-item"><div class="setting-item-info"><h4>New User Signups</h4><p>When new users register</p></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+              <div class="setting-item"><div class="setting-item-info"><h4>Weekly Reports</h4><p>Summary email every Monday</p></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="setting-item"><div class="setting-item-info"><h4>Billing Reminders</h4><p>3 days before renewal</p></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            </div>
+          </div>
+
+          <div>
+            <!-- Security -->
+            <div class="card settings-section">
+              <h3>Security</h3>
+              <p>Protect your account with strong security settings.</p>
+              <div class="setting-item"><div class="setting-item-info"><h4>Two-Factor Authentication</h4><p>Extra security via authenticator app</p></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+              <div class="setting-item"><div class="setting-item-info"><h4>Login Alerts</h4><p>Email on new device login</p></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="setting-item"><div class="setting-item-info"><h4>Session Timeout</h4><p>Auto-logout after inactivity</p></div>
+                <select style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 10px;font-family:inherit;outline:none;font-size:12px">
+                  <option>30 minutes</option><option>1 hour</option><option>4 hours</option><option>Never</option>
+                </select>
+              </div>
+              <div style="margin-top:16px">
+                <button class="btn btn-sm btn-outline" onclick="openModal('changePasswordModal')" style="margin-right:8px">🔑 Change Password</button>
+                <button class="btn btn-sm btn-outline" onclick="showToast('Sessions cleared','success')">🚫 Clear All Sessions</button>
+              </div>
+            </div>
+
+            <!-- API Keys -->
+            <div class="card settings-section">
+              <h3>API Access</h3>
+              <p>Manage API keys for programmatic access. <span class="badge badge-gold">Enterprise Only</span></p>
+              <div id="apiKeyList">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg3);border-radius:7px;margin-bottom:8px;font-size:12px">
+                  <div>
+                    <div style="font-weight:600;margin-bottom:2px">Production Key</div>
+                    <div style="color:var(--text3);font-family:monospace">cp_live_••••••••••••••••4a2f</div>
+                  </div>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-sm btn-outline" onclick="showToast('API key copied!','success')">📋 Copy</button>
+                    <button class="btn btn-sm btn-red" onclick="showToast('API key revoked','error')">Revoke</button>
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-outline" style="margin-top:8px" onclick="showToast('Upgrade to Enterprise for API access','info')">+ Generate New Key</button>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="card" style="border-color:rgba(239,68,68,0.3)">
+              <div class="card-title" style="color:var(--red);margin-bottom:12px">⚠ Danger Zone</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div><div style="font-size:14px;font-weight:500">Export All Data</div><div style="font-size:12px;color:var(--text2)">Download all your files and data</div></div>
+                  <button class="btn btn-sm btn-outline" onclick="showToast('Data export initiated, email will be sent','info')">📤 Export</button>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div><div style="font-size:14px;font-weight:500">Delete Account</div><div style="font-size:12px;color:var(--text2)">Permanently delete your account and data</div></div>
+                  <button class="btn btn-sm btn-red" onclick="openModal('deleteAccountModal')">🗑 Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════ -->
+
+<!-- UPLOAD MODAL -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('uploadModal')">✕</button>
+    <h3>📤 Upload Files</h3>
+    <p>Drag and drop or click to select files from your device.</p>
+    <div class="dropzone" style="margin-bottom:16px" onclick="triggerFileUpload()" id="mainDropzone">
+      <div class="dropzone-icon">📁</div>
+      <h3>Drop files here</h3>
+      <p>PDF, DOCX, XLSX, PNG, JPG, MP4 supported · Max 500MB per file</p>
+    </div>
+    <input type="file" id="mainFileInput" multiple style="display:none" onchange="handleFileUpload(event)">
+    <div id="uploadFileList" style="margin-bottom:16px"></div>
+    <div style="display:flex;gap:10px">
+      <label class="toggle" style="align-items:center;display:flex;gap:8px;font-size:13px"><input type="checkbox" id="autoWatermark" checked><span class="toggle-slider"></span> Auto-watermark on upload</label>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-accent" onclick="confirmUpload()">📤 Upload All</button>
+      <button class="btn btn-outline" onclick="closeModal('uploadModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- UPGRADE MODAL -->
+<div class="modal-overlay" id="upgradeModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('upgradeModal')">✕</button>
+    <h3>⬆ Upgrade Your Plan</h3>
+    <p>Unlock more power with Pro or Enterprise features.</p>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+      <div style="padding:16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);cursor:pointer" onclick="selectPlan('pro')">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><strong>Pro</strong> <span class="badge badge-blue" style="margin-left:6px">Popular</span></div>
+          <strong style="color:var(--accent)">₹999/mo</strong>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">50 GB · 10K downloads · Full analytics</div>
+      </div>
+      <div style="padding:16px;background:var(--bg3);border-radius:10px;border:1px solid var(--gold);cursor:pointer" onclick="selectPlan('enterprise')">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><strong>Enterprise</strong></div>
+          <strong style="color:var(--gold2)">₹2999/mo</strong>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">1 TB · Unlimited · API + White-label + SSO</div>
+      </div>
+    </div>
+    <button class="btn btn-accent" style="width:100%" onclick="closeModal('upgradeModal');navigateTo('pricing')">View All Plans →</button>
+  </div>
+</div>
+
+<!-- INVITE USER MODAL -->
+<div class="modal-overlay" id="inviteModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('inviteModal')">✕</button>
+    <h3>👤 Invite New User</h3>
+    <p>Send an email invitation with automatic account setup.</p>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="inviteEmail" placeholder="colleague@company.com" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none">
+    </div>
+    <div class="form-group">
+      <label>Role</label>
+      <select id="inviteRole" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none">
+        <option>Viewer</option><option>Editor</option><option>Admin</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Plan</label>
+      <select id="invitePlan" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none">
+        <option>Free</option><option>Pro</option><option>Enterprise</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-accent" onclick="sendInvite()">📧 Send Invite</button>
+      <button class="btn btn-outline" onclick="closeModal('inviteModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div class="modal-overlay" id="changePasswordModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('changePasswordModal')">✕</button>
+    <h3>🔑 Change Password</h3>
+    <p>Choose a strong password to protect your account.</p>
+    <div class="form-group"><label>Current Password</label><input type="password" placeholder="••••••••" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none"></div>
+    <div class="form-group"><label>New Password</label><input type="password" placeholder="••••••••" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none"></div>
+    <div class="form-group"><label>Confirm New Password</label><input type="password" placeholder="••••••••" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none"></div>
+    <div style="display:flex;gap:10px"><button class="btn btn-accent" onclick="showToast('Password updated successfully!','success');closeModal('changePasswordModal')">💾 Update Password</button><button class="btn btn-outline" onclick="closeModal('changePasswordModal')">Cancel</button></div>
+  </div>
+</div>
+
+<!-- CANCEL PLAN MODAL -->
+<div class="modal-overlay" id="cancelModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('cancelModal')">✕</button>
+    <h3>😢 Cancel Subscription</h3>
+    <p>Are you sure you want to cancel? You'll lose access to Pro features at the end of your billing period.</p>
+    <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px">
+      You will lose: 50 GB storage (down to 5 GB), analytics, admin dashboard, and unlimited share links.
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-red" onclick="showToast('Cancellation request submitted','error');closeModal('cancelModal')">Cancel My Plan</button>
+      <button class="btn btn-accent" onclick="closeModal('cancelModal')">Keep My Plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAINTENANCE MODAL -->
+<div class="modal-overlay" id="maintenanceModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('maintenanceModal')">✕</button>
+    <h3>⚠ Enable Maintenance Mode</h3>
+    <p>This will block all user access to the platform. Only admins can log in during maintenance.</p>
+    <div class="form-group"><label>Maintenance Message</label><input type="text" value="System is under maintenance. Back in 30 minutes." style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-red" onclick="showToast('⚠ Maintenance mode enabled — users blocked','error');closeModal('maintenanceModal')">Enable Now</button>
+      <button class="btn btn-outline" onclick="closeModal('maintenanceModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE ACCOUNT MODAL -->
+<div class="modal-overlay" id="deleteAccountModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('deleteAccountModal')">✕</button>
+    <h3 style="color:var(--red)">🗑 Delete Account</h3>
+    <p>This action is <strong>permanent and irreversible</strong>. All your files, data, and settings will be deleted.</p>
+    <div class="form-group"><label>Type DELETE to confirm</label><input type="text" placeholder="DELETE" id="deleteConfirm" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--red);border-radius:7px;color:var(--red);font-family:inherit;outline:none"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-red" onclick="confirmDeleteAccount()">Delete Forever</button>
+      <button class="btn btn-outline" onclick="closeModal('deleteAccountModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW FOLDER MODAL -->
+<div class="modal-overlay" id="newFolderModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('newFolderModal')">✕</button>
+    <h3>📁 Create New Folder</h3>
+    <p>Organize your files into folders.</p>
+    <div class="form-group"><label>Folder Name</label><input type="text" id="folderName" placeholder="e.g. GST Documents FY2024" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-accent" onclick="createFolder()">📁 Create Folder</button>
+      <button class="btn btn-outline" onclick="closeModal('newFolderModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('paymentModal')">✕</button>
+    <h3>💳 Update Payment Method</h3>
+    <p>Enter your new card details below.</p>
+    <div class="form-group"><label>Card Number</label><input type="text" placeholder="1234 5678 9012 3456" maxlength="19" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group"><label>Expiry</label><input type="text" placeholder="MM/YY" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none"></div>
+      <div class="form-group"><label>CVV</label><input type="text" placeholder="•••" maxlength="4" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none"></div>
+    </div>
+    <div class="form-group"><label>Name on Card</label><input type="text" placeholder="Mamta Sharma" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;outline:none"></div>
+    <div style="display:flex;gap:10px"><button class="btn btn-accent" onclick="showToast('Payment method updated!','success');closeModal('paymentModal')">💾 Save Card</button><button class="btn btn-outline" onclick="closeModal('paymentModal')">Cancel</button></div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ══════════════════════════════════════════
+//   STATE
+// ══════════════════════════════════════════
+const state = {
+  user: null,
+  currentPanel: 'dashboard',
+  files: [],
+  fileView: 'grid',
+  wmColor: '#ffffff',
+  wmPosition: 'center',
+  isAnnual: false
+};
+
+const USERS_DB = [
+  { id:1, name:'Mamta Sharma', email:'admin@connectpro.com', password:'admin123', plan:'Pro', role:'admin', storage:'14.3 GB', downloads:847, status:'Active', joined:'Jan 2024', avatar:'MS' },
+  { id:2, name:'Demo User', email:'user@demo.com', password:'demo123', plan:'Free', role:'user', storage:'1.2 GB', downloads:12, status:'Active', joined:'Mar 2024', avatar:'DU' }
+];
+
+const FILES_DATA = [
+  { name:'GST_Filing_Q3_2024.pdf', type:'pdf', size:'2.4 MB', downloads:142, wm:true, date:'Apr 20' },
+  { name:'Balance_Sheet_FY24.xlsx', type:'doc', size:'890 KB', downloads:87, wm:true, date:'Apr 19' },
+  { name:'Tax_Computation.docx', type:'doc', size:'1.1 MB', downloads:34, wm:false, date:'Apr 18' },
+  { name:'Company_Logo.png', type:'img', size:'245 KB', downloads:201, wm:false, date:'Apr 17' },
+  { name:'GSTR1_April.pdf', type:'pdf', size:'3.2 MB', downloads:56, wm:true, date:'Apr 16' },
+  { name:'TDS_Certificates.pdf', type:'pdf', size:'1.8 MB', downloads:93, wm:true, date:'Apr 15' },
+  { name:'Audit_Report.docx', type:'doc', size:'4.1 MB', downloads:28, wm:true, date:'Apr 14' },
+  { name:'Client_Photo.jpg', type:'img', size:'3.8 MB', downloads:5, wm:false, date:'Apr 12' },
+  { name:'Training_Video.mp4', type:'vid', size:'128 MB', downloads:19, wm:false, date:'Apr 10' },
+  { name:'ITR_Form.pdf', type:'pdf', size:'670 KB', downloads:312, wm:true, date:'Apr 9' },
+];
+
+const ALL_USERS = [
+  { name:'Mamta Sharma', email:'mamta@cafirm.com', plan:'Pro', storage:'14.3 GB / 50 GB', downloads:847, status:'Active', joined:'Jan 2024', avatar:'MS' },
+  { name:'Rahul Gupta', email:'rahul@finance.in', plan:'Enterprise', storage:'42.1 GB / 1 TB', downloads:2341, status:'Active', joined:'Dec 2023', avatar:'RG' },
+  { name:'Priya Mehta', email:'priya@taxco.in', plan:'Pro', storage:'28.7 GB / 50 GB', downloads:1123, status:'Active', joined:'Feb 2024', avatar:'PM' },
+  { name:'Ajay Sharma', email:'ajay@auditing.com', plan:'Free', storage:'4.8 GB / 5 GB', downloads:87, status:'Suspended', joined:'Mar 2024', avatar:'AS' },
+  { name:'Sunita Patel', email:'sunita@gstsupport.in', plan:'Pro', storage:'11.2 GB / 50 GB', downloads:432, status:'Active', joined:'Nov 2023', avatar:'SP' },
+  { name:'Vikram Joshi', email:'vikram@ca.com', plan:'Free', storage:'2.1 GB / 5 GB', downloads:23, status:'Active', joined:'Apr 2024', avatar:'VJ' },
+  { name:'Neha Agarwal', email:'neha@itreturn.in', plan:'Enterprise', storage:'87.4 GB / 1 TB', downloads:5823, status:'Active', joined:'Oct 2023', avatar:'NA' },
+  { name:'Deepak Kumar', email:'deepak@compliance.in', plan:'Free', storage:'5.0 GB / 5 GB', downloads:4, status:'Over Quota', joined:'Apr 2024', avatar:'DK' },
+];
+
+// ══════════════════════════════════════════
+//   AUTH
+// ══════════════════════════════════════════
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>{
+    t.classList.toggle('active', (tab==='login'&&i===0)||(tab==='register'&&i===1));
+  });
+  document.getElementById('loginForm').style.display = tab==='login'?'block':'none';
+  document.getElementById('registerForm').style.display = tab==='register'?'block':'none';
+}
+
+function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value.trim();
+  const found = USERS_DB.find(u=>u.email===email && u.password===pass);
+  if (found) {
+    state.user = found;
+    document.getElementById('authScreen').classList.remove('active');
+    document.getElementById('appScreen').classList.add('active');
+    document.getElementById('welcomeName').textContent = found.name.split(' ')[0];
+    document.getElementById('userAvatar').textContent = found.avatar;
+    document.getElementById('currentPlanBadge').textContent = found.plan;
+    document.getElementById('currentPlanBadge').className = 'plan-badge plan-' + found.plan.toLowerCase();
+    initApp();
+    showToast('Welcome back, ' + found.name.split(' ')[0] + '! 👋', 'success');
+  } else {
+    showToast('Invalid credentials. Try admin@connectpro.com / admin123', 'error');
+  }
+}
+
+function doRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  if (!name || !email) { showToast('Please fill all fields','error'); return; }
+  showToast('Account created! Please log in.','success');
+  switchAuthTab('login');
+  document.getElementById('loginEmail').value = email;
+}
+
+function doLogout() {
+  state.user = null;
+  document.getElementById('appScreen').classList.remove('active');
+  document.getElementById('authScreen').classList.add('active');
+  showToast('Logged out successfully','info');
+}
+
+// ══════════════════════════════════════════
+//   NAVIGATION
+// ══════════════════════════════════════════
+function navigateTo(panel) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+panel)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.textContent.toLowerCase().includes(panel.replace('-',' '))) n.classList.add('active');
+  });
+  state.currentPanel = panel;
+  renderPanelData(panel);
+}
+
+// ══════════════════════════════════════════
+//   INIT
+// ══════════════════════════════════════════
+function initApp() {
+  state.files = [...FILES_DATA];
+  setExpiryDate();
+  renderAllPanels();
+}
+
+function renderAllPanels() {
+  renderDownloadChart();
+  renderRecentFiles();
+  renderActivityFeed();
+  renderFileGrid();
+  renderFileTable();
+  renderWmHistory();
+  renderLinks();
+  renderDownloadLog();
+  renderLineChart();
+  renderTopFiles();
+  renderGeo();
+  renderDevices();
+  renderUptimeDots();
+  renderServiceHealth();
+  renderRevenuePlan();
+  renderAuditLog();
+  renderUsersTable();
+  renderInvoices();
+}
+
+function renderPanelData(panel) {
+  // already all rendered at init — just re-trigger dynamic ones
+}
+
+// ══════════════════════════════════════════
+//   CHART RENDERING
+// ══════════════════════════════════════════
+function renderDownloadChart() {
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const values = [42,67,54,89,120,78,95];
+  const max = Math.max(...values);
+  const container = document.getElementById('downloadChart');
+  container.innerHTML = days.map((d,i)=>`
+    <div class="chart-bar" style="height:${(values[i]/max*100)}%;background:${i===4?'var(--accent)':'rgba(59,130,246,0.5)'};" title="${d}: ${values[i]} downloads">
+      <div class="chart-bar-label">${d}</div>
+    </div>`).join('');
+}
+
+function renderLineChart() {
+  const svg = document.getElementById('lineChartSvg');
+  if (!svg) return;
+  const pts = [30,60,45,80,70,110,90,130,100,140,120,160];
+  const w=400, h=140, pad=10;
+  const xs = pts.map((_,i)=>pad+i*(w-2*pad)/(pts.length-1));
+  const maxV=Math.max(...pts), minV=Math.min(...pts);
+  const ys = pts.map(v=>pad+(1-(v-minV)/(maxV-minV))*(h-2*pad));
+  const pathD = xs.map((x,i)=>`${i?'L':'M'}${x},${ys[i]}`).join(' ');
+  const areaD = pathD+` L${xs[xs.length-1]},${h} L${xs[0]},${h} Z`;
+  svg.innerHTML = `
+    <defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="${areaD}" fill="url(#lg)"/>
+    <path d="${pathD}" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+    ${xs.map((x,i)=>`<circle cx="${x}" cy="${ys[i]}" r="3" fill="#3b82f6"/>`).join('')}`;
+}
+
+// ══════════════════════════════════════════
+//   FILES
+// ══════════════════════════════════════════
+const FILE_ICONS = { pdf:'📑', doc:'📄', img:'🖼️', vid:'🎬' };
+
+function renderFileGrid(filter='all') {
+  const grid = document.getElementById('fileGrid');
+  const files = state.files.filter(f=>filter==='all'||f.type===filter);
+  grid.innerHTML = files.map((f,i)=>`
+    <div class="file-card" ondblclick="showToast('Opening ${f.name}...','info')">
+      <input type="checkbox" onchange="updateBulkActions()">
+      <div class="file-icon">${FILE_ICONS[f.type]||'📎'}</div>
+      <div class="file-name" title="${f.name}">${f.name}</div>
+      <div class="file-meta">${f.size} · ${f.downloads} dl</div>
+      <div style="margin-top:8px;display:flex;gap:4px;justify-content:center">
+        ${f.wm?'<span class="badge badge-blue" style="font-size:9px">🔏 WM</span>':''}
+        <span class="badge badge-gray" style="font-size:9px">${f.date}</span>
+      </div>
+    </div>`).join('');
+}
+
+function renderFileTable() {
+  const tbody = document.getElementById('fileTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = state.files.map(f=>`
+    <tr>
+      <td><input type="checkbox" onchange="updateBulkActions()"> ${FILE_ICONS[f.type]||'📎'} ${f.name}</td>
+      <td><span class="badge badge-gray">${f.type.toUpperCase()}</span></td>
+      <td>${f.size}</td>
+      <td>${f.downloads}</td>
+      <td>${f.wm?'<span class="badge badge-blue">✓ Yes</span>':'<span class="badge badge-gray">No</span>'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="showToast('Downloading ${f.name}...','info')">⬇</button>
+        <button class="btn btn-sm btn-outline" onclick="showToast('${f.name} link copied!','success')">🔗</button>
+        <button class="btn btn-sm btn-red" onclick="deleteFile('${f.name}')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+function filterByType(type, btn) {
+  document.querySelectorAll('#panel-files .btn-sm').forEach(b=>{ b.className=b.className.replace('btn-accent','btn-outline'); });
+  btn.className = btn.className.replace('btn-outline','btn-accent');
+  renderFileGrid(type);
+}
+
+function filterFiles(q) {
+  const filtered = state.files.filter(f=>f.name.toLowerCase().includes(q.toLowerCase()));
+  const grid = document.getElementById('fileGrid');
+  grid.innerHTML = filtered.map(f=>`
+    <div class="file-card"><div class="file-icon">${FILE_ICONS[f.type]||'📎'}</div>
+    <div class="file-name">${f.name}</div><div class="file-meta">${f.size}</div></div>`).join('');
+}
+
+function setFileView(v) {
+  state.fileView = v;
+  document.getElementById('fileGrid').style.display = v==='grid'?'grid':'none';
+  document.getElementById('fileListView').style.display = v==='list'?'block':'none';
+}
+
+function updateBulkActions() {
+  const checked = document.querySelectorAll('#fileGrid input[type=checkbox]:checked, #fileTableBody input[type=checkbox]:checked');
+  document.getElementById('bulkDeleteBtn').style.display = checked.length>0?'inline-flex':'none';
+}
+
+function bulkDelete() {
+  showToast('Selected files deleted','error');
+  document.querySelectorAll('#fileGrid input[type=checkbox]').forEach(c=>c.checked=false);
+  document.getElementById('bulkDeleteBtn').style.display='none';
+}
+
+function selectAllFiles(cb) {
+  document.querySelectorAll('#fileTableBody input[type=checkbox]').forEach(c=>c.checked=cb.checked);
+  updateBulkActions();
+}
+
+function deleteFile(name) {
+  state.files = state.files.filter(f=>f.name!==name);
+  renderFileGrid(); renderFileTable();
+  showToast(name + ' deleted','error');
+}
+
+function triggerFileUpload() { document.getElementById('mainFileInput').click(); }
+
+function handleFileUpload(e) {
+  const files = Array.from(e.target.files);
+  const list = document.getElementById('uploadFileList');
+  list.innerHTML = files.map(f=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg3);border-radius:7px;margin-bottom:6px;font-size:13px">
+      <span>📎</span><span style="flex:1">${f.name}</span>
+      <span style="color:var(--text2)">${(f.size/1024/1024).toFixed(1)} MB</span>
+    </div>`).join('');
+}
+
+function confirmUpload() {
+  const files = document.getElementById('mainFileInput').files;
+  if (files.length===0) { showToast('Please select files first','error'); return; }
+  Array.from(files).forEach(f=>{
+    const ext = f.name.split('.').pop().toLowerCase();
+    const type = ['pdf'].includes(ext)?'pdf':['doc','docx','xlsx'].includes(ext)?'doc':['png','jpg','jpeg'].includes(ext)?'img':'vid';
+    state.files.unshift({ name:f.name, type, size:(f.size/1024/1024).toFixed(1)+' MB', downloads:0, wm:document.getElementById('autoWatermark').checked, date:'Today' });
+  });
+  renderFileGrid(); renderFileTable();
+  closeModal('uploadModal');
+  showToast(files.length + ' file(s) uploaded successfully!','success');
+}
+
+// ══════════════════════════════════════════
+//   WATERMARK
+// ══════════════════════════════════════════
+function updateWatermarkPreview() {
+  const text = document.getElementById('wmText').value;
+  const size = document.getElementById('wmSize').value;
+  const opacity = document.getElementById('wmOpacity').value;
+  const rotation = document.getElementById('wmRotation').value;
+  document.getElementById('wmSizeVal').textContent = size+'px';
+  document.getElementById('wmOpacityVal').textContent = opacity+'%';
+  document.getElementById('wmRotationVal').textContent = rotation+'°';
+  const overlay = document.getElementById('wmOverlay');
+  if (!overlay) return;
+  overlay.textContent = text;
+  overlay.style.fontSize = size+'px';
+  overlay.style.opacity = opacity/100;
+  overlay.style.color = state.wmColor;
+
+  const tiled = document.getElementById('wmTile')?.checked;
+  if (tiled) {
+    overlay.style.top = '0'; overlay.style.left = '0';
+    overlay.style.width = '100%'; overlay.style.height = '100%';
+    overlay.style.display = 'flex'; overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center';
+    overlay.style.transform = `rotate(${rotation}deg)`;
+  } else {
+    applyWmPosition(overlay, state.wmPosition, rotation);
+  }
+}
+
+function applyWmPosition(el, pos, rotation) {
+  const positions = {
+    tl:{top:'12px',left:'12px',transform:`rotate(${rotation}deg)`},
+    tc:{top:'12px',left:'50%',transform:`translateX(-50%) rotate(${rotation}deg)`},
+    tr:{top:'12px',right:'12px',transform:`rotate(${rotation}deg)`},
+    ml:{top:'50%',left:'12px',transform:`translateY(-50%) rotate(${rotation}deg)`},
+    center:{top:'50%',left:'50%',transform:`translate(-50%,-50%) rotate(${rotation}deg)`},
+    mr:{top:'50%',right:'12px',transform:`translateY(-50%) rotate(${rotation}deg)`},
+    bl:{bottom:'12px',left:'12px',transform:`rotate(${rotation}deg)`},
+    bc:{bottom:'12px',left:'50%',transform:`translateX(-50%) rotate(${rotation}deg)`},
+    br:{bottom:'12px',right:'12px',transform:`rotate(${rotation}deg)`},
+  };
+  const p = positions[pos]||positions.center;
+  el.style.top=p.top||''; el.style.left=p.left||''; el.style.right=p.right||'';
+  el.style.bottom=p.bottom||''; el.style.transform=p.transform;
+}
+
+function selectWmColor(el) {
+  document.querySelectorAll('.color-opt').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.wmColor = el.dataset.color;
+  updateWatermarkPreview();
+}
+
+function selectWmPos(pos, btn) {
+  document.querySelectorAll('#wmPositionGrid .btn').forEach(b=>{
+    b.className=b.className.replace('btn-accent','btn-outline');
+  });
+  btn.className=btn.className.replace('btn-outline','btn-accent');
+  state.wmPosition = pos;
+  updateWatermarkPreview();
+}
+
+function loadWmFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const preview = document.getElementById('wmPreview');
+    preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%;max-height:100%;object-fit:contain">
+      <div id="wmOverlay" class="watermark-overlay wm-pos-center" style="color:#ffffff;opacity:0.35;font-size:24px;transform:translate(-50%,-50%) rotate(-30deg)">© ConnectPro Confidential</div>`;
+    updateWatermarkPreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function applyTemplate(tpl) {
+  const templates = {
+    confidential:{ text:'🔒 CONFIDENTIAL', color:'#ef4444', size:'28', opacity:'40', rotation:'-30' },
+    draft:{ text:'📝 DRAFT', color:'#f59e0b', size:'36', opacity:'35', rotation:'-20' },
+    approved:{ text:'✅ APPROVED', color:'#10b981', size:'32', opacity:'45', rotation:'0' },
+    sample:{ text:'🔍 SAMPLE ONLY', color:'#8b5cf6', size:'24', opacity:'40', rotation:'-30' },
+  };
+  const t = templates[tpl];
+  document.getElementById('wmText').value = t.text;
+  document.getElementById('wmSize').value = t.size;
+  document.getElementById('wmOpacity').value = t.opacity;
+  document.getElementById('wmRotation').value = t.rotation;
+  state.wmColor = t.color;
+  updateWatermarkPreview();
+  showToast('Template "' + tpl + '" applied!','success');
+}
+
+function applyWatermark() {
+  const text = document.getElementById('wmText').value;
+  showToast('Watermark "' + text + '" applied to file!','success');
+  addWmHistory(text);
+}
+
+function downloadWatermarked() {
+  showToast('Downloading watermarked file...','info');
+}
+
+function addWmHistory(text) {
+  const tbody = document.getElementById('wmHistoryTable');
+  if (!tbody) return;
+  const row = document.createElement('tr');
+  row.innerHTML = `<td>sample.pdf</td><td>${text}</td><td>${state.wmPosition}</td><td>${state.user?.name||'Admin'}</td><td>${new Date().toLocaleString()}</td><td><button class="btn btn-sm btn-outline" onclick="showToast('Re-applied','success')">Re-apply</button></td>`;
+  tbody.prepend(row);
+}
+
+function renderWmHistory() {
+  const tbody = document.getElementById('wmHistoryTable');
+  if (!tbody) return;
+  const history = [
+    ['GST_Filing_Q3.pdf','© ConnectPro','center','Mamta','Apr 20, 2025'],
+    ['Balance_Sheet.xlsx','CONFIDENTIAL','br','Rahul','Apr 19, 2025'],
+    ['Audit_Report.docx','DRAFT - Not Final','center','Mamta','Apr 18, 2025'],
+  ];
+  tbody.innerHTML = history.map(h=>`
+    <tr><td>📎 ${h[0]}</td><td>${h[1]}</td><td>${h[2]}</td><td>${h[3]}</td><td>${h[4]}</td>
+    <td><button class="btn btn-sm btn-outline" onclick="showToast('Watermark reapplied','success')">Re-apply</button></td></tr>`).join('');
+}
+
+// ══════════════════════════════════════════
+//   DOWNLOADS
+// ══════════════════════════════════════════
+function setExpiryDate() {
+  const d = new Date(); d.setDate(d.getDate()+7);
+  const inp = document.getElementById('expiryDate');
+  if (inp) inp.value = d.toISOString().split('T')[0];
+}
+
+function generateShareLink() {
+  const id = Math.random().toString(36).substr(2,8).toUpperCase();
+  const link = `https://connectpro.app/dl/${id}`;
+  const box = document.getElementById('generatedLink');
+  box.style.display = 'block';
+  box.innerHTML = `🔗 ${link} <button class="btn btn-sm btn-accent" style="margin-left:8px" onclick="navigator.clipboard.writeText('${link}');showToast('Link copied!','success')">Copy</button>`;
+  showToast('Share link generated!','success');
+}
+
+function renderLinks() {
+  const tbody = document.getElementById('linksTable');
+  if (!tbody) return;
+  const links = [
+    ['GST_Filing_Q3_2024.pdf','47','100','May 1, 2026','No','Yes','Active'],
+    ['Balance_Sheet_FY24.xlsx','12','50','Apr 30, 2026','Yes','Yes','Active'],
+    ['Company_Logo.png','5','0','Never','No','No','Active'],
+    ['Training_Video.mp4','19','20','Apr 25, 2026','No','Yes','Expired'],
+  ];
+  tbody.innerHTML = links.map(l=>`
+    <tr>
+      <td>📎 ${l[0]}</td><td>${l[1]}</td>
+      <td>${l[2]==='0'?'∞':l[2]}</td><td>${l[3]}</td>
+      <td>${l[4]==='Yes'?'<span class="badge badge-green">✓</span>':'<span class="badge badge-gray">No</span>'}</td>
+      <td>${l[5]==='Yes'?'<span class="badge badge-blue">✓</span>':'<span class="badge badge-gray">No</span>'}</td>
+      <td><span class="badge ${l[6]==='Active'?'badge-green':'badge-red'}">${l[6]}</span></td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="showToast('Link copied!','success')">🔗</button>
+        <button class="btn btn-sm btn-red" onclick="this.closest('tr').remove();showToast('Link revoked','error')">✕</button>
+      </td>
+    </tr>`).join('');
+}
+
+function renderDownloadLog() {
+  const tbody = document.getElementById('downloadLog');
+  if (!tbody) return;
+  const logs = [
+    ['GST_Filing_Q3.pdf','Rahul Gupta','192.168.1.42','2 min ago','2.4 MB'],
+    ['Balance_Sheet.xlsx','Priya Mehta','10.0.0.21','15 min ago','890 KB'],
+    ['ITR_Form.pdf','Ajay Sharma','172.16.0.8','1 hr ago','670 KB'],
+    ['Audit_Report.docx','Sunita Patel','192.168.1.90','3 hrs ago','4.1 MB'],
+  ];
+  tbody.innerHTML = logs.map(l=>`
+    <tr><td>📎 ${l[0]}</td><td>${l[1]}</td><td><code style="font-size:11px;color:var(--text2)">${l[2]}</code></td><td>${l[3]}</td><td>${l[4]}</td></tr>`).join('');
+}
+
+// ══════════════════════════════════════════
+//   ANALYTICS
+// ══════════════════════════════════════════
+function setRange(range, btn) {
+  document.querySelectorAll('#panel-analytics .btn-sm').forEach(b=>{
+    if(!b.textContent.includes('Export')) b.className=b.className.replace('btn-accent','btn-outline');
+  });
+  btn.className=btn.className.replace('btn-outline','btn-accent');
+  showToast('Showing data for ' + range,'info');
+}
+
+function renderTopFiles() {
+  const container = document.getElementById('topFilesList');
+  if (!container) return;
+  const files = [
+    ['ITR_Form.pdf',312,100],['GST_Filing_Q3.pdf',142,46],
+    ['Company_Logo.png',201,65],['Balance_Sheet.xlsx',87,28],['TDS_Certificates.pdf',93,30]
+  ];
+  container.innerHTML = files.map(f=>`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span>📎 ${f[0]}</span><span style="font-weight:600">${f[1]}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${f[2]}%;background:var(--accent)"></div></div>
+    </div>`).join('');
+}
+
+function renderGeo() {
+  const container = document.getElementById('geoList');
+  if (!container) return;
+  const data = [
+    ['🇮🇳 India',847,69],['🇺🇸 USA',234,19],['🇬🇧 UK',89,7],['🇦🇺 Australia',45,4],['🇸🇬 Singapore',12,1]
+  ];
+  container.innerHTML = data.map(d=>`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span>${d[0]}</span><span>${d[1]} (${d[2]}%)</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${d[2]}%;background:var(--purple)"></div></div>
+    </div>`).join('');
+}
+
+function renderDevices() {
+  const container = document.getElementById('deviceList');
+  if (!container) return;
+  const devices = [['💻 Desktop',62,'var(--accent)'],['📱 Mobile',28,'var(--purple)'],['📟 Tablet',10,'var(--green)']];
+  container.innerHTML = devices.map(d=>`
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:13px;width:80px">${d[0]}</span>
+      <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:${d[1]}%;background:${d[2]}"></div></div>
+      <span style="font-size:12px;font-weight:600;width:30px">${d[1]}%</span>
+    </div>`).join('');
+}
+
+function renderUptimeDots() {
+  const container = document.getElementById('uptimeDots');
+  if (!container) return;
+  const dots = Array(90).fill(0).map((_,i)=>{
+    const r = Math.random();
+    return r>0.05?'':'<1% chance';
+  });
+  container.innerHTML = Array(90).fill(0).map((_,i)=>{
+    const r = Math.random();
+    const cls = r>0.97?'down':r>0.94?'partial':'';
+    return `<div class="uptime-dot ${cls}" title="Day ${90-i}"></div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//   ADMIN
+// ══════════════════════════════════════════
+function renderServiceHealth() {
+  const container = document.getElementById('serviceHealth');
+  if (!container) return;
+  const services = [
+    ['API Gateway','Operational','var(--green)'],
+    ['File Storage','Operational','var(--green)'],
+    ['Download CDN','Operational','var(--green)'],
+    ['Auth Service','Operational','var(--green)'],
+    ['Analytics Engine','Degraded','var(--gold)'],
+    ['Email Service','Operational','var(--green)'],
+  ];
+  container.innerHTML = services.map(s=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span>${s[0]}</span>
+      <span style="color:${s[2]};font-weight:600">● ${s[1]}</span>
+    </div>`).join('');
+}
+
+function renderRevenuePlan() {
+  const container = document.getElementById('revenueByPlan');
+  if (!container) return;
+  const plans = [
+    ['Enterprise','₹89,400',77],['Pro','₹24,300',21],['Free','₹0',0]
+  ];
+  container.innerHTML = plans.map(p=>`
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span>${p[0]}</span><strong>${p[1]}</strong>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${p[2]}%;background:var(--gold)"></div></div>
+    </div>`).join('');
+}
+
+function renderAuditLog() {
+  const tbody = document.getElementById('auditTable');
+  if (!tbody) return;
+  const logs = [
+    ['User login','admin@connectpro.com','192.168.1.1','2 min ago','Info'],
+    ['File deleted','rahul@finance.in','10.0.0.21','14 min ago','Warning'],
+    ['Plan upgraded','priya@taxco.in','172.16.0.5','1 hr ago','Info'],
+    ['Failed login (3x)','unknown@spam.com','45.33.32.156','2 hrs ago','Critical'],
+    ['User suspended','admin@connectpro.com','192.168.1.1','3 hrs ago','Warning'],
+    ['Bulk download','ajay@auditing.com','192.168.1.42','4 hrs ago','Info'],
+  ];
+  tbody.innerHTML = logs.map(l=>`
+    <tr>
+      <td>${l[0]}</td><td>${l[1]}</td>
+      <td><code style="font-size:11px;color:var(--text2)">${l[2]}</code></td><td>${l[3]}</td>
+      <td><span class="badge ${l[4]==='Critical'?'badge-red':l[4]==='Warning'?'badge-gold':'badge-blue'}">${l[4]}</span></td>
+    </tr>`).join('');
+}
+
+// ══════════════════════════════════════════
+//   USERS
+// ══════════════════════════════════════════
+function renderUsersTable(filter='') {
+  const tbody = document.getElementById('usersTable');
+  if (!tbody) return;
+  const users = ALL_USERS.filter(u=>
+    !filter || u.name.toLowerCase().includes(filter.toLowerCase()) || u.email.toLowerCase().includes(filter.toLowerCase())
+  );
+  tbody.innerHTML = users.map(u=>`
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${u.avatar}</div>
+          <div>
+            <div style="font-weight:500;font-size:13px">${u.name}</div>
+            <div style="font-size:11px;color:var(--text3)">${u.email}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="badge ${u.plan==='Enterprise'?'badge-gold':u.plan==='Pro'?'badge-blue':'badge-gray'}">${u.plan}</span></td>
+      <td style="font-size:12px">${u.storage}</td>
+      <td>${u.downloads.toLocaleString()}</td>
+      <td><span class="badge ${u.status==='Active'?'badge-green':u.status==='Over Quota'?'badge-red':'badge-gray'}">${u.status}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${u.joined}</td>
+      <td>
+        <div class="user-row-actions">
+          <button class="btn btn-sm btn-outline" onclick="showToast('Impersonating ${u.name}...','info')">👤</button>
+          <button class="btn btn-sm btn-outline" onclick="showToast('Email sent to ${u.name}','success')">📧</button>
+          <button class="btn btn-sm btn-red" onclick="this.closest('tr').remove();showToast('User suspended','error')">🚫</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function filterUsers(q) { renderUsersTable(q); }
+
+function sendInvite() {
+  const email = document.getElementById('inviteEmail').value;
+  if (!email) { showToast('Enter an email address','error'); return; }
+  showToast('Invite sent to ' + email + '!','success');
+  closeModal('inviteModal');
+}
+
+// ══════════════════════════════════════════
+//   RECENT FILES + ACTIVITY
+// ══════════════════════════════════════════
+function renderRecentFiles() {
+  const container = document.getElementById('recentFilesList');
+  if (!container) return;
+  const files = state.files.slice(0,5);
+  container.innerHTML = files.map(f=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:20px">${FILE_ICONS[f.type]||'📎'}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500">${f.name}</div>
+        <div style="font-size:11px;color:var(--text2)">${f.size} · ${f.date}</div>
+      </div>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-sm btn-ghost" onclick="showToast('Downloading...','info')">⬇</button>
+        <button class="btn btn-sm btn-ghost" onclick="showToast('Link copied!','success')">🔗</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderActivityFeed() {
+  const container = document.getElementById('activityFeed');
+  if (!container) return;
+  const activities = [
+    ['RG','Rahul Gupta','downloaded','Balance_Sheet_FY24.xlsx','2 min ago'],
+    ['MS','Mamta Sharma','uploaded','GSTR1_April.pdf','18 min ago'],
+    ['PM','Priya Mehta','shared','Tax_Computation.docx','1 hr ago'],
+    ['AS','Ajay Sharma','viewed','Company_Logo.png','2 hrs ago'],
+    ['SP','Sunita Patel','watermarked','Audit_Report.docx','3 hrs ago'],
+  ];
+  container.innerHTML = activities.map(a=>`
+    <div class="activity-item">
+      <div class="activity-avatar">${a[0]}</div>
+      <div>
+        <div class="activity-text"><strong>${a[1]}</strong> ${a[2]} <strong>${a[3]}</strong></div>
+        <div class="activity-time">${a[4]}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════
+//   BILLING
+// ══════════════════════════════════════════
+function renderInvoices() {
+  const tbody = document.getElementById('invoiceTable');
+  if (!tbody) return;
+  const invoices = [
+    ['INV-2026-04','Apr 1, 2026','Pro','₹999','Paid'],
+    ['INV-2026-03','Mar 1, 2026','Pro','₹999','Paid'],
+    ['INV-2026-02','Feb 1, 2026','Pro','₹999','Paid'],
+    ['INV-2026-01','Jan 1, 2026','Free','₹0','Paid'],
+    ['INV-2025-12','Dec 1, 2025','Free','₹0','Paid'],
+  ];
+  tbody.innerHTML = invoices.map(inv=>`
+    <tr>
+      <td><code style="font-size:11px">${inv[0]}</code></td>
+      <td>${inv[1]}</td>
+      <td><span class="badge badge-blue">${inv[2]}</span></td>
+      <td style="font-weight:600">${inv[3]}</td>
+      <td><span class="badge badge-green">${inv[4]}</span></td>
+      <td><button class="btn btn-sm btn-outline" onclick="showToast('Invoice ${inv[0]} downloaded','success')">⬇ PDF</button></td>
+    </tr>`).join('');
+}
+
+// ══════════════════════════════════════════
+//   PRICING
+// ══════════════════════════════════════════
+function toggleAnnual() {
+  state.isAnnual = document.getElementById('annualToggle').checked;
+  document.getElementById('proPrice').innerHTML = state.isAnnual?'₹799<span>/mo</span>':'₹999<span>/mo</span>';
+  document.getElementById('entPrice').innerHTML = state.isAnnual?'₹2399<span>/mo</span>':'₹2999<span>/mo</span>';
+  showToast(state.isAnnual?'Annual pricing applied — save 20%!':'Switched to monthly pricing','info');
+}
+
+function selectPlan(plan) {
+  const labels = { free:'Free', pro:'Pro', enterprise:'Enterprise' };
+  showToast('Switching to ' + labels[plan] + ' plan...','success');
+  setTimeout(()=>{
+    state.user.plan = labels[plan];
+    document.getElementById('currentPlanBadge').textContent = labels[plan];
+    document.getElementById('currentPlanBadge').className = 'plan-badge plan-' + plan;
+    closeModal('upgradeModal');
+  }, 800);
+}
+
+// ══════════════════════════════════════════
+//   MODALS
+// ══════════════════════════════════════════
+function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+document.addEventListener('click', e=>{
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('open');
+  }
+});
+
+// ══════════════════════════════════════════
+//   TOASTS
+// ══════════════════════════════════════════
+function showToast(msg, type='info') {
+  const icons = { success:'✅', error:'❌', info:'ℹ️' };
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(()=>toast.remove(), 3500);
+}
+
+// ══════════════════════════════════════════
+//   MISC
+// ══════════════════════════════════════════
+function createFolder() {
+  const name = document.getElementById('folderName').value.trim();
+  if (!name) { showToast('Enter a folder name','error'); return; }
+  state.files.unshift({ name:name+' (Folder)', type:'doc', size:'—', downloads:0, wm:false, date:'Today' });
+  renderFileGrid();
+  closeModal('newFolderModal');
+  showToast('Folder "'+name+'" created!','success');
+}
+
+function confirmDeleteAccount() {
+  if (document.getElementById('deleteConfirm').value === 'DELETE') {
+    showToast('Account deletion initiated','error');
+    closeModal('deleteAccountModal');
+    setTimeout(doLogout, 1500);
+  } else {
+    showToast('Please type DELETE to confirm','error');
+  }
+}
+
+// Global search
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('globalSearch')?.addEventListener('keydown', e=>{
+    if (e.key==='Enter' && e.target.value) {
+      showToast('Searching for: '+e.target.value,'info');
+      e.target.value='';
+    }
+  });
+
+  // Watermark init
+  setTimeout(updateWatermarkPreview, 500);
+});
+</script>
+</body>
+</html>

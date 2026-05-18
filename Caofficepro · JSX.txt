@@ -1,0 +1,805 @@
+import { useState, useEffect } from "react";
+
+// ─── STORAGE KEYS ─────────────────────────────────────────────────────────────
+const USERS_KEY   = "ca_pro_users_v1";
+const SESSION_KEY = "ca_pro_session_v1";
+const PIN_KEY     = "ca_pro_pin_v1";
+const DATA_KEY    = "ca_pro_data_v1";
+
+// ─── DEFAULT DATA ─────────────────────────────────────────────────────────────
+const DEFAULT_USERS = [
+  { id:"usr-001", name:"CA Sharma", role:"admin", email:"sharma@ca.com", pin:"1234", color:"#2563eb" },
+  { id:"usr-002", name:"Rahul (Staff)", role:"staff", email:"rahul@ca.com", pin:"5678", color:"#7c3aed" },
+  { id:"usr-003", name:"Priya (Junior)", role:"viewer", email:"priya@ca.com", pin:"0000", color:"#059669" },
+];
+const DEFAULT_DATA = {
+  ca: { name:"CA Sharma & Associates", gstin:"27AABCS1234A1Z5", tools:["GST Filing","ITR","Audit","TDS","ROC"] },
+  businesses: [
+    { id:"biz-001", name:"Mehta Traders Pvt Ltd", type:"Manufacturing", gstin:"27AABCM5678B1Z3", phone:"9876543210", email:"mehta@example.com", annualTurnover:2400000, gstStatus:"Filed", itrStatus:"Pending", tdsStatus:"Done", lastContact:"2026-04-18" },
+    { id:"biz-002", name:"Kapoor Retail Chain", type:"Retail", gstin:"27AABCK9012C1Z1", phone:"9123456780", email:"kapoor@example.com", annualTurnover:5800000, gstStatus:"Pending", itrStatus:"Filed", tdsStatus:"Pending", lastContact:"2026-04-15" },
+    { id:"biz-003", name:"Singh IT Solutions", type:"Services", gstin:"27AABCS3456D1Z9", phone:"9988776655", email:"singh@example.com", annualTurnover:1200000, gstStatus:"Filed", itrStatus:"Filed", tdsStatus:"Done", lastContact:"2026-04-20" },
+  ],
+  employees: [
+    { id:"emp-001", bizId:"biz-001", name:"Rajesh Kumar", role:"Manager", pan:"ABCPK1234D", salary:55000, tds:3200, pf:6600, esi:1375, form16:"Done" },
+    { id:"emp-002", bizId:"biz-001", name:"Priya Singh", role:"Accountant", pan:"DEFPS5678E", salary:38000, tds:1800, pf:4560, esi:950, form16:"Pending" },
+    { id:"emp-003", bizId:"biz-002", name:"Amit Shah", role:"Supervisor", pan:"GHIAS9012F", salary:42000, tds:2100, pf:5040, esi:1050, form16:"Done" },
+    { id:"emp-004", bizId:"biz-003", name:"Neha Verma", role:"Developer", pan:"IJKNV3456G", salary:68000, tds:5500, pf:8160, esi:0, form16:"Done" },
+  ],
+  accounts: [
+    { id:"acc-001", bizId:"biz-001", type:"GST Payable", amount:124500, due:"2026-04-25", status:"Due" },
+    { id:"acc-002", bizId:"biz-001", type:"TDS Deposit", amount:48200, due:"2026-04-07", status:"Overdue" },
+    { id:"acc-003", bizId:"biz-002", type:"Advance Tax", amount:210000, due:"2026-06-15", status:"Upcoming" },
+    { id:"acc-004", bizId:"biz-002", type:"GST Payable", amount:367800, due:"2026-04-25", status:"Due" },
+    { id:"acc-005", bizId:"biz-003", type:"TDS Deposit", amount:22500, due:"2026-05-07", status:"Upcoming" },
+  ],
+  vouchers: [],
+};
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const fmt = n => "₹" + Number(n).toLocaleString("en-IN");
+const SC = s => ({ Filed:"#00e5a0",Done:"#00e5a0",Pending:"#ffb347",Due:"#ffb347",Overdue:"#ff4d6d",Upcoming:"#4dc3ff",Paid:"#00e5a0" }[s]||"#aaa");
+const health = b => (b.gstStatus==="Filed"?34:0)+(b.itrStatus==="Filed"?33:0)+(b.tdsStatus==="Done"?33:0);
+const HC = h => h>=90?"#00e5a0":h>=60?"#ffb347":"#ff4d6d";
+
+function loadUsers() { try { return JSON.parse(localStorage.getItem(USERS_KEY)) || DEFAULT_USERS; } catch { return DEFAULT_USERS; } }
+function saveUsers(u) { try { localStorage.setItem(USERS_KEY, JSON.stringify(u)); } catch {} }
+function loadData() { try { return JSON.parse(localStorage.getItem(DATA_KEY)) || DEFAULT_DATA; } catch { return DEFAULT_DATA; } }
+function saveData(d) { try { localStorage.setItem(DATA_KEY, JSON.stringify(d)); } catch {} }
+function loadSession() { try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)) || null; } catch { return null; } }
+function saveSession(u) { try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(u)); } catch {} }
+
+// ─── COMPONENTS ───────────────────────────────────────────────────────────────
+function Toast({ msg, onDone }) {
+  useEffect(() => { const t = setTimeout(onDone, 2600); return () => clearTimeout(t); }, []);
+  return (
+    <div style={{ position:"fixed",bottom:24,right:24,zIndex:9999,background:"#0f2040",border:"1px solid #2563eb",borderRadius:12,padding:"12px 22px",color:"#60a5fa",fontSize:13,fontWeight:700,boxShadow:"0 8px 32px #00000099" }}>
+      {msg}
+    </div>
+  );
+}
+function Modal({ title, onClose, children }) {
+  return (
+    <div style={{ position:"fixed",inset:0,zIndex:1000,background:"#000000cc",display:"flex",alignItems:"center",justifyContent:"center",padding:16 }} onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{ background:"#0d1525",border:"1px solid #2563eb",borderRadius:18,padding:26,width:"100%",maxWidth:500,maxHeight:"90vh",overflowY:"auto" }}>
+        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20 }}>
+          <div style={{ fontSize:15,fontWeight:800,color:"#fff" }}>{title}</div>
+          <button onClick={onClose} style={{ background:"transparent",border:"none",color:"#6b7280",fontSize:22,cursor:"pointer" }}>×</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+const inp = { width:"100%",boxSizing:"border-box",background:"#111827",border:"1px solid #1e3a5f",borderRadius:8,color:"#e8eaf0",padding:"9px 12px",fontSize:13,outline:"none",marginBottom:10,fontFamily:"inherit" };
+const lbl = { fontSize:11,color:"#4a90d9",marginBottom:4,display:"block",letterSpacing:1 };
+const btnP = { background:"linear-gradient(135deg,#2563eb,#7c3aed)",border:"none",borderRadius:8,color:"#fff",padding:"10px 0",cursor:"pointer",fontSize:13,fontWeight:700,width:"100%",fontFamily:"inherit" };
+
+// ════════════════════════════════════════════════════════════
+// USER SELECT SCREEN
+// ════════════════════════════════════════════════════════════
+function UserSelectScreen({ users, onSelect }) {
+  return (
+    <div style={{ minHeight:"100vh",background:"#0a0d14",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'JetBrains Mono','Fira Code',monospace",padding:24 }}>
+      <div style={{ fontSize:40,marginBottom:12 }}>⚖️</div>
+      <div style={{ fontSize:20,fontWeight:900,color:"#fff",letterSpacing:3,marginBottom:4 }}>CA OFFICE PRO</div>
+      <div style={{ fontSize:11,color:"#4a90d9",letterSpacing:4,marginBottom:36 }}>USER चुनें</div>
+      <div style={{ display:"flex",gap:16,flexWrap:"wrap",justifyContent:"center",maxWidth:500 }}>
+        {users.map(u => (
+          <div key={u.id} onClick={() => onSelect(u)} style={{
+            background:"#0d1525",border:`2px solid ${u.color}44`,borderRadius:16,padding:"24px 32px",
+            textAlign:"center",cursor:"pointer",minWidth:140,transition:"all 0.2s",
+          }}
+            onMouseEnter={e=>e.currentTarget.style.borderColor=u.color}
+            onMouseLeave={e=>e.currentTarget.style.borderColor=u.color+"44"}
+          >
+            <div style={{ width:52,height:52,borderRadius:"50%",background:u.color+"22",border:`2px solid ${u.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:900,color:u.color,margin:"0 auto 12px" }}>
+              {u.name[0]}
+            </div>
+            <div style={{ fontWeight:700,color:"#fff",fontSize:13 }}>{u.name}</div>
+            <div style={{ fontSize:10,color:"#6b7280",marginTop:4 }}>{u.role.toUpperCase()}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// PIN SCREEN
+// ════════════════════════════════════════════════════════════
+function PinScreen({ user, onUnlock, onBack }) {
+  const [pin, setPin] = useState("");
+  const [err, setErr] = useState(false);
+  const [shake, setShake] = useState(false);
+  const tryPin = p => {
+    if (p === user.pin) onUnlock();
+    else { setErr(true); setShake(true); setPin(""); setTimeout(()=>setShake(false),500); }
+  };
+  const press = d => {
+    if (d === "DEL") { setPin(p=>p.slice(0,-1)); setErr(false); return; }
+    const next = pin + d; setPin(next); setErr(false);
+    if (next.length===4) setTimeout(()=>tryPin(next),120);
+  };
+  return (
+    <div style={{ minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#0a0d14",fontFamily:"'JetBrains Mono','Fira Code',monospace" }}>
+      <div style={{ textAlign:"center",maxWidth:300,width:"100%",padding:24 }}>
+        <div style={{ width:60,height:60,borderRadius:"50%",background:user.color+"22",border:`2px solid ${user.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,fontWeight:900,color:user.color,margin:"0 auto 12px" }}>{user.name[0]}</div>
+        <div style={{ fontSize:16,fontWeight:900,color:"#fff",marginBottom:4 }}>{user.name}</div>
+        <div style={{ fontSize:10,color:"#4a90d9",letterSpacing:4,marginBottom:32 }}>PIN डालें</div>
+        <div style={{ display:"flex",justifyContent:"center",gap:14,marginBottom:28,animation:shake?"shake 0.4s ease":"none" }}>
+          {[0,1,2,3].map(i=>(
+            <div key={i} style={{ width:16,height:16,borderRadius:"50%",background:i<pin.length?(err?"#ff4d6d":user.color):"#1e3a5f",transition:"background 0.2s" }} />
+          ))}
+        </div>
+        <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10 }}>
+          {["1","2","3","4","5","6","7","8","9","","0","DEL"].map((d,i)=>(
+            <button key={i} onClick={()=>d&&press(d)} style={{ background:d==="DEL"?"#1a1030":d===""?"transparent":"#0f1f3d",border:d&&d!==""?"1px solid #1e3a5f":"none",borderRadius:14,padding:"18px 0",fontSize:d==="DEL"?16:20,fontWeight:700,color:d==="DEL"?"#ff4d6d":"#e8eaf0",cursor:d?"pointer":"default",fontFamily:"inherit" }}>{d}</button>
+          ))}
+        </div>
+        {err && <div style={{ color:"#ff4d6d",fontSize:12,marginTop:14 }}>❌ गलत PIN — Default: {user.pin}</div>}
+        <button onClick={onBack} style={{ marginTop:20,background:"transparent",border:"none",color:"#4a90d9",cursor:"pointer",fontSize:12,fontFamily:"inherit" }}>← वापस जाएं</button>
+      </div>
+      <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}`}</style>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// MAIN APP
+// ════════════════════════════════════════════════════════════
+export default function CAOfficePro() {
+  const [users, setUsers] = useState(loadUsers);
+  const [session, setSession] = useState(loadSession);
+  const [selectUser, setSelectUser] = useState(null);
+  const [data, setData] = useState(loadData);
+  const [view, setView] = useState("chain");
+  const [selBiz, setSelBiz] = useState(null);
+  const [bizTab, setBizTab] = useState("employees");
+  const [search, setSearch] = useState("");
+  const [fGST, setFGST] = useState("All");
+  const [toast, setToast] = useState(null);
+  const [modal, setModal] = useState(null);
+  const [voucherTab, setVoucherTab] = useState("entry");
+  const [vouchers, setVouchers] = useState(() => loadData().vouchers || []);
+
+  useEffect(() => { if (session) saveData({ ...data, vouchers }); }, [data, vouchers, session]);
+  useEffect(() => { saveUsers(users); }, [users]);
+
+  const T = msg => setToast(msg);
+  const CM = () => setModal(null);
+  const canEdit = session && (session.role==="admin"||session.role==="staff");
+  const isAdmin = session && session.role==="admin";
+  const card = { background:"#0d1525",border:"1px solid #1e3a5f",borderRadius:14,padding:18 };
+
+  // Auth flow
+  if (!session) {
+    if (!selectUser) return <UserSelectScreen users={users} onSelect={setSelectUser} />;
+    return <PinScreen user={selectUser} onBack={()=>setSelectUser(null)} onUnlock={()=>{ saveSession(selectUser); setSession(selectUser); setSelectUser(null); }} />;
+  }
+
+  const biz      = selBiz ? data.businesses.find(b=>b.id===selBiz) : null;
+  const bizEmps  = selBiz ? data.employees.filter(e=>e.bizId===selBiz) : [];
+  const bizAccs  = selBiz ? data.accounts.filter(a=>a.bizId===selBiz) : [];
+  const filtered = data.businesses.filter(b =>
+    (b.name.toLowerCase().includes(search.toLowerCase())||b.gstin.toLowerCase().includes(search.toLowerCase())||b.type.toLowerCase().includes(search.toLowerCase())) &&
+    (fGST==="All"||b.gstStatus===fGST)
+  );
+  const alerts = [
+    ...data.accounts.filter(a=>a.status==="Overdue").map(a=>({ level:"danger",icon:"🔴",title:`OVERDUE: ${a.type}`,desc:`${data.businesses.find(b=>b.id===a.bizId)?.name} — ${fmt(a.amount)} — Due: ${a.due}` })),
+    ...data.accounts.filter(a=>a.status==="Due").map(a=>({ level:"warn",icon:"🟡",title:`DUE SOON: ${a.type}`,desc:`${data.businesses.find(b=>b.id===a.bizId)?.name} — ${fmt(a.amount)} — ${a.due}` })),
+    ...data.businesses.filter(b=>b.gstStatus==="Pending").map(b=>({ level:"warn",icon:"⚠️",title:`GST File नहीं: ${b.name}`,desc:"GSTR-3B pending है" })),
+    ...data.employees.filter(e=>e.form16==="Pending").map(e=>({ level:"info",icon:"📋",title:`Form 16 Pending: ${e.name}`,desc:data.businesses.find(b=>b.id===e.bizId)?.name||"" })),
+  ];
+
+  // CRUD
+  const addBiz = f => {
+    if (!canEdit) return T("❌ Permission नहीं है");
+    setData(d=>({...d,businesses:[...d.businesses,{...f,id:"biz-"+uid(),annualTurnover:+f.annualTurnover||0,gstStatus:"Pending",itrStatus:"Pending",tdsStatus:"Pending",lastContact:new Date().toISOString().slice(0,10)}]}));
+    T("✅ Business जोड़ा गया!"); CM();
+  };
+  const editBiz = f => {
+    if (!canEdit) return T("❌ Permission नहीं है");
+    setData(d=>({...d,businesses:d.businesses.map(b=>b.id===f.id?{...b,...f,annualTurnover:+f.annualTurnover}:b)}));
+    T("✅ Business update!"); CM();
+  };
+  const delBiz = id => {
+    if (!isAdmin) return T("❌ सिर्फ Admin delete कर सकता है");
+    if (!window.confirm("Delete करें?")) return;
+    setData(d=>({...d,businesses:d.businesses.filter(b=>b.id!==id),employees:d.employees.filter(e=>e.bizId!==id),accounts:d.accounts.filter(a=>a.bizId!==id)}));
+    setSelBiz(null); T("🗑️ Business delete हुआ");
+  };
+  const addEmp = f => {
+    if (!canEdit) return T("❌ Permission नहीं है");
+    setData(d=>({...d,employees:[...d.employees,{...f,id:"emp-"+uid(),bizId:selBiz,salary:+f.salary,tds:+f.tds,pf:+f.pf,esi:+f.esi||0}]}));
+    T("✅ Employee जोड़ा!"); CM();
+  };
+  const delEmp = id => {
+    if (!canEdit) return T("❌ Permission नहीं है");
+    setData(d=>({...d,employees:d.employees.filter(e=>e.id!==id)})); T("🗑️ Employee हटाया");
+  };
+  const addAcc = f => {
+    if (!canEdit) return T("❌ Permission नहीं है");
+    setData(d=>({...d,accounts:[...d.accounts,{...f,id:"acc-"+uid(),bizId:selBiz,amount:+f.amount}]}));
+    T("✅ Entry जोड़ी!"); CM();
+  };
+  const delAcc = id => {
+    if (!canEdit) return T("❌ Permission नहीं है");
+    setData(d=>({...d,accounts:d.accounts.filter(a=>a.id!==id)})); T("🗑️ Entry हटाई");
+  };
+  const updComp = (id,field,val) => {
+    if (!canEdit) return T("❌ Permission नहीं है");
+    setData(d=>({...d,businesses:d.businesses.map(b=>b.id===id?{...b,[field]:val}:b)}));
+    T("✅ Status update!");
+  };
+
+  // Voucher
+  const [vForm, setVForm] = useState({ type:"Sales",date:new Date().toISOString().slice(0,10),party:"",gstin:"",invoice:"",ledger:"",amount:"",gstRate:"18",txType:"intra",hsn:"",narration:"" });
+  const gstAmt = +vForm.amount * +vForm.gstRate / 100;
+  const isInter = vForm.txType==="inter";
+  const addVoucher = () => {
+    if (!canEdit) return T("❌ Permission नहीं है");
+    if (!vForm.date||!vForm.party||!+vForm.amount) return T("❌ Date, Party और Amount जरूरी है");
+    const v = { ...vForm,id:"v-"+uid(),amount:+vForm.amount,gstRate:+vForm.gstRate,totalGST:gstAmt,cgst:isInter?0:gstAmt/2,sgst:isInter?0:gstAmt/2,igst:isInter?gstAmt:0,total:+vForm.amount+gstAmt,createdBy:session.name };
+    setVouchers(vs=>[v,...vs]);
+    setVForm(f=>({...f,party:"",gstin:"",invoice:"",ledger:"",amount:"",hsn:"",narration:""}));
+    T("✅ Voucher save हुआ!");
+  };
+  const delVoucher = id => {
+    if (!canEdit) return T("❌ Permission नहीं है");
+    setVouchers(vs=>vs.filter(v=>v.id!==id)); T("🗑️ Voucher delete");
+  };
+
+  // GST Summary calc
+  const gstFiltered = vouchers;
+  const outward = gstFiltered.filter(v=>v.type==="Sales"||v.type==="Debit Note");
+  const inward  = gstFiltered.filter(v=>v.type==="Purchase"||v.type==="Credit Note");
+  const netGST  = Math.max(0, outward.reduce((s,v)=>s+v.totalGST,0) - inward.reduce((s,v)=>s+v.totalGST,0));
+
+  // User management forms
+  function UserForm({ init, onSave }) {
+    const [f, setF] = useState(init||{name:"",email:"",role:"staff",pin:"0000",color:"#2563eb"});
+    return (
+      <div>
+        {[["नाम","name"],["Email","email"]].map(([l,k])=>(
+          <div key={k}><label style={lbl}>{l}</label><input style={inp} value={f[k]||""} onChange={e=>setF({...f,[k]:e.target.value})} /></div>
+        ))}
+        <label style={lbl}>Role</label>
+        <select style={inp} value={f.role} onChange={e=>setF({...f,role:e.target.value})}>
+          <option value="admin">Admin (सब rights)</option>
+          <option value="staff">Staff (edit allowed)</option>
+          <option value="viewer">Viewer (सिर्फ देख सकता)</option>
+        </select>
+        <label style={lbl}>PIN (4 digits)</label>
+        <input style={inp} type="password" maxLength={4} value={f.pin} onChange={e=>setF({...f,pin:e.target.value})} />
+        <label style={lbl}>Color</label>
+        <input type="color" value={f.color} onChange={e=>setF({...f,color:e.target.value})} style={{ width:60,height:36,borderRadius:8,border:"1px solid #1e3a5f",background:"#111827",cursor:"pointer",marginBottom:12 }} />
+        <button style={btnP} onClick={()=>onSave(f)}>💾 Save करें</button>
+      </div>
+    );
+  }
+
+  function BizForm({ init, onSave }) {
+    const [f, setF] = useState(init||{name:"",type:"",gstin:"",phone:"",email:"",annualTurnover:""});
+    return (
+      <div>
+        {[["Business Name","name"],["Type","type"],["GSTIN","gstin"],["Phone","phone"],["Email","email"],["Annual Turnover (₹)","annualTurnover"]].map(([l,k])=>(
+          <div key={k}><label style={lbl}>{l}</label><input style={inp} value={f[k]||""} onChange={e=>setF({...f,[k]:e.target.value})} /></div>
+        ))}
+        <button style={btnP} onClick={()=>onSave(f)}>💾 Save</button>
+      </div>
+    );
+  }
+  function EmpForm() {
+    const [f,setF]=useState({name:"",role:"",pan:"",salary:"",tds:"",pf:"",esi:"",form16:"Pending"});
+    return (
+      <div>
+        {[["नाम","name"],["Role","role"],["PAN","pan"],["Salary (₹)","salary"],["TDS (₹)","tds"],["PF (₹)","pf"],["ESI (₹)","esi"]].map(([l,k])=>(
+          <div key={k}><label style={lbl}>{l}</label><input style={inp} value={f[k]} onChange={e=>setF({...f,[k]:e.target.value})} /></div>
+        ))}
+        <label style={lbl}>Form 16</label>
+        <select style={inp} value={f.form16} onChange={e=>setF({...f,form16:e.target.value})}><option>Pending</option><option>Done</option></select>
+        <button style={btnP} onClick={()=>addEmp(f)}>💾 Add Employee</button>
+      </div>
+    );
+  }
+  function AccForm() {
+    const [f,setF]=useState({type:"GST Payable",amount:"",due:"",status:"Due"});
+    return (
+      <div>
+        <label style={lbl}>Type</label>
+        <select style={inp} value={f.type} onChange={e=>setF({...f,type:e.target.value})}>
+          {["GST Payable","TDS Deposit","Advance Tax","Professional Tax","Income Tax","Other"].map(t=><option key={t}>{t}</option>)}
+        </select>
+        <label style={lbl}>Amount (₹)</label>
+        <input style={inp} type="number" value={f.amount} onChange={e=>setF({...f,amount:e.target.value})} />
+        <label style={lbl}>Due Date</label>
+        <input style={{...inp,colorScheme:"dark"}} type="date" value={f.due} onChange={e=>setF({...f,due:e.target.value})} />
+        <label style={lbl}>Status</label>
+        <select style={inp} value={f.status} onChange={e=>setF({...f,status:e.target.value})}>
+          {["Due","Upcoming","Overdue","Paid"].map(s=><option key={s}>{s}</option>)}
+        </select>
+        <button style={btnP} onClick={()=>addAcc(f)}>💾 Add</button>
+      </div>
+    );
+  }
+
+  const exportCSV = () => {
+    if (!vouchers.length) return T("❌ कोई voucher नहीं");
+    const rows = [["Date","Type","Party","GSTIN","Invoice","Taxable","GST%","CGST","SGST","IGST","Total","By"]];
+    vouchers.forEach(v=>rows.push([v.date,v.type,v.party,v.gstin,v.invoice,v.amount,v.gstRate,v.cgst.toFixed(2),v.sgst.toFixed(2),v.igst.toFixed(2),v.total.toFixed(2),v.createdBy]));
+    const csv="\uFEFF"+rows.map(r=>r.join(",")).join("\n");
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));a.download="GST_Vouchers.csv";a.click();
+    T("✅ CSV download हुई!");
+  };
+
+  const navItems = [
+    {k:"chain",l:"🔗 Chain"},
+    {k:"alerts",l:`🔔 Alerts${alerts.length?` (${alerts.length})`:""}`,red:alerts.some(a=>a.level==="danger")},
+    {k:"tally",l:"📊 Tally+GST"},
+    {k:"tools",l:"🛠 Tools"},
+    ...(isAdmin?[{k:"users",l:"👥 Users"}]:[]),
+  ];
+
+  return (
+    <div style={{ minHeight:"100vh",background:"#0a0d14",fontFamily:"'JetBrains Mono','Fira Code',monospace",color:"#e8eaf0" }}>
+      <style>{`*{box-sizing:border-box}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#0d1525}::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:3px}input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1)}@media(max-width:600px){.biz-grid{grid-template-columns:1fr!important}.stat-grid{grid-template-columns:1fr 1fr!important}.nav-lbl{display:none}}`}</style>
+
+      {/* HEADER */}
+      <div style={{ background:"#0d1525",borderBottom:"1px solid #1e3a5f",padding:"12px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8,position:"sticky",top:0,zIndex:100 }}>
+        <div style={{ display:"flex",alignItems:"center",gap:10 }}>
+          <div style={{ width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,#2563eb,#7c3aed)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18 }}>⚖️</div>
+          <div>
+            <div style={{ fontSize:13,fontWeight:900,color:"#fff",letterSpacing:1 }}>CA OFFICE PRO</div>
+            <div style={{ fontSize:9,color:"#4a90d9",letterSpacing:2 }}>MULTI-USER v3.0</div>
+          </div>
+        </div>
+        <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
+          {navItems.map(v=>(
+            <button key={v.k} onClick={()=>{setView(v.k);setSelBiz(null);}} style={{
+              padding:"6px 13px",borderRadius:8,border:"1px solid",fontFamily:"inherit",
+              borderColor:view===v.k?"#2563eb":v.red?"#ff4d6d44":"#1e3a5f",
+              background:view===v.k?"#2563eb22":v.red?"#ff4d6d11":"transparent",
+              color:view===v.k?"#60a5fa":v.red?"#ff4d6d":"#6b7280",
+              cursor:"pointer",fontSize:11,fontWeight:700,
+            }}><span className="nav-lbl">{v.l}</span></button>
+          ))}
+        </div>
+        <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+          <div style={{ display:"flex",alignItems:"center",gap:6,background:"#0f1f3d",border:"1px solid #1e3a5f",borderRadius:8,padding:"5px 12px" }}>
+            <div style={{ width:22,height:22,borderRadius:"50%",background:session.color+"22",border:`1.5px solid ${session.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:900,color:session.color }}>{session.name[0]}</div>
+            <div>
+              <div style={{ fontSize:11,color:"#fff",fontWeight:700 }}>{session.name}</div>
+              <div style={{ fontSize:9,color:"#6b7280" }}>{session.role.toUpperCase()}</div>
+            </div>
+          </div>
+          <button onClick={()=>{saveSession(null);setSession(null);setSelectUser(null);}} style={{ padding:"6px 12px",borderRadius:8,border:"1px solid #ff4d6d44",background:"transparent",color:"#ff4d6d",cursor:"pointer",fontSize:11,fontFamily:"inherit" }}>Logout</button>
+          <button onClick={()=>{if(window.confirm("Reset data?")){ const nd={...DEFAULT_DATA,vouchers:[]}; setData(nd); setVouchers([]); saveData(nd); T("🔄 Reset!");} }} style={{ padding:"6px 10px",borderRadius:8,border:"1px solid #1e3a5f",background:"transparent",color:"#6b7280",cursor:"pointer",fontSize:12 }}>↺</button>
+        </div>
+      </div>
+
+      <div style={{ padding:"18px 18px 60px" }}>
+
+        {/* ══ CHAIN VIEW ══ */}
+        {view==="chain" && !selBiz && (<>
+          <div style={{ ...card,border:"2px solid #2563eb",marginBottom:18,display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:14,alignItems:"center" }}>
+            <div style={{ display:"flex",alignItems:"center",gap:14 }}>
+              <div style={{ fontSize:36 }}>⚖️</div>
+              <div>
+                <div style={{ fontSize:17,fontWeight:900,color:"#fff" }}>{data.ca.name}</div>
+                <div style={{ fontSize:11,color:"#4a90d9",marginTop:2 }}>GSTIN: {data.ca.gstin}</div>
+                <div style={{ display:"flex",gap:6,marginTop:8,flexWrap:"wrap" }}>
+                  {data.ca.tools.map(t=><span key={t} style={{ background:"#1e3a5f",borderRadius:6,padding:"2px 10px",fontSize:10,color:"#60a5fa" }}>{t}</span>)}
+                </div>
+              </div>
+            </div>
+            <div style={{ textAlign:"right" }}>
+              <div style={{ fontSize:11,color:"#6b7280" }}>कुल Client Turnover</div>
+              <div style={{ fontSize:24,fontWeight:900,color:"#00e5a0" }}>{fmt(data.businesses.reduce((s,b)=>s+(b.annualTurnover||0),0))}</div>
+              <div style={{ fontSize:11,color:alerts.some(a=>a.level==="danger")?"#ff4d6d":"#6b7280",marginTop:4 }}>{alerts.length?`⚠ ${alerts.length} Alerts`:"✅ All Clear"}</div>
+            </div>
+          </div>
+
+          <div className="stat-grid" style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:18 }}>
+            {[
+              {l:"Businesses",v:data.businesses.length,i:"🏢",c:"#60a5fa"},
+              {l:"Employees",v:data.employees.length,i:"👥",c:"#a78bfa"},
+              {l:"GST Pending",v:data.businesses.filter(b=>b.gstStatus==="Pending").length,i:"📋",c:"#ffb347"},
+              {l:"Overdue",v:data.accounts.filter(a=>a.status==="Overdue").length,i:"🔴",c:"#ff4d6d"},
+            ].map(s=>(
+              <div key={s.l} style={{ ...card,display:"flex",alignItems:"center",gap:10,padding:14 }}>
+                <span style={{ fontSize:20 }}>{s.i}</span>
+                <div><div style={{ fontSize:22,fontWeight:900,color:s.c }}>{s.v}</div><div style={{ fontSize:10,color:"#6b7280" }}>{s.l}</div></div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display:"flex",gap:8,marginBottom:14,flexWrap:"wrap" }}>
+            <input style={{ ...inp,flex:1,minWidth:180,marginBottom:0 }} placeholder="🔍 Search..." value={search} onChange={e=>setSearch(e.target.value)} />
+            {["All","Filed","Pending"].map(f=>(
+              <button key={f} onClick={()=>setFGST(f)} style={{ padding:"9px 14px",borderRadius:8,border:"1px solid",fontFamily:"inherit",borderColor:fGST===f?"#2563eb":"#1e3a5f",background:fGST===f?"#2563eb22":"transparent",color:fGST===f?"#60a5fa":"#6b7280",cursor:"pointer",fontSize:11,fontWeight:700 }}>GST: {f}</button>
+            ))}
+            {canEdit && <button onClick={()=>setModal({type:"addBiz"})} style={{ padding:"9px 16px",borderRadius:8,background:"linear-gradient(135deg,#2563eb,#7c3aed)",border:"none",color:"#fff",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"inherit" }}>+ Add Business</button>}
+          </div>
+
+          <div className="biz-grid" style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(290px,1fr))",gap:12 }}>
+            {filtered.map(b=>{
+              const h=health(b);
+              return (
+                <div key={b.id} style={{ ...card,cursor:"pointer",position:"relative",overflow:"hidden",transition:"transform 0.2s" }}
+                  onClick={()=>{setSelBiz(b.id);setBizTab("employees");}}
+                  onMouseEnter={e=>{e.currentTarget.style.borderColor="#2563eb";e.currentTarget.style.transform="translateY(-2px)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.borderColor="#1e3a5f";e.currentTarget.style.transform="translateY(0)";}}
+                >
+                  <div style={{ position:"absolute",top:0,right:0,width:64,height:64,borderRadius:"0 14px 0 64px",background:`${HC(h)}18` }} />
+                  <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start" }}>
+                    <div style={{ flex:1,paddingRight:10 }}>
+                      <div style={{ fontSize:14,fontWeight:800,color:"#fff" }}>{b.name}</div>
+                      <div style={{ fontSize:10,color:"#4a90d9",marginTop:2 }}>{b.type}</div>
+                      <div style={{ fontSize:10,color:"#6b7280" }}>{b.gstin}</div>
+                    </div>
+                    <div style={{ fontSize:20,fontWeight:900,color:HC(h),whiteSpace:"nowrap" }}>{h}%</div>
+                  </div>
+                  <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginTop:12 }}>
+                    {[["GST",b.gstStatus],["ITR",b.itrStatus],["TDS",b.tdsStatus]].map(([l,v])=>(
+                      <div key={l} style={{ background:"#111827",borderRadius:7,padding:"6px 3px",textAlign:"center",border:`1px solid ${SC(v)}30` }}>
+                        <div style={{ fontSize:9,color:"#6b7280" }}>{l}</div>
+                        <div style={{ fontSize:11,fontWeight:700,color:SC(v) }}>{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:8,borderTop:"1px solid #1e3a5f" }}>
+                    <div style={{ fontSize:11,color:"#4a90d9" }}>Turnover: <span style={{ color:"#fff" }}>{fmt(b.annualTurnover)}</span></div>
+                    <div style={{ fontSize:10,color:"#6b7280" }}>{b.lastContact}</div>
+                  </div>
+                </div>
+              );
+            })}
+            {filtered.length===0 && <div style={{ color:"#6b7280",fontSize:13,padding:20 }}>कोई business नहीं मिला।</div>}
+          </div>
+        </>)}
+
+        {/* ══ BIZ DETAIL ══ */}
+        {view==="chain" && selBiz && biz && (<>
+          <div style={{ display:"flex",gap:8,marginBottom:16,flexWrap:"wrap",alignItems:"center" }}>
+            <button onClick={()=>setSelBiz(null)} style={{ background:"transparent",border:"1px solid #1e3a5f",color:"#4a90d9",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontFamily:"inherit" }}>← Back</button>
+            {canEdit && <button onClick={()=>setModal({type:"editBiz",payload:biz})} style={{ background:"transparent",border:"1px solid #2563eb44",color:"#60a5fa",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontFamily:"inherit" }}>✏️ Edit</button>}
+            {isAdmin && <button onClick={()=>delBiz(biz.id)} style={{ background:"#7f1d1d22",border:"1px solid #ff4d6d44",borderRadius:8,color:"#ff4d6d",padding:"7px 14px",cursor:"pointer",fontSize:12,fontFamily:"inherit" }}>🗑️ Delete</button>}
+          </div>
+          <div style={{ ...card,border:"1px solid #2563eb",marginBottom:16,display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:12,alignItems:"center" }}>
+            <div>
+              <div style={{ fontSize:17,fontWeight:900,color:"#fff" }}>{biz.name}</div>
+              <div style={{ fontSize:11,color:"#4a90d9" }}>{biz.type} · {biz.gstin}</div>
+              <div style={{ fontSize:11,color:"#6b7280",marginTop:2 }}>📞 {biz.phone} &nbsp;·&nbsp; 📧 {biz.email}</div>
+              <div style={{ fontSize:11,color:"#6b7280" }}>Turnover: <span style={{ color:"#00e5a0" }}>{fmt(biz.annualTurnover)}</span></div>
+            </div>
+            <div style={{ textAlign:"right" }}>
+              <div style={{ fontSize:28,fontWeight:900,color:HC(health(biz)) }}>{health(biz)}%</div>
+              <div style={{ fontSize:10,color:"#6b7280" }}>Compliance Score</div>
+            </div>
+          </div>
+          <div style={{ display:"flex",gap:4,marginBottom:16,flexWrap:"wrap" }}>
+            {[["employees","👥 Employees"],["accounts","📊 Accounts"],["compliance","✅ Compliance"]].map(([k,l])=>(
+              <button key={k} onClick={()=>setBizTab(k)} style={{ padding:"8px 16px",borderRadius:8,border:"1px solid",fontFamily:"inherit",borderColor:bizTab===k?"#2563eb":"#1e3a5f",background:bizTab===k?"#2563eb22":"transparent",color:bizTab===k?"#60a5fa":"#6b7280",cursor:"pointer",fontSize:12,fontWeight:700 }}>{l}</button>
+            ))}
+          </div>
+
+          {bizTab==="employees" && (<>
+            {canEdit && <div style={{ display:"flex",justifyContent:"flex-end",marginBottom:10 }}><button onClick={()=>setModal({type:"addEmp"})} style={{ padding:"8px 16px",borderRadius:8,background:"linear-gradient(135deg,#2563eb,#7c3aed)",border:"none",color:"#fff",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"inherit" }}>+ Add Employee</button></div>}
+            {bizEmps.length===0 && <div style={{ color:"#6b7280",fontSize:13 }}>No employees.</div>}
+            {bizEmps.map(e=>(
+              <div key={e.id} style={{ ...card,marginBottom:10,display:"flex",flexWrap:"wrap",justifyContent:"space-between",alignItems:"center",gap:12 }}>
+                <div style={{ minWidth:140 }}>
+                  <div style={{ fontWeight:700,color:"#fff",fontSize:13 }}>{e.name}</div>
+                  <div style={{ fontSize:10,color:"#4a90d9" }}>{e.role} · {e.pan}</div>
+                </div>
+                <div style={{ display:"flex",gap:14,flexWrap:"wrap" }}>
+                  {[["Salary",fmt(e.salary),"#fff"],["TDS",fmt(e.tds),"#ffb347"],["PF",fmt(e.pf),"#60a5fa"],["ESI",e.esi?fmt(e.esi):"—","#a78bfa"],["Form 16",e.form16,SC(e.form16)]].map(([l,v,c])=>(
+                    <div key={l} style={{ textAlign:"center" }}>
+                      <div style={{ fontSize:9,color:"#6b7280" }}>{l}</div>
+                      <div style={{ fontSize:12,fontWeight:700,color:c }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+                {canEdit && <button onClick={()=>delEmp(e.id)} style={{ background:"transparent",border:"none",color:"#ff4d6d44",cursor:"pointer",fontSize:18 }} onMouseEnter={x=>x.target.style.color="#ff4d6d"} onMouseLeave={x=>x.target.style.color="#ff4d6d44"}>✕</button>}
+              </div>
+            ))}
+          </>)}
+
+          {bizTab==="accounts" && (<>
+            {canEdit && <div style={{ display:"flex",justifyContent:"flex-end",marginBottom:10 }}><button onClick={()=>setModal({type:"addAcc"})} style={{ padding:"8px 16px",borderRadius:8,background:"linear-gradient(135deg,#2563eb,#7c3aed)",border:"none",color:"#fff",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"inherit" }}>+ Add Entry</button></div>}
+            {bizAccs.length===0 && <div style={{ color:"#6b7280",fontSize:13 }}>No entries.</div>}
+            {bizAccs.map(a=>(
+              <div key={a.id} style={{ ...card,marginBottom:10,borderLeftWidth:3,borderLeftStyle:"solid",borderLeftColor:SC(a.status),display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10 }}>
+                <div><div style={{ fontWeight:700,color:"#fff" }}>{a.type}</div><div style={{ fontSize:11,color:"#6b7280" }}>Due: {a.due}</div></div>
+                <div style={{ display:"flex",alignItems:"center",gap:14 }}>
+                  <div style={{ textAlign:"right" }}>
+                    <div style={{ fontSize:16,fontWeight:800,color:"#fff" }}>{fmt(a.amount)}</div>
+                    <div style={{ fontSize:11,fontWeight:700,color:SC(a.status) }}>{a.status}</div>
+                  </div>
+                  {canEdit && <button onClick={()=>delAcc(a.id)} style={{ background:"transparent",border:"none",color:"#ff4d6d44",cursor:"pointer",fontSize:18 }} onMouseEnter={x=>x.target.style.color="#ff4d6d"} onMouseLeave={x=>x.target.style.color="#ff4d6d44"}>✕</button>}
+                </div>
+              </div>
+            ))}
+          </>)}
+
+          {bizTab==="compliance" && (
+            <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12 }}>
+              {[{l:"GST Return",field:"gstStatus",opts:["Filed","Pending"],cur:biz.gstStatus},{l:"ITR Filing",field:"itrStatus",opts:["Filed","Pending"],cur:biz.itrStatus},{l:"TDS Status",field:"tdsStatus",opts:["Done","Pending"],cur:biz.tdsStatus}].map(item=>(
+                <div key={item.l} style={card}>
+                  <div style={{ fontSize:11,color:"#6b7280",marginBottom:10 }}>{item.l}</div>
+                  <div style={{ display:"flex",gap:6 }}>
+                    {item.opts.map(opt=>(
+                      <button key={opt} onClick={()=>updComp(biz.id,item.field,opt)} style={{ flex:1,padding:"10px 0",borderRadius:8,border:"1px solid",fontFamily:"inherit",borderColor:item.cur===opt?SC(opt):"#1e3a5f",background:item.cur===opt?`${SC(opt)}22`:"transparent",color:item.cur===opt?SC(opt):"#6b7280",cursor:"pointer",fontSize:12,fontWeight:700 }}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>)}
+
+        {/* ══ ALERTS VIEW ══ */}
+        {view==="alerts" && (<>
+          <div style={{ fontSize:12,color:"#4a90d9",letterSpacing:3,marginBottom:18 }}>◆ ALERTS & NOTIFICATIONS</div>
+          {alerts.length===0 && <div style={{ ...card,color:"#00e5a0",textAlign:"center",padding:48,fontSize:14 }}>✅ All clear!</div>}
+          {alerts.map((a,i)=>(
+            <div key={i} style={{ ...card,marginBottom:10,borderLeftWidth:3,borderLeftStyle:"solid",borderLeftColor:a.level==="danger"?"#ff4d6d":a.level==="warn"?"#ffb347":"#4dc3ff",display:"flex",alignItems:"center",gap:14 }}>
+              <span style={{ fontSize:22 }}>{a.icon}</span>
+              <div>
+                <div style={{ fontWeight:700,color:"#fff",fontSize:13 }}>{a.title}</div>
+                <div style={{ fontSize:11,color:"#6b7280",marginTop:2 }}>{a.desc}</div>
+              </div>
+            </div>
+          ))}
+        </>)}
+
+        {/* ══ TALLY + GST VIEW ══ */}
+        {view==="tally" && (<>
+          <div style={{ display:"flex",gap:6,marginBottom:18,flexWrap:"wrap" }}>
+            {[["entry","📝 Voucher Entry"],["gst","📋 GST Summary"],["export","⬇️ Export"]].map(([k,l])=>(
+              <button key={k} onClick={()=>setVoucherTab(k)} style={{ padding:"8px 16px",borderRadius:8,border:"1px solid",fontFamily:"inherit",borderColor:voucherTab===k?"#2563eb":"#1e3a5f",background:voucherTab===k?"#2563eb22":"transparent",color:voucherTab===k?"#60a5fa":"#6b7280",cursor:"pointer",fontSize:12,fontWeight:700 }}>{l}</button>
+            ))}
+          </div>
+
+          {/* Stats */}
+          <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10,marginBottom:18 }}>
+            {[
+              {l:"Vouchers",v:vouchers.length,c:"#60a5fa"},
+              {l:"Sales",v:fmt(vouchers.filter(v=>v.type==="Sales").reduce((s,v)=>s+v.total,0)),c:"#00e5a0"},
+              {l:"Purchase",v:fmt(vouchers.filter(v=>v.type==="Purchase").reduce((s,v)=>s+v.total,0)),c:"#ffb347"},
+              {l:"Net GST Due",v:fmt(netGST),c:"#a78bfa"},
+            ].map(s=>(
+              <div key={s.l} style={{ ...card,padding:14,textAlign:"center" }}>
+                <div style={{ fontSize:18,fontWeight:900,color:s.c }}>{s.v}</div>
+                <div style={{ fontSize:10,color:"#6b7280",marginTop:4 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Voucher Entry */}
+          {voucherTab==="entry" && (<>
+            {canEdit && (
+              <div style={{ ...card,marginBottom:18 }}>
+                <div style={{ fontSize:13,fontWeight:800,color:"#fff",marginBottom:16 }}>➕ New Voucher Entry</div>
+                <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:12 }}>
+                  <div>
+                    <label style={lbl}>Type</label>
+                    <select style={inp} value={vForm.type} onChange={e=>setVForm(f=>({...f,type:e.target.value}))}>
+                      {["Sales","Purchase","Credit Note","Debit Note"].map(t=><option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={lbl}>Date</label>
+                    <input style={{...inp,colorScheme:"dark"}} type="date" value={vForm.date} onChange={e=>setVForm(f=>({...f,date:e.target.value}))} />
+                  </div>
+                  <div>
+                    <label style={lbl}>Party</label>
+                    <input style={inp} value={vForm.party} onChange={e=>setVForm(f=>({...f,party:e.target.value}))} placeholder="Party name" />
+                  </div>
+                  <div>
+                    <label style={lbl}>GSTIN</label>
+                    <input style={inp} value={vForm.gstin} onChange={e=>setVForm(f=>({...f,gstin:e.target.value.toUpperCase()}))} placeholder="Party GSTIN" />
+                  </div>
+                  <div>
+                    <label style={lbl}>Invoice #</label>
+                    <input style={inp} value={vForm.invoice} onChange={e=>setVForm(f=>({...f,invoice:e.target.value}))} placeholder="INV-001" />
+                  </div>
+                  <div>
+                    <label style={lbl}>Taxable Amount (₹)</label>
+                    <input style={inp} type="number" value={vForm.amount} onChange={e=>setVForm(f=>({...f,amount:e.target.value}))} placeholder="0" />
+                  </div>
+                  <div>
+                    <label style={lbl}>GST Rate</label>
+                    <select style={inp} value={vForm.gstRate} onChange={e=>setVForm(f=>({...f,gstRate:e.target.value}))}>
+                      {["0","5","12","18","28"].map(r=><option key={r} value={r}>{r}% GST</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={lbl}>Transaction Type</label>
+                    <select style={inp} value={vForm.txType} onChange={e=>setVForm(f=>({...f,txType:e.target.value}))}>
+                      <option value="intra">Intra-State (CGST+SGST)</option>
+                      <option value="inter">Inter-State (IGST)</option>
+                    </select>
+                  </div>
+                </div>
+                {/* GST Preview */}
+                <div style={{ background:"#0f1f3d",border:"1px solid #2563eb33",borderRadius:10,padding:14,margin:"10px 0 14px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,textAlign:"center" }}>
+                  {[["Taxable",fmt(+vForm.amount||0),"#fff"],isInter?["IGST",fmt(gstAmt),"#4dc3ff"]:["CGST",fmt(gstAmt/2),"#ffb347"],isInter?["—","—","#6b7280"]:["SGST",fmt(gstAmt/2),"#a78bfa"],["Total",fmt((+vForm.amount||0)+gstAmt),"#00e5a0"]].map(([l,v,c])=>(
+                    <div key={l}><div style={{ fontSize:10,color:"#6b7280" }}>{l}</div><div style={{ fontSize:15,fontWeight:800,color:c }}>{v}</div></div>
+                  ))}
+                </div>
+                <div>
+                  <label style={lbl}>HSN/SAC</label>
+                  <input style={inp} value={vForm.hsn} onChange={e=>setVForm(f=>({...f,hsn:e.target.value}))} placeholder="e.g. 9983" />
+                </div>
+                <button style={btnP} onClick={addVoucher}>💾 Save Voucher</button>
+              </div>
+            )}
+            {/* Voucher list */}
+            <div style={card}>
+              <div style={{ fontSize:13,fontWeight:800,color:"#fff",marginBottom:14 }}>📋 Voucher List ({vouchers.length})</div>
+              {vouchers.length===0 && <div style={{ color:"#6b7280",fontSize:13 }}>कोई voucher नहीं।</div>}
+              {vouchers.map(v=>{
+                const tc = {"Sales":"#00e5a0","Purchase":"#ffb347","Credit Note":"#4dc3ff","Debit Note":"#ff4d6d"}[v.type]||"#aaa";
+                return (
+                  <div key={v.id} style={{ ...card,marginBottom:8,display:"flex",flexWrap:"wrap",justifyContent:"space-between",alignItems:"center",gap:10 }}>
+                    <div>
+                      <span style={{ background:tc+"22",color:tc,padding:"2px 8px",borderRadius:5,fontSize:10,fontWeight:700,marginRight:8 }}>{v.type}</span>
+                      <span style={{ color:"#fff",fontWeight:700,fontSize:13 }}>{v.party}</span>
+                      <div style={{ fontSize:10,color:"#6b7280",marginTop:4 }}>{v.date} · {v.invoice||"—"} · By: {v.createdBy}</div>
+                    </div>
+                    <div style={{ display:"flex",alignItems:"center",gap:16 }}>
+                      <div style={{ textAlign:"right" }}>
+                        <div style={{ fontSize:15,fontWeight:800,color:"#fff" }}>{fmt(v.total)}</div>
+                        <div style={{ fontSize:10,color:"#a78bfa" }}>GST: {fmt(v.totalGST)} ({v.gstRate}%)</div>
+                      </div>
+                      {canEdit && <button onClick={()=>delVoucher(v.id)} style={{ background:"transparent",border:"none",color:"#ff4d6d44",cursor:"pointer",fontSize:18 }} onMouseEnter={x=>x.target.style.color="#ff4d6d"} onMouseLeave={x=>x.target.style.color="#ff4d6d44"}>✕</button>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>)}
+
+          {/* GST Summary */}
+          {voucherTab==="gst" && (
+            <div>
+              <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12,marginBottom:20 }}>
+                {[
+                  {l:"3.1(a) Outward Taxable",v:fmt(outward.reduce((s,v)=>s+v.amount,0)),c:"#00e5a0"},
+                  {l:"4(A) Input Tax Credit",v:fmt(inward.reduce((s,v)=>s+v.amount,0)),c:"#60a5fa"},
+                  {l:"GST Payable (Net)",v:fmt(netGST),c:"#ffb347"},
+                  {l:"CGST Payable",v:fmt(Math.max(0,outward.reduce((s,v)=>s+v.cgst,0)-inward.reduce((s,v)=>s+v.cgst,0))),c:"#a78bfa"},
+                  {l:"SGST Payable",v:fmt(Math.max(0,outward.reduce((s,v)=>s+v.sgst,0)-inward.reduce((s,v)=>s+v.sgst,0))),c:"#a78bfa"},
+                  {l:"IGST Payable",v:fmt(Math.max(0,outward.reduce((s,v)=>s+v.igst,0)-inward.reduce((s,v)=>s+v.igst,0))),c:"#4dc3ff"},
+                ].map(s=>(
+                  <div key={s.l} style={{ ...card }}>
+                    <div style={{ fontSize:10,color:"#6b7280",letterSpacing:1,marginBottom:6 }}>{s.l}</div>
+                    <div style={{ fontSize:20,fontWeight:900,color:s.c }}>{s.v}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={card}>
+                <div style={{ fontSize:13,fontWeight:800,color:"#fff",marginBottom:12 }}>B2B Invoice List (GSTR-1)</div>
+                {outward.filter(v=>v.gstin).length===0 && <div style={{ color:"#6b7280",fontSize:12 }}>GSTIN वाली Sales entries नहीं हैं।</div>}
+                {outward.filter(v=>v.gstin).map(v=>(
+                  <div key={v.id} style={{ borderBottom:"1px solid #1e3a5f",padding:"8px 0",display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:8 }}>
+                    <div><div style={{ color:"#fff",fontWeight:700,fontSize:12 }}>{v.party}</div><div style={{ fontSize:10,color:"#4a90d9" }}>{v.gstin} · {v.invoice}</div></div>
+                    <div style={{ textAlign:"right" }}><div style={{ color:"#fff",fontWeight:700 }}>{fmt(v.total)}</div><div style={{ fontSize:10,color:"#a78bfa" }}>Tax: {fmt(v.totalGST)}</div></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Export */}
+          {voucherTab==="export" && (
+            <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:14 }}>
+              <div style={card}>
+                <div style={{ fontSize:13,fontWeight:800,color:"#fff",marginBottom:16 }}>⬇️ Export Options</div>
+                <button onClick={exportCSV} style={{ ...btnP,marginBottom:10 }}>📊 GST CSV Download</button>
+                <div style={{ ...card,marginTop:4 }}>
+                  <div style={{ fontSize:11,color:"#4a90d9",marginBottom:10,letterSpacing:1 }}>📅 GST Due Dates</div>
+                  {[["GSTR-1","11 तारीख"],["GSTR-3B","20 तारीख"],["TDS","7 तारीख"],["Advance Tax","15 Jun/Sep/Dec/Mar"]].map(([l,v])=>(
+                    <div key={l} style={{ display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"1px solid #1e3a5f",fontSize:12 }}>
+                      <span style={{ color:"#6b7280" }}>{l}</span><span style={{ color:"#fff" }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={card}>
+                <div style={{ fontSize:13,fontWeight:800,color:"#fff",marginBottom:16 }}>💡 Tally Import Guide</div>
+                {[["1","Vouchers add करें","Voucher Entry tab में entries डालें"],["2","CSV Export करें","Export tab से CSV download करें"],["3","Tally खोलें","Gateway of Tally → Company चुनें"],["4","Import करें","Import Data → Vouchers → file select करें"],["5","Verify करें","Reports → GST → GSTR-3B देखें"]].map(([n,t,d])=>(
+                  <div key={n} style={{ display:"flex",gap:10,marginBottom:12,alignItems:"flex-start" }}>
+                    <div style={{ minWidth:24,height:24,borderRadius:"50%",background:"#2563eb22",border:"1px solid #2563eb",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:900,color:"#2563eb" }}>{n}</div>
+                    <div><div style={{ color:"#fff",fontSize:12,fontWeight:700 }}>{t}</div><div style={{ color:"#6b7280",fontSize:11 }}>{d}</div></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>)}
+
+        {/* ══ TOOLS VIEW ══ */}
+        {view==="tools" && (<>
+          <div style={{ fontSize:12,color:"#4a90d9",letterSpacing:3,marginBottom:18 }}>◆ CA AUTOMATION MODULES</div>
+          <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:12 }}>
+            {[
+              {i:"📋",l:"GST Filing",d:"GSTR-1, 3B, Annual",c:"#2563eb",t:"Active ✓"},
+              {i:"📊",l:"TDS Manager",d:"26Q, 24Q, Form 16",c:"#7c3aed",t:"Active ✓"},
+              {i:"💰",l:"Payroll",d:"PF, ESI, Salary Slip",c:"#dc2626",t:"Active ✓"},
+              {i:"🔔",l:"Due Date Alert",d:"Deadline reminder",c:"#7c3aed",t:"Active ✓"},
+              {i:"🧾",l:"ITR Filing",d:"ITR-1 to ITR-6",c:"#059669",t:"जल्द"},
+              {i:"📁",l:"ROC Compliance",d:"MCA Filing, AOC-4",c:"#d97706",t:"जल्द"},
+              {i:"📈",l:"Tally Sync",d:"Auto import ledger",c:"#0891b2",t:"जल्द"},
+              {i:"👥",l:"Client Portal",d:"Document sharing",c:"#2563eb",t:"जल्द"},
+              {i:"🤖",l:"AI Assistant",d:"Tax query resolver",c:"#059669",t:"जल्द"},
+              {i:"📱",l:"WhatsApp Alert",d:"Auto client notify",c:"#25d366",t:"जल्द"},
+              {i:"📑",l:"Audit Tools",d:"Bank reconciliation",c:"#d97706",t:"जल्द"},
+              {i:"☁️",l:"Cloud Backup",d:"Secure doc storage",c:"#0891b2",t:"जल्द"},
+            ].map(tool=>(
+              <div key={tool.l} style={{ ...card,cursor:"pointer",position:"relative",transition:"transform 0.18s",opacity:tool.t.includes("Active")?1:0.7 }}
+                onClick={()=>T(tool.t.includes("Active")?`${tool.l} — Opening...`:`${tool.l} — Coming soon!`)}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor=tool.c;e.currentTarget.style.transform="translateY(-2px)";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor="#1e3a5f";e.currentTarget.style.transform="translateY(0)";}}
+              >
+                <div style={{ position:"absolute",top:10,right:10,background:`${tool.c}22`,borderRadius:6,padding:"2px 8px",fontSize:9,color:tool.c,fontWeight:700 }}>{tool.t}</div>
+                <div style={{ fontSize:26,marginBottom:10 }}>{tool.i}</div>
+                <div style={{ fontWeight:700,color:"#fff",fontSize:13 }}>{tool.l}</div>
+                <div style={{ fontSize:11,color:"#6b7280",marginTop:3 }}>{tool.d}</div>
+              </div>
+            ))}
+          </div>
+        </>)}
+
+        {/* ══ USERS VIEW (Admin only) ══ */}
+        {view==="users" && isAdmin && (<>
+          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,flexWrap:"wrap",gap:10 }}>
+            <div style={{ fontSize:12,color:"#4a90d9",letterSpacing:3 }}>◆ USER MANAGEMENT</div>
+            <button onClick={()=>setModal({type:"addUser"})} style={{ padding:"8px 16px",borderRadius:8,background:"linear-gradient(135deg,#2563eb,#7c3aed)",border:"none",color:"#fff",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"inherit" }}>+ Add User</button>
+          </div>
+          <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12 }}>
+            {users.map(u=>(
+              <div key={u.id} style={{ ...card,border:`1px solid ${u.color}33` }}>
+                <div style={{ display:"flex",alignItems:"center",gap:12,marginBottom:12 }}>
+                  <div style={{ width:44,height:44,borderRadius:"50%",background:u.color+"22",border:`2px solid ${u.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:900,color:u.color }}>{u.name[0]}</div>
+                  <div>
+                    <div style={{ fontWeight:700,color:"#fff",fontSize:14 }}>{u.name}</div>
+                    <div style={{ fontSize:11,color:"#6b7280" }}>{u.email}</div>
+                    <span style={{ background:u.color+"22",color:u.color,padding:"1px 8px",borderRadius:5,fontSize:10,fontWeight:700 }}>{u.role.toUpperCase()}</span>
+                  </div>
+                </div>
+                <div style={{ display:"flex",gap:8 }}>
+                  <button onClick={()=>setModal({type:"editUser",payload:u})} style={{ flex:1,padding:"7px 0",borderRadius:7,border:"1px solid #2563eb44",background:"transparent",color:"#60a5fa",cursor:"pointer",fontSize:11,fontFamily:"inherit" }}>✏️ Edit</button>
+                  {u.id!==session.id && <button onClick={()=>{ if(window.confirm(`Delete "${u.name}"?`)) { setUsers(us=>us.filter(x=>x.id!==u.id)); T("🗑️ User deleted"); } }} style={{ padding:"7px 14px",borderRadius:7,border:"1px solid #ff4d6d44",background:"transparent",color:"#ff4d6d",cursor:"pointer",fontSize:11,fontFamily:"inherit" }}>🗑️</button>}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ ...card,marginTop:16,border:"1px solid #1e3a5f" }}>
+            <div style={{ fontSize:12,color:"#4a90d9",marginBottom:12,letterSpacing:1 }}>🔑 ROLE PERMISSIONS</div>
+            <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:10 }}>
+              {[["Admin","Full access — add/edit/delete everything","#2563eb"],["Staff","Add & edit — no delete permission","#7c3aed"],["Viewer","Read-only — सिर्फ देख सकता है","#059669"]].map(([r,d,c])=>(
+                <div key={r} style={{ background:"#111827",borderRadius:8,padding:12,borderLeft:`3px solid ${c}` }}>
+                  <div style={{ fontWeight:700,color:c,fontSize:12,marginBottom:4 }}>{r}</div>
+                  <div style={{ fontSize:11,color:"#6b7280" }}>{d}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>)}
+      </div>
+
+      {/* MODALS */}
+      {modal?.type==="addBiz" && <Modal title="➕ Business जोड़ें" onClose={CM}><BizForm onSave={addBiz}/></Modal>}
+      {modal?.type==="editBiz" && <Modal title="✏️ Edit Business" onClose={CM}><BizForm init={modal.payload} onSave={f=>editBiz({...modal.payload,...f})}/></Modal>}
+      {modal?.type==="addEmp" && <Modal title="➕ Employee जोड़ें" onClose={CM}><EmpForm/></Modal>}
+      {modal?.type==="addAcc" && <Modal title="➕ Account Entry" onClose={CM}><AccForm/></Modal>}
+      {modal?.type==="addUser" && <Modal title="➕ New User" onClose={CM}><UserForm onSave={f=>{ if(!f.name||f.pin.length!==4) return T("❌ Name और 4-digit PIN जरूरी है"); setUsers(us=>[...us,{...f,id:"usr-"+uid()}]); T("✅ User जोड़ा!"); CM(); }}/></Modal>}
+      {modal?.type==="editUser" && <Modal title="✏️ Edit User" onClose={CM}><UserForm init={modal.payload} onSave={f=>{ setUsers(us=>us.map(u=>u.id===modal.payload.id?{...u,...f}:u)); if(modal.payload.id===session.id) setSession(s=>({...s,...f})); T("✅ User update!"); CM(); }}/></Modal>}
+
+      {toast && <Toast msg={toast} onDone={()=>setToast(null)}/>}
+    </div>
+  );
+}

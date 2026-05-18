@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shareholding Pattern Analyzer - Corporate Suite</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; padding: 16px; }
+  .wrap { max-width: 960px; margin: 0 auto; }
+
+  /* HEADER */
+  .header { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; color: #0f172a; }
+  .logo span { color: #4f46e5; font-size: 22px; }
+  .print-btn { background: #4f46e5; color: #fff; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 14px; }
+  .print-btn:hover { background: #4338ca; }
+
+  /* LAYOUT */
+  .grid { display: flex; gap: 20px; flex-wrap: wrap; }
+  .sidebar { flex: 0 0 300px; display: flex; flex-direction: column; gap: 16px; }
+  .main { flex: 1; min-width: 280px; }
+
+  /* CARDS */
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; }
+  .card-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #4f46e5; margin-bottom: 16px; }
+  .card-title.gray { color: #94a3b8; }
+
+  /* INPUTS */
+  .field { margin-bottom: 12px; }
+  .field input, .field select { width: 100%; padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 13px; font-weight: 500; outline: none; font-family: inherit; transition: border 0.2s; }
+  .field input:focus, .field select:focus { border-color: #4f46e5; }
+  .add-btn { width: 100%; background: #0f172a; color: #fff; border: none; padding: 11px; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer; font-family: inherit; letter-spacing: 0.5px; margin-top: 4px; }
+  .add-btn:hover { background: #000; }
+
+  /* RESULT PANEL */
+  .result-panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; overflow: hidden; }
+  .result-header { background: #0f172a; color: #fff; padding: 28px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .result-header h2 { font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; }
+  .result-header .sub { color: #94a3b8; font-size: 13px; margin-top: 4px; }
+  .total-label { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; text-align: right; }
+  .total-amount { font-size: 28px; font-weight: 900; color: #818cf8; text-align: right; margin-top: 4px; }
+
+  /* STAT BOXES */
+  .stat-row { display: flex; gap: 12px; padding: 20px 24px; flex-wrap: wrap; }
+  .stat-box { flex: 1; min-width: 110px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; }
+  .stat-box.green { background: #f0fdf4; border-color: #bbf7d0; }
+  .stat-box p { font-size: 9px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; }
+  .stat-box.green p { color: #16a34a; }
+  .stat-box h4 { font-size: 16px; font-weight: 800; color: #4f46e5; }
+  .stat-box.neutral h4 { color: #0f172a; }
+  .stat-box.green h4 { font-size: 13px; color: #15803d; }
+
+  /* MPS STATUS */
+  .mps-ok  { color: #15803d; }
+  .mps-bad { color: #dc2626; }
+
+  /* TABLE */
+  .table-wrap { padding: 4px 24px 20px; }
+  .table-head-row { display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 4px; align-items: center; }
+  .table-head-row span { font-weight: 700; color: #0f172a; font-size: 13px; }
+  .table-head-row small { font-size: 11px; color: #94a3b8; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { padding: 10px 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; color: #94a3b8; border-bottom: 1px solid #e2e8f0; text-align: left; letter-spacing: 0.5px; }
+  thead th:nth-child(3), thead th:nth-child(4) { text-align: right; }
+  thead th:last-child { text-align: center; }
+  tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.15s; }
+  tbody tr:hover { background: #f8fafc; }
+  td { padding: 11px 4px; color: #475569; vertical-align: middle; }
+  td:nth-child(3), td:nth-child(4) { text-align: right; }
+  td:nth-child(4) { color: #4f46e5; font-weight: 700; }
+  td:last-child { text-align: center; }
+  td.bold { font-weight: 700; color: #0f172a; }
+  .cat-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }
+  .del-btn { background: none; border: none; cursor: pointer; color: #cbd5e1; font-size: 16px; line-height: 1; padding: 2px 6px; border-radius: 6px; }
+  .del-btn:hover { color: #ef4444; background: #fef2f2; }
+  tfoot tr td { background: #0f172a; color: #fff; padding: 12px 10px; font-weight: 800; font-size: 13px; }
+  tfoot tr td:first-child { border-radius: 10px 0 0 10px; padding-left: 14px; }
+  tfoot tr td:last-child { border-radius: 0 10px 10px 0; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 13px; }
+  .empty-state div { font-size: 32px; margin-bottom: 8px; }
+
+  /* FOOTER */
+  .result-footer { border-top: 1px solid #e2e8f0; background: #fafafa; padding: 16px 24px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .footer-note { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; line-height: 2; }
+  .sig-block { text-align: center; width: 160px; border-top: 1px solid #cbd5e1; padding-top: 6px; }
+  .sig-block span { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* PRINT */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .header, .sidebar, .del-btn { display: none !important; }
+    .grid { display: block; }
+    .main { width: 100%; }
+    .result-panel { border: 1px solid #e2e8f0; box-shadow: none; }
+  }
+
+  @media (max-width: 640px) {
+    .sidebar { flex: 0 0 100%; }
+    .result-header { flex-direction: column; gap: 10px; }
+    .total-label, .total-amount { text-align: left; }
+    thead th:last-child, td:last-child { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo"><span>📊</span> CapTable Pro</div>
+    <button class="print-btn" onclick="window.print()">🖨️ Print Statutory Report</button>
+  </div>
+
+  <div class="grid">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="card">
+        <div class="card-title">Add Shareholder Entity</div>
+        <div class="field"><input type="text" id="shName" placeholder="Name (Individual / Corporate)"></div>
+        <div class="field"><input type="number" id="shShares" placeholder="Number of Shares Held" min="1"></div>
+        <div class="field">
+          <select id="shCategory">
+            <option value="Promoter">Promoter Group</option>
+            <option value="Public">Public – Institutional</option>
+            <option value="Retail">Public – Retail / Non-Inst</option>
+          </select>
+        </div>
+        <button class="add-btn" onclick="addShareholder()">+ LOG ENTRY</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title gray">Company Meta Data</div>
+        <div class="field"><input type="text" id="compName" placeholder="Company Name" oninput="sync()"></div>
+        <div class="field"><input type="text" id="quarterDate" placeholder="Reporting Quarter (e.g. Q4 2026)" oninput="sync()"></div>
+      </div>
+    </aside>
+
+    <!-- RESULT PANEL -->
+    <main class="main">
+      <div class="result-panel">
+        <div class="result-header">
+          <div>
+            <h2>Shareholding Pattern Statement</h2>
+            <div class="sub" id="dr_compName">Corporate Entity Name</div>
+          </div>
+          <div>
+            <div class="total-label">Total Paid-up Shares</div>
+            <div class="total-amount" id="resTotalShares">0</div>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-box">
+            <p>Promoter %</p>
+            <h4 id="resPromoterPct">0.00%</h4>
+          </div>
+          <div class="stat-box neutral">
+            <p>Public %</p>
+            <h4 id="resPublicPct">0.00%</h4>
+          </div>
+          <div class="stat-box green">
+            <p>MPS Status</p>
+            <h4 id="resMPS">–</h4>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-head-row">
+            <span>Shareholding Breakdown</span>
+            <small id="dr_quarter">Period: Not Set</small>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Name of Shareholder</th>
+                <th>Category</th>
+                <th>No. of Shares</th>
+                <th>Holding %</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="shTableBody">
+              <tr><td colspan="5" class="empty-state"><div>📋</div>No shareholders added yet.<br>Use the form on the left to begin.</td></tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2">Total Issued Capital</td>
+                <td style="text-align:right" id="tabTotalShares">0</td>
+                <td style="text-align:right">100.00%</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="result-footer">
+          <div class="footer-note">
+            Statutory Report – Section 92 / Clause 35<br>
+            Draft for Filing Purpose
+          </div>
+          <div class="sig-block">
+            <span>Authorized Signatory</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  var stakeholders = [];
+
+  function sync() {
+    var c = document.getElementById('compName').value.trim();
+    var q = document.getElementById('quarterDate').value.trim();
+    document.getElementById('dr_compName').innerText = c || 'Corporate Entity Name';
+    document.getElementById('dr_quarter').innerText = q ? 'Period: ' + q : 'Period: Not Set';
+  }
+
+  function addShareholder() {
+    var name     = document.getElementById('shName').value.trim();
+    var shares   = parseInt(document.getElementById('shShares').value) || 0;
+    var category = document.getElementById('shCategory').value;
+
+    if (!name || shares <= 0) {
+      alert('Please enter a valid name and number of shares.');
+      return;
+    }
+
+    stakeholders.push({ id: Date.now(), name: name, shares: shares, category: category });
+    document.getElementById('shName').value   = '';
+    document.getElementById('shShares').value = '';
+    updateReport();
+  }
+
+  function removeShareholder(id) {
+    stakeholders = stakeholders.filter(function(s) { return s.id !== id; });
+    updateReport();
+  }
+
+  function fmt(n) { return n.toLocaleString('en-IN'); }
+
+  function updateReport() {
+    var total = stakeholders.reduce(function(sum, s) { return sum + s.shares; }, 0);
+    var promoterTotal = stakeholders
+      .filter(function(s) { return s.category === 'Promoter'; })
+      .reduce(function(sum, s) { return sum + s.shares; }, 0);
+    var publicTotal = total - promoterTotal;
+
+    document.getElementById('resTotalShares').innerText  = fmt(total);
+    document.getElementById('tabTotalShares').innerText  = fmt(total);
+    document.getElementById('resPromoterPct').innerText  = total > 0 ? ((promoterTotal / total) * 100).toFixed(2) + '%' : '0.00%';
+    document.getElementById('resPublicPct').innerText    = total > 0 ? ((publicTotal   / total) * 100).toFixed(2) + '%' : '0.00%';
+
+    // MPS Compliance: Public shareholding must be >= 25%
+    var mpsEl = document.getElementById('resMPS');
+    if (total === 0) {
+      mpsEl.innerText = '–';
+      mpsEl.className = '';
+    } else if ((publicTotal / total) * 100 >= 25) {
+      mpsEl.innerText = '✔ Compliant';
+      mpsEl.className = 'mps-ok';
+    } else {
+      mpsEl.innerText = '✘ Non-Compliant';
+      mpsEl.className = 'mps-bad';
+    }
+
+    var tbody = document.getElementById('shTableBody');
+    if (stakeholders.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><div>📋</div>No shareholders added yet.<br>Use the form on the left to begin.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = stakeholders.map(function(s) {
+      var pct = total > 0 ? ((s.shares / total) * 100).toFixed(2) : '0.00';
+      return '<tr>' +
+        '<td class="bold">' + s.name + '</td>' +
+        '<td><span class="cat-badge">' + s.category + '</span></td>' +
+        '<td style="text-align:right;font-family:monospace">' + fmt(s.shares) + '</td>' +
+        '<td style="text-align:right;color:#4f46e5;font-weight:700">' + pct + '%</td>' +
+        '<td style="text-align:center"><button class="del-btn" onclick="removeShareholder(' + s.id + ')">🗑</button></td>' +
+        '</tr>';
+    }).join('');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CA Firm Automation Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root {
+  --gold: #C8A96E;
+  --gold-light: #E8D5A3;
+  --gold-dark: #9A7A42;
+  --navy: #0D1B2A;
+  --navy-mid: #1A2E45;
+  --navy-light: #243B55;
+  --cream: #FAF7F2;
+  --cream-dark: #F0EBE1;
+  --slate: #8A9BB0;
+  --slate-light: #B8C5D4;
+  --text-primary: #0D1B2A;
+  --text-secondary: #4A6070;
+  --text-muted: #8A9BB0;
+  --success: #2E7D5E;
+  --success-bg: #E8F5EE;
+  --warning: #A0692A;
+  --warning-bg: #FEF3E2;
+  --danger: #8B2635;
+  --danger-bg: #FDECEE;
+  --info: #1A5276;
+  --info-bg: #EAF2FF;
+  --white: #FFFFFF;
+  --border: rgba(200,169,110,0.25);
+  --shadow: 0 4px 24px rgba(13,27,42,0.08);
+  --shadow-lg: 0 12px 48px rgba(13,27,42,0.14);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 20px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--text-primary);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: 260px;
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-logo {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid rgba(200,169,110,0.15);
+}
+
+.logo-mark {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 12px;
+}
+
+.logo-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px; font-weight: 600;
+  color: var(--white);
+  line-height: 1.2;
+}
+
+.logo-sub {
+  font-size: 11px;
+  color: var(--slate);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.nav-section {
+  padding: 16px 12px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--slate);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  margin: 1px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--slate-light);
+  font-size: 13px; font-weight: 400;
+  transition: all 0.2s;
+  border: none; background: none; width: calc(100% - 16px); text-align: left;
+}
+
+.nav-item:hover { background: rgba(200,169,110,0.08); color: var(--gold-light); }
+.nav-item.active { background: rgba(200,169,110,0.15); color: var(--gold); font-weight: 500; }
+.nav-item .nav-icon { width: 18px; height: 18px; opacity: 0.8; flex-shrink: 0; }
+.nav-item.active .nav-icon { opacity: 1; }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 16px;
+  border-top: 1px solid rgba(200,169,110,0.1);
+}
+
+.user-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px;
+  background: rgba(255,255,255,0.04);
+  border-radius: var(--radius-sm);
+}
+
+.user-avatar {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600;
+  color: var(--navy);
+}
+
+.user-name { font-size: 13px; font-weight: 500; color: var(--white); }
+.user-role { font-size: 11px; color: var(--slate); }
+
+/* ── MAIN LAYOUT ── */
+.main {
+  margin-left: 260px;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+
+.topbar {
+  position: sticky; top: 0;
+  background: rgba(250,247,242,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 90;
+}
+
+.topbar-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 600;
+  color: var(--text-primary);
+}
+
+.topbar-actions {
+  display: flex; align-items: center; gap: 10px;
+}
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: var(--navy);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(200,169,110,0.4); }
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.btn-outline:hover { border-color: var(--gold); color: var(--gold-dark); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.btn-ghost:hover { background: var(--cream-dark); }
+
+.btn-danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid rgba(139,38,53,0.2);
+}
+
+.notification-bell {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.notif-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px;
+  background: var(--gold);
+  border-radius: 50%;
+  border: 2px solid var(--white);
+}
+
+/* ── CONTENT ── */
+.content {
+  padding: 28px 32px;
+  flex: 1;
+}
+
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── METRIC CARDS ── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.metric-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.metric-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-dark));
+}
+
+.metric-icon {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+}
+
+.metric-label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-bottom: 4px; }
+.metric-value { font-size: 26px; font-weight: 600; font-family: 'Playfair Display', serif; color: var(--text-primary); line-height: 1; }
+.metric-change { font-size: 12px; margin-top: 6px; }
+.change-up { color: var(--success); }
+.change-down { color: var(--danger); }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px; font-weight: 500;
+}
+.badge-success { background: var(--success-bg); color: var(--success); }
+.badge-warning { background: var(--warning-bg); color: var(--warning); }
+.badge-danger { background: var(--danger-bg); color: var(--danger); }
+.badge-info { background: var(--info-bg); color: var(--info); }
+.badge-gold { background: rgba(200,169,110,0.15); color: var(--gold-dark); }
+
+/* ── CARDS ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 15px; font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-body { padding: 20px; }
+
+/* ── TABLES ── */
+.table-wrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 11px; font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--cream);
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 12px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(200,169,110,0.1);
+  color: var(--text-secondary);
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(250,247,242,0.6); }
+
+/* ── CLIENT AVATAR ── */
+.client-dot {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ── GRID LAYOUT ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.main-aside { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+
+/* ── FORMS ── */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; letter-spacing: 0.02em; }
+.form-control {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--white);
+  transition: border-color 0.2s;
+  outline: none;
+}
+.form-control:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(200,169,110,0.12); }
+select.form-control { cursor: pointer; }
+textarea.form-control { resize: vertical; min-height: 80px; }
+
+/* ── SEARCH ── */
+.search-wrap { position: relative; }
+.search-wrap input { padding-left: 36px; }
+.search-icon {
+  position: absolute; left: 10px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(13,27,42,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: none; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  width: 90%; max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.modal-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.modal-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 600; }
+.modal-close { width: 28px; height: 28px; border: none; background: var(--cream); border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+.modal-body { padding: 20px 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 4px; padding: 4px; background: var(--cream-dark); border-radius: var(--radius-sm); margin-bottom: 20px; }
+.tab-btn {
+  flex: 1; padding: 7px 12px;
+  border: none; background: transparent;
+  border-radius: 6px; font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 400;
+  cursor: pointer; color: var(--text-muted); transition: all 0.2s;
+}
+.tab-btn.active { background: var(--white); color: var(--text-primary); font-weight: 500; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── AUTOMATION FLOW ── */
+.flow-step {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(200,169,110,0.1);
+}
+.flow-step:last-child { border-bottom: none; }
+
+.step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600;
+  flex-shrink: 0; margin-top: 2px;
+}
+
+.step-connector {
+  width: 2px; background: var(--border);
+  margin: 0 auto;
+  height: 16px;
+}
+
+.progress-bar { height: 4px; background: var(--cream-dark); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+.progress-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+/* ── TOGGLE ── */
+.toggle {
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer;
+}
+.toggle-track {
+  width: 36px; height: 20px;
+  border-radius: 10px;
+  background: var(--cream-dark);
+  border: 1px solid var(--border);
+  position: relative;
+  transition: background 0.2s;
+}
+.toggle-track.on { background: var(--gold); border-color: var(--gold-dark); }
+.toggle-thumb {
+  position: absolute;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--white);
+  top: 2px; left: 2px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-track.on .toggle-thumb { transform: translateX(16px); }
+
+/* ── TEMPLATE CARDS ── */
+.template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.template-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.template-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--gold); }
+.template-preview {
+  height: 120px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+}
+.template-info { padding: 14px; }
+.template-name { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+.template-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+/* ── AI TOOLS ── */
+.ai-chat {
+  display: flex; flex-direction: column;
+  height: 400px;
+}
+.ai-messages {
+  flex: 1; overflow-y: auto;
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.msg {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13px; line-height: 1.6;
+}
+.msg-ai {
+  background: var(--cream);
+  border: 1px solid var(--border);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+.msg-user {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: var(--navy);
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  font-weight: 500;
+}
+.ai-input-wrap {
+  display: flex; gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+.ai-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  outline: none;
+  background: var(--cream);
+}
+.ai-input:focus { border-color: var(--gold); background: var(--white); }
+
+/* ── TIMELINE ── */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.timeline-item { display: flex; gap: 12px; padding-bottom: 16px; position: relative; }
+.timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 11px; top: 24px;
+  width: 2px; bottom: 0;
+  background: var(--border);
+}
+.timeline-dot {
+  width: 24px; height: 24px; border-radius: 50%;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600;
+  z-index: 1;
+}
+.timeline-content { flex: 1; }
+.timeline-time { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+.timeline-text { font-size: 13px; color: var(--text-secondary); }
+
+/* ── PAGE HEADER ── */
+.page-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.page-heading { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; color: var(--text-primary); }
+.page-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+
+/* ── MOBILE HAMBURGER ── */
+.hamburger {
+  display: none;
+  position: fixed; top: 14px; left: 14px;
+  z-index: 150;
+  width: 36px; height: 36px;
+  background: var(--navy);
+  border-radius: 8px;
+  border: none; cursor: pointer;
+  flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+}
+.ham-line { width: 16px; height: 2px; background: var(--white); border-radius: 2px; }
+
+/* ── NOTIFICATION TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--navy);
+  color: var(--white);
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 300;
+  border-left: 3px solid var(--gold);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── PDF INVOICE ── */
+#pdf-preview {
+  position: fixed; inset: 0;
+  background: rgba(13,27,42,0.7);
+  z-index: 400;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+#pdf-preview.open { display: flex; }
+
+.pdf-modal {
+  background: var(--white);
+  width: 680px; max-width: 95vw;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.pdf-topbar {
+  background: var(--navy);
+  padding: 14px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.pdf-topbar span { color: var(--slate-light); font-size: 13px; }
+
+#invoice-template {
+  padding: 40px;
+  background: var(--white);
+}
+
+.inv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; }
+.inv-logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--navy); }
+.inv-logo span { color: var(--gold-dark); }
+.inv-meta { text-align: right; }
+.inv-meta h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: var(--navy); }
+.inv-meta p { font-size: 12px; color: var(--text-muted); }
+.inv-meta .inv-num { color: var(--gold-dark); font-weight: 600; font-size: 14px; }
+
+.inv-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+.inv-party h4 { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.inv-party p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+.inv-party .name { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+
+.inv-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+.inv-table th {
+  background: var(--navy); color: var(--white);
+  padding: 10px 14px; font-size: 11px;
+  font-weight: 500; letter-spacing: 0.04em; text-align: left;
+  text-transform: none;
+}
+.inv-table td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--cream-dark); }
+.inv-table tr:last-child td { border-bottom: none; }
+
+.inv-totals { display: flex; justify-content: flex-end; }
+.inv-totals-box { width: 260px; }
+.inv-total-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; color: var(--text-secondary); }
+.inv-total-final {
+  display: flex; justify-content: space-between;
+  padding: 10px 14px; margin-top: 8px;
+  background: var(--navy);
+  border-radius: var(--radius-sm);
+  color: var(--white); font-weight: 600; font-size: 15px;
+}
+
+.inv-footer {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--text-muted); line-height: 1.8;
+}
+
+.inv-stamp {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px;
+  border: 2px solid var(--success);
+  border-radius: 4px;
+  color: var(--success);
+  font-size: 14px; font-weight: 700;
+  letter-spacing: 0.06em;
+  transform: rotate(-6deg);
+  float: right; margin-top: -10px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1024px) {
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .two-col { grid-template-columns: 1fr; }
+  .main-aside { grid-template-columns: 1fr; }
+  .template-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .hamburger { display: flex; }
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .topbar { padding: 0 16px 0 60px; }
+  .content { padding: 20px 16px; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .three-col { grid-template-columns: 1fr; }
+  .template-grid { grid-template-columns: 1fr 1fr; }
+  .page-header { flex-direction: column; gap: 12px; }
+  .topbar-actions { gap: 6px; }
+}
+
+@media (max-width: 480px) {
+  .metrics-grid { grid-template-columns: 1fr; }
+  .template-grid { grid-template-columns: 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--cream); }
+::-webkit-scrollbar-thumb { background: var(--gold-light); border-radius: 3px; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.page.active { animation: fadeInUp 0.3s ease; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 11px; color: var(--text-muted);
+  margin: 2px;
+}
+
+.section-title { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px; }
+
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+}
+.empty-state .empty-icon { font-size: 36px; margin-bottom: 12px; }
+.empty-state p { font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- HAMBURGER -->
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+  <span class="ham-line"></span><span class="ham-line"></span><span class="ham-line"></span>
+</button>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">CA</div>
+    <div class="logo-text">LexAudit Pro</div>
+    <div class="logo-sub">Firm Automation Suite</div>
+  </div>
+
+  <div class="nav-section">Main</div>
+  <button class="nav-item active" onclick="navigate('dashboard', this)">
+    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Dashboard
+  </button>
+  <button class="nav-item" onclick="navigate('clients', this)">
+    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    Client Portal
+  </button>
+  <button class="nav-item" onclick="navigate('invoices', this)">
+    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+    Invoices & Billing
+  </button>
+  <button class="nav-item" onclick="navigate('automation', this)">
+    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    Automation Flows
+  </button>
+
+  <div class="nav-section">Tools</div>
+  <button class="nav-item" onclick="navigate('ai', this)">
+    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M5.34 5.34L3.93 6.75M19.07 19.07l-1.41-1.41M5.34 18.66l-1.41 1.41M21 12h-2M5 12H3M12 5V3M12 21v-2"/></svg>
+    AI Tools
+  </button>
+  <button class="nav-item" onclick="navigate('templates', this)">
+    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+    Templates
+  </button>
+  <button class="nav-item" onclick="navigate('compliance', this)">
+    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    Compliance
+  </button>
+  <button class="nav-item" onclick="navigate('reports', this)">
+    <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Reports
+  </button>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">RK</div>
+      <div>
+        <div class="user-name">Rajesh Kumar</div>
+        <div class="user-role">Senior Partner</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-actions">
+      <button class="btn btn-outline" onclick="openModal('add-client-modal')">+ Add Client</button>
+      <button class="btn btn-primary" onclick="openModal('new-invoice-modal')">New Invoice</button>
+      <div class="notification-bell" onclick="showToast('3 compliance deadlines approaching this week')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── DASHBOARD ── -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <div>
+          <div class="page-heading">Good morning, Rajesh ✦</div>
+          <div class="page-sub">Here's your firm overview for March 2026</div>
+        </div>
+        <span class="badge badge-gold">FY 2025–26</span>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon" style="background:rgba(200,169,110,0.1);">
+            <svg width="20" height="20" fill="none" stroke="var(--gold-dark)" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/></svg>
+          </div>
+          <div class="metric-label">Total Clients</div>
+          <div class="metric-value">84</div>
+          <div class="metric-change change-up">↑ 6 new this month</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background:rgba(46,125,94,0.1);">
+            <svg width="20" height="20" fill="none" stroke="var(--success)" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          </div>
+          <div class="metric-label">Revenue Collected</div>
+          <div class="metric-value">₹8.4L</div>
+          <div class="metric-change change-up">↑ 18% vs last month</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background:rgba(139,38,53,0.08);">
+            <svg width="20" height="20" fill="none" stroke="var(--danger)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div class="metric-label">Overdue Invoices</div>
+          <div class="metric-value">₹1.2L</div>
+          <div class="metric-change change-down">↑ 8 clients pending</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background:rgba(26,82,118,0.08);">
+            <svg width="20" height="20" fill="none" stroke="var(--info)" stroke-width="2" viewBox="0 0 24 24"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div class="metric-label">Automations Active</div>
+          <div class="metric-value">12</div>
+          <div class="metric-change change-up">↑ 3 saved hours/day</div>
+        </div>
+      </div>
+
+      <div class="main-aside" style="margin-bottom:20px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Recent Invoices</span>
+            <button class="btn btn-ghost" style="font-size:12px;" onclick="navigate('invoices',null)">View all →</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Client</th><th>Service</th><th>Amount</th><th>Due</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="client-dot" style="background:#E6F1FB;color:#185FA5;font-size:11px;">SR</div>Sharma Retail</div></td><td>GST Filing</td><td>₹12,500</td><td>Apr 5</td><td><span class="badge badge-warning">Pending</span></td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="client-dot" style="background:#E8F5EE;color:#2E7D5E;font-size:11px;">MK</div>Mehta & Sons</div></td><td>ITR Filing</td><td>₹8,000</td><td>Mar 20</td><td><span class="badge badge-success">Paid</span></td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="client-dot" style="background:#FDECEE;color:#8B2635;font-size:11px;">RP</div>Ravi Pharma</div></td><td>Audit FY25</td><td>₹35,000</td><td>Mar 10</td><td><span class="badge badge-danger">Overdue</span></td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="client-dot" style="background:#FEF3E2;color:#A0692A;font-size:11px;">DG</div>Desai Group</div></td><td>ROC Filing</td><td>₹22,000</td><td>Mar 31</td><td><span class="badge badge-info">Sent</span></td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="client-dot" style="background:rgba(200,169,110,0.15);color:#9A7A42;font-size:11px;">NK</div>Nirmala Exp.</div></td><td>Bookkeeping</td><td>₹6,000</td><td>Mar 22</td><td><span class="badge badge-success">Paid</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Compliance Alerts</span></div>
+            <div class="card-body" style="padding-top:12px;">
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-dot" style="background:#FDECEE;color:#8B2635;">!</div>
+                  <div class="timeline-content">
+                    <div class="timeline-time">Today — Mar 24</div>
+                    <div class="timeline-text">GSTR-1 due for 12 clients</div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot" style="background:#FEF3E2;color:#A0692A;">⏰</div>
+                  <div class="timeline-content">
+                    <div class="timeline-time">Mar 31</div>
+                    <div class="timeline-text">ITR filing deadline — 6 pending</div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot" style="background:#E8F5EE;color:#2E7D5E;">✓</div>
+                  <div class="timeline-content">
+                    <div class="timeline-time">Apr 15</div>
+                    <div class="timeline-text">Advance Tax Q4 — 23 clients</div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot" style="background:#EAF2FF;color:#1A5276;">i</div>
+                  <div class="timeline-content">
+                    <div class="timeline-time">Apr 30</div>
+                    <div class="timeline-text">TDS Return Q4 filing</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">Quick Actions</span></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:8px;">
+              <button class="btn btn-outline" style="justify-content:flex-start;width:100%;" onclick="openModal('new-invoice-modal')">📄 Generate Invoice</button>
+              <button class="btn btn-outline" style="justify-content:flex-start;width:100%;" onclick="navigate('ai',null)">🤖 Ask AI Assistant</button>
+              <button class="btn btn-outline" style="justify-content:flex-start;width:100%;" onclick="navigate('templates',null)">📋 Browse Templates</button>
+              <button class="btn btn-outline" style="justify-content:flex-start;width:100%;" onclick="sendBulkReminders()">📲 Send Reminders</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CLIENT PORTAL ── -->
+    <div id="page-clients" class="page">
+      <div class="page-header">
+        <div><div class="page-heading">Client Portal</div><div class="page-sub">Manage all your client relationships</div></div>
+        <button class="btn btn-primary" onclick="openModal('add-client-modal')">+ Add Client</button>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div class="search-wrap" style="flex:1;min-width:200px;">
+            <svg class="search-icon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="form-control" id="client-search" placeholder="Search clients…" oninput="filterClients()" style="padding-left:34px;"/>
+          </div>
+          <select class="form-control" style="width:160px;" onchange="filterClients()">
+            <option>All Clients</option><option>Active</option><option>Inactive</option>
+          </select>
+          <select class="form-control" style="width:180px;" onchange="filterClients()">
+            <option>All Services</option><option>GST</option><option>ITR</option><option>Audit</option><option>Bookkeeping</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table id="clients-table">
+            <thead><tr><th>Client</th><th>GSTIN</th><th>Services</th><th>Last Invoice</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="clients-tbody">
+              <tr><td><div style="display:flex;align-items:center;gap:10px;"><div class="client-dot" style="background:#E6F1FB;color:#185FA5;">SR</div><div><div style="font-weight:500;color:var(--text-primary);">Sharma Retail Pvt Ltd</div><div style="font-size:11px;color:var(--text-muted);">sharma@retail.in</div></div></div></td><td style="font-family:monospace;font-size:12px;">22AAAAA0000A1Z5</td><td><span class="chip">GST</span><span class="chip">ITR</span></td><td>Mar 2026</td><td>₹12,500</td><td><span class="badge badge-warning">Pending</span></td><td><button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="viewClient('Sharma Retail Pvt Ltd')">View</button></td></tr>
+              <tr><td><div style="display:flex;align-items:center;gap:10px;"><div class="client-dot" style="background:#E8F5EE;color:#2E7D5E;">MK</div><div><div style="font-weight:500;color:var(--text-primary);">Mehta & Sons</div><div style="font-size:11px;color:var(--text-muted);">mehta@sons.co.in</div></div></div></td><td style="font-family:monospace;font-size:12px;">22BBBBB1111B1Z6</td><td><span class="chip">ITR</span><span class="chip">Audit</span></td><td>Mar 2026</td><td>₹0</td><td><span class="badge badge-success">Paid</span></td><td><button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="viewClient('Mehta & Sons')">View</button></td></tr>
+              <tr><td><div style="display:flex;align-items:center;gap:10px;"><div class="client-dot" style="background:#FDECEE;color:#8B2635;">RP</div><div><div style="font-weight:500;color:var(--text-primary);">Ravi Pharma LLP</div><div style="font-size:11px;color:var(--text-muted);">accounts@ravipharma.com</div></div></div></td><td style="font-family:monospace;font-size:12px;">22CCCCC2222C1Z7</td><td><span class="chip">Audit</span><span class="chip">ROC</span></td><td>Mar 2026</td><td>₹35,000</td><td><span class="badge badge-danger">Overdue</span></td><td><button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="viewClient('Ravi Pharma LLP')">View</button></td></tr>
+              <tr><td><div style="display:flex;align-items:center;gap:10px;"><div class="client-dot" style="background:#FEF3E2;color:#A0692A;">DG</div><div><div style="font-weight:500;color:var(--text-primary);">Desai Group Holdings</div><div style="font-size:11px;color:var(--text-muted);">finance@desaigroup.in</div></div></div></td><td style="font-family:monospace;font-size:12px;">22DDDDD3333D1Z8</td><td><span class="chip">GST</span><span class="chip">ROC</span><span class="chip">Audit</span></td><td>Mar 2026</td><td>₹22,000</td><td><span class="badge badge-info">Sent</span></td><td><button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="viewClient('Desai Group Holdings')">View</button></td></tr>
+              <tr><td><div style="display:flex;align-items:center;gap:10px;"><div class="client-dot" style="background:rgba(200,169,110,0.15);color:#9A7A42;">NK</div><div><div style="font-weight:500;color:var(--text-primary);">Nirmala Krishna Exports</div><div style="font-size:11px;color:var(--text-muted);">nk@exports.in</div></div></div></td><td style="font-family:monospace;font-size:12px;">22EEEEE4444E1Z9</td><td><span class="chip">GST</span><span class="chip">Bookkeeping</span></td><td>Mar 2026</td><td>₹0</td><td><span class="badge badge-success">Paid</span></td><td><button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="viewClient('Nirmala Krishna Exports')">View</button></td></tr>
+              <tr><td><div style="display:flex;align-items:center;gap:10px;"><div class="client-dot" style="background:#EAF2FF;color:#1A5276;">BT</div><div><div style="font-weight:500;color:var(--text-primary);">Bharat Tech Pvt Ltd</div><div style="font-size:11px;color:var(--text-muted);">cfo@bharattech.io</div></div></div></td><td style="font-family:monospace;font-size:12px;">22FFFFF5555F2Z1</td><td><span class="chip">ITR</span><span class="chip">Bookkeeping</span></td><td>Feb 2026</td><td>₹9,500</td><td><span class="badge badge-warning">Pending</span></td><td><button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="viewClient('Bharat Tech Pvt Ltd')">View</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INVOICES ── -->
+    <div id="page-invoices" class="page">
+      <div class="page-header">
+        <div><div class="page-heading">Invoices & Billing</div><div class="page-sub">Manage and track all billing</div></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline" onclick="showPdfPreview()">Export PDF</button>
+          <button class="btn btn-primary" onclick="openModal('new-invoice-modal')">+ New Invoice</button>
+        </div>
+      </div>
+      <div class="metrics-grid" style="margin-bottom:20px;">
+        <div class="metric-card"><div class="metric-label">Total Invoiced</div><div class="metric-value">₹12.6L</div><div class="metric-change">This month</div></div>
+        <div class="metric-card"><div class="metric-label">Collected</div><div class="metric-value">₹8.4L</div><div class="metric-change change-up">66.7% rate</div></div>
+        <div class="metric-card"><div class="metric-label">Outstanding</div><div class="metric-value">₹4.2L</div><div class="metric-change change-down">14 invoices</div></div>
+        <div class="metric-card"><div class="metric-label">Avg. Days to Pay</div><div class="metric-value">9</div><div class="metric-change change-up">–5 vs manual</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">All Invoices</span>
+          <div style="display:flex;gap:8px;">
+            <select class="form-control" style="width:130px;padding:6px 10px;font-size:12px;">
+              <option>All Status</option><option>Paid</option><option>Pending</option><option>Overdue</option><option>Draft</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Invoice #</th><th>Client</th><th>Service</th><th>Amount</th><th>GST (18%)</th><th>Total</th><th>Due Date</th><th>Status</th><th>PDF</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:500;color:var(--gold-dark);">#INV-2026-048</td><td>Sharma Retail</td><td>GST Filing</td><td>₹10,593</td><td>₹1,907</td><td>₹12,500</td><td>Apr 5, 2026</td><td><span class="badge badge-warning">Pending</span></td><td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="showPdfPreview()">📄 PDF</button></td></tr>
+              <tr><td style="font-weight:500;color:var(--gold-dark);">#INV-2026-047</td><td>Mehta & Sons</td><td>ITR Filing</td><td>₹6,780</td><td>₹1,220</td><td>₹8,000</td><td>Mar 20, 2026</td><td><span class="badge badge-success">Paid</span></td><td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="showPdfPreview()">📄 PDF</button></td></tr>
+              <tr><td style="font-weight:500;color:var(--gold-dark);">#INV-2026-046</td><td>Ravi Pharma</td><td>Audit FY25</td><td>₹29,661</td><td>₹5,339</td><td>₹35,000</td><td>Mar 10, 2026</td><td><span class="badge badge-danger">Overdue</span></td><td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="showPdfPreview()">📄 PDF</button></td></tr>
+              <tr><td style="font-weight:500;color:var(--gold-dark);">#INV-2026-045</td><td>Desai Group</td><td>ROC + Advisory</td><td>₹18,644</td><td>₹3,356</td><td>₹22,000</td><td>Mar 31, 2026</td><td><span class="badge badge-info">Sent</span></td><td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="showPdfPreview()">📄 PDF</button></td></tr>
+              <tr><td style="font-weight:500;color:var(--gold-dark);">#INV-2026-044</td><td>Nirmala Exports</td><td>Bookkeeping Q4</td><td>₹5,085</td><td>₹915</td><td>₹6,000</td><td>Mar 22, 2026</td><td><span class="badge badge-success">Paid</span></td><td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="showPdfPreview()">📄 PDF</button></td></tr>
+              <tr><td style="font-weight:500;color:var(--gold-dark);">#INV-2026-043</td><td>Bharat Tech</td><td>Bookkeeping</td><td>₹8,051</td><td>₹1,449</td><td>₹9,500</td><td>Apr 1, 2026</td><td><span class="badge badge-warning">Pending</span></td><td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="showPdfPreview()">📄 PDF</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AUTOMATION ── -->
+    <div id="page-automation" class="page">
+      <div class="page-header">
+        <div><div class="page-heading">Automation Flows</div><div class="page-sub">Configure intelligent workflows for your firm</div></div>
+        <button class="btn btn-primary" onclick="showToast('New automation flow builder coming soon!')">+ New Flow</button>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Active Flows</span><span class="badge badge-success">12 running</span></div>
+          <div class="card-body" style="padding-top:8px;">
+            <div id="flows-list">
+              <div class="flow-step">
+                <div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                    <div style="font-size:13px;font-weight:500;color:var(--text-primary);">Work Done → Auto Invoice Draft</div>
+                    <label class="toggle" onclick="toggleFlow(this)"><div class="toggle-track on"><div class="toggle-thumb"></div></div></label>
+                  </div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Triggers when task marked complete in practice mgmt</div>
+                  <div><span class="chip">Zoho Practice</span><span class="chip">Zoho Books</span><span class="chip">Zapier</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--success);"></div></div>
+                </div>
+              </div>
+              <div class="flow-step">
+                <div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                    <div style="font-size:13px;font-weight:500;color:var(--text-primary);">Invoice Sent → WhatsApp + Email</div>
+                    <label class="toggle" onclick="toggleFlow(this)"><div class="toggle-track on"><div class="toggle-thumb"></div></div></label>
+                  </div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Sends invoice PDF over email + WhatsApp Pay link</div>
+                  <div><span class="chip">Razorpay</span><span class="chip">WATI</span><span class="chip">Gmail</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--success);"></div></div>
+                </div>
+              </div>
+              <div class="flow-step">
+                <div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                    <div style="font-size:13px;font-weight:500;color:var(--text-primary);">Overdue → Escalating Reminders</div>
+                    <label class="toggle" onclick="toggleFlow(this)"><div class="toggle-track on"><div class="toggle-thumb"></div></div></label>
+                  </div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Day 3 nudge → Day 7 formal → Day 14 partner alert</div>
+                  <div><span class="chip">Zoho Books</span><span class="chip">WhatsApp API</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width:75%;background:var(--warning);"></div></div>
+                </div>
+              </div>
+              <div class="flow-step">
+                <div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                    <div style="font-size:13px;font-weight:500;color:var(--text-primary);">Payment Received → Receipt + Upsell</div>
+                    <label class="toggle" onclick="toggleFlow(this)"><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                  </div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Auto receipt, Tally entry, next service prompt</div>
+                  <div><span class="chip">Razorpay</span><span class="chip">Tally</span><span class="chip">Gmail</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width:30%;background:var(--danger);"></div></div>
+                </div>
+              </div>
+              <div class="flow-step">
+                <div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                    <div style="font-size:13px;font-weight:500;color:var(--text-primary);">Compliance Deadline → Client Reminder</div>
+                    <label class="toggle" onclick="toggleFlow(this)"><div class="toggle-track on"><div class="toggle-thumb"></div></div></label>
+                  </div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">7 days before deadline, auto-notify clients for docs</div>
+                  <div><span class="chip">GST Portal</span><span class="chip">WhatsApp API</span></div>
+                  <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--success);"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Flow Analytics</span></div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div style="padding:12px;background:var(--cream);border-radius:var(--radius-sm);text-align:center;">
+                  <div style="font-size:22px;font-weight:700;font-family:'Playfair Display',serif;color:var(--text-primary);">284</div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Tasks automated this month</div>
+                </div>
+                <div style="padding:12px;background:var(--cream);border-radius:var(--radius-sm);text-align:center;">
+                  <div style="font-size:22px;font-weight:700;font-family:'Playfair Display',serif;color:var(--success);">46h</div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Staff hours saved</div>
+                </div>
+                <div style="padding:12px;background:var(--cream);border-radius:var(--radius-sm);text-align:center;">
+                  <div style="font-size:22px;font-weight:700;font-family:'Playfair Display',serif;color:var(--text-primary);">97%</div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Automation success rate</div>
+                </div>
+                <div style="padding:12px;background:var(--cream);border-radius:var(--radius-sm);text-align:center;">
+                  <div style="font-size:22px;font-weight:700;font-family:'Playfair Display',serif;color:var(--gold-dark);">₹2.1L</div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Revenue accelerated</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">Integrations</span></div>
+            <div class="card-body">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--cream);border-radius:var(--radius-sm);">
+                  <div style="font-size:13px;font-weight:500;">Zoho Books</div><span class="badge badge-success">Connected</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--cream);border-radius:var(--radius-sm);">
+                  <div style="font-size:13px;font-weight:500;">Razorpay</div><span class="badge badge-success">Connected</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--cream);border-radius:var(--radius-sm);">
+                  <div style="font-size:13px;font-weight:500;">WATI (WhatsApp)</div><span class="badge badge-success">Connected</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--cream);border-radius:var(--radius-sm);">
+                  <div style="font-size:13px;font-weight:500;">Tally Prime</div><span class="badge badge-warning">Configuring</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--cream);border-radius:var(--radius-sm);">
+                  <div style="font-size:13px;font-weight:500;">GST Portal</div><span class="badge badge-info">Via API</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AI TOOLS ── -->
+    <div id="page-ai" class="page">
+      <div class="page-header">
+        <div><div class="page-heading">AI Tools</div><div class="page-sub">Intelligent assistance for CA workflows</div></div>
+      </div>
+      <div class="two-col">
+        <div class="card" style="display:flex;flex-direction:column;">
+          <div class="card-header">
+            <div>
+              <span class="card-title">AI Assistant</span>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:1px;">GST, ITR, compliance & billing queries</div>
+            </div>
+            <span class="badge badge-gold">Powered by AI</span>
+          </div>
+          <div class="ai-chat">
+            <div class="ai-messages" id="ai-messages">
+              <div class="msg msg-ai">Hello! I'm your CA firm assistant. I can help with GST queries, invoice drafting, compliance deadlines, client communication, and more. What do you need?</div>
+            </div>
+            <div class="ai-input-wrap">
+              <input class="ai-input" id="ai-input" placeholder="Ask about GST, compliance, invoicing…" onkeydown="if(event.key==='Enter') sendAiMsg()"/>
+              <button class="btn btn-primary" style="border-radius:20px;padding:8px 16px;" onclick="sendAiMsg()">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card">
+            <div class="card-header"><span class="card-title">AI Quick Tools</span></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:8px;">
+              <button class="btn btn-outline" style="justify-content:flex-start;width:100%;text-align:left;" onclick="aiQuickPrompt('Draft a professional payment reminder for an overdue invoice of ₹35,000 from Ravi Pharma LLP, overdue by 14 days.')">✉️ Draft Payment Reminder</button>
+              <button class="btn btn-outline" style="justify-content:flex-start;width:100%;text-align:left;" onclick="aiQuickPrompt('Generate a GST compliance checklist for a manufacturing company registered under regular GST scheme.')">📋 GST Compliance Checklist</button>
+              <button class="btn btn-outline" style="justify-content:flex-start;width:100%;text-align:left;" onclick="aiQuickPrompt('Summarise the ITR filing requirements for FY 2025-26 for a private limited company.')">📊 ITR Filing Summary</button>
+              <button class="btn btn-outline" style="justify-content:flex-start;width:100%;text-align:left;" onclick="aiQuickPrompt('What are the key TDS compliance requirements for Q4 FY 2025-26 and common mistakes to avoid?')">⚠️ TDS Compliance Tips</button>
+              <button class="btn btn-outline" style="justify-content:flex-start;width:100%;text-align:left;" onclick="aiQuickPrompt('Draft a professional engagement letter for audit services for a private limited company.')">📝 Draft Engagement Letter</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Document Analyser</span></div>
+            <div class="card-body">
+              <div style="border:2px dashed var(--border);border-radius:var(--radius);padding:24px;text-align:center;cursor:pointer;" onclick="showToast('Document upload feature — connect your storage to enable')">
+                <div style="font-size:28px;margin-bottom:8px;">📂</div>
+                <div style="font-size:13px;font-weight:500;color:var(--text-secondary);">Drop financial documents here</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Balance sheets, GST returns, bank statements</div>
+                <button class="btn btn-outline" style="margin-top:12px;font-size:12px;">Browse Files</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TEMPLATES ── -->
+    <div id="page-templates" class="page">
+      <div class="page-header">
+        <div><div class="page-heading">Premium Templates</div><div class="page-sub">Professional templates for CA firm communications</div></div>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-invoices',this)">Invoice Templates</button>
+        <button class="tab-btn" onclick="switchTab('tab-letters',this)">Engagement Letters</button>
+        <button class="tab-btn" onclick="switchTab('tab-reminders',this)">Reminder Messages</button>
+        <button class="tab-btn" onclick="switchTab('tab-reports',this)">Report Templates</button>
+      </div>
+      <div id="tab-invoices" class="tab-panel active">
+        <div class="template-grid">
+          <div class="template-card" onclick="useTemplate('Classic Professional')">
+            <div class="template-preview" style="background:linear-gradient(135deg,#0D1B2A,#1A2E45);">
+              <div style="text-align:center;color:#C8A96E;">
+                <div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;">INVOICE</div>
+                <div style="font-size:10px;color:#8A9BB0;margin-top:4px;">Classic Professional</div>
+              </div>
+            </div>
+            <div class="template-info">
+              <div class="template-name">Classic Professional</div>
+              <div class="template-desc">Navy & gold letterhead, ideal for formal audit and advisory invoices</div>
+              <div style="margin-top:8px;"><span class="badge badge-gold">Premium</span></div>
+            </div>
+          </div>
+          <div class="template-card" onclick="useTemplate('Minimal Clean')">
+            <div class="template-preview" style="background:#F8F8F8;border-bottom:3px solid #C8A96E;">
+              <div style="text-align:center;color:#0D1B2A;">
+                <div style="font-size:13px;font-weight:600;">Invoice</div>
+                <div style="font-size:10px;color:#888;margin-top:4px;">Minimal Clean</div>
+              </div>
+            </div>
+            <div class="template-info">
+              <div class="template-name">Minimal Clean</div>
+              <div class="template-desc">Crisp white with gold accent bar, modern and uncluttered</div>
+              <div style="margin-top:8px;"><span class="badge badge-success">Free</span></div>
+            </div>
+          </div>
+          <div class="template-card" onclick="useTemplate('GST Compliant')">
+            <div class="template-preview" style="background:linear-gradient(135deg,#1B4332,#2E7D5E);">
+              <div style="text-align:center;color:#fff;">
+                <div style="font-size:12px;font-weight:600;">TAX INVOICE</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.7);margin-top:4px;">GST Compliant</div>
+              </div>
+            </div>
+            <div class="template-info">
+              <div class="template-name">GST Compliant</div>
+              <div class="template-desc">All mandatory GST fields pre-filled, GSTIN, HSN codes included</div>
+              <div style="margin-top:8px;"><span class="badge badge-gold">Premium</span></div>
+            </div>
+          </div>
+          <div class="template-card" onclick="showPdfPreview()">
+            <div class="template-preview" style="background:linear-gradient(135deg,#4A1628,#8B2635);">
+              <div style="text-align:center;color:#fff;">
+                <div style="font-size:12px;font-weight:600;">PROFORMA</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.7);margin-top:4px;">Proforma Invoice</div>
+              </div>
+            </div>
+            <div class="template-info">
+              <div class="template-name">Proforma Invoice</div>
+              <div class="template-desc">Pre-billing estimate with terms, ideal for audit engagements</div>
+              <div style="margin-top:8px;"><span class="badge badge-info">Preview</span></div>
+            </div>
+          </div>
+          <div class="template-card" onclick="showToast('Retainer template loaded')">
+            <div class="template-preview" style="background:#FAF7F2;border:2px solid #C8A96E;">
+              <div style="text-align:center;color:#9A7A42;">
+                <div style="font-size:12px;font-weight:600;">RETAINER</div>
+                <div style="font-size:10px;color:#888;margin-top:4px;">Monthly Retainer</div>
+              </div>
+            </div>
+            <div class="template-info">
+              <div class="template-name">Monthly Retainer</div>
+              <div class="template-desc">Recurring billing template for monthly bookkeeping clients</div>
+              <div style="margin-top:8px;"><span class="badge badge-gold">Premium</span></div>
+            </div>
+          </div>
+          <div class="template-card" onclick="showToast('Credit note template loaded')">
+            <div class="template-preview" style="background:linear-gradient(135deg,#1A3A5C,#2471A3);">
+              <div style="text-align:center;color:#fff;">
+                <div style="font-size:12px;font-weight:600;">CREDIT NOTE</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.7);margin-top:4px;">GST Credit Note</div>
+              </div>
+            </div>
+            <div class="template-info">
+              <div class="template-name">GST Credit Note</div>
+              <div class="template-desc">For corrections and adjustments as per GST rules</div>
+              <div style="margin-top:8px;"><span class="badge badge-success">Free</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="tab-letters" class="tab-panel">
+        <div class="template-grid">
+          <div class="template-card" onclick="showToast('Engagement letter template opened')"><div class="template-preview" style="background:#F8F8F4;">📜</div><div class="template-info"><div class="template-name">Audit Engagement Letter</div><div class="template-desc">Standard ICAI compliant audit engagement letter</div><div style="margin-top:8px;"><span class="badge badge-gold">Premium</span></div></div></div>
+          <div class="template-card" onclick="showToast('Tax advisory letter template opened')"><div class="template-preview" style="background:#EAF2FF;">⚖️</div><div class="template-info"><div class="template-name">Tax Advisory Letter</div><div class="template-desc">Formal opinion letter for tax advisory services</div><div style="margin-top:8px;"><span class="badge badge-gold">Premium</span></div></div></div>
+          <div class="template-card" onclick="showToast('NOC template opened')"><div class="template-preview" style="background:#E8F5EE;">✅</div><div class="template-info"><div class="template-name">NOC Letter</div><div class="template-desc">No Objection Certificate for client transitions</div><div style="margin-top:8px;"><span class="badge badge-success">Free</span></div></div></div>
+        </div>
+      </div>
+      <div id="tab-reminders" class="tab-panel">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="card"><div class="card-header"><span class="card-title">Friendly Reminder (Day 3)</span><span class="badge badge-success">WhatsApp</span></div><div class="card-body"><p style="font-size:13px;color:var(--text-secondary);line-height:1.8;">Dear {Client Name}, hope you're doing well! Just a gentle reminder that Invoice #{INV_NO} for ₹{AMOUNT} for {SERVICE} is due on {DUE_DATE}. You can pay instantly via the link: {PAY_LINK}. Feel free to reach out for any queries. — {FIRM_NAME}</p><div style="margin-top:12px;display:flex;gap:8px;"><button class="btn btn-outline" style="font-size:12px;" onclick="showToast('Template copied to clipboard')">Copy</button><button class="btn btn-primary" style="font-size:12px;" onclick="showToast('Reminder sent to all pending clients')">Send to All Pending</button></div></div></div>
+          <div class="card"><div class="card-header"><span class="card-title">Formal Notice (Day 7)</span><span class="badge badge-warning">Email + WhatsApp</span></div><div class="card-body"><p style="font-size:13px;color:var(--text-secondary);line-height:1.8;">Dear {Client Name}, this is a formal reminder that Invoice #{INV_NO} amounting to ₹{AMOUNT} remains unpaid as of {TODAY}. The invoice was due on {DUE_DATE}. Kindly settle the outstanding amount at your earliest convenience to avoid any service disruption. Payment link: {PAY_LINK}. Regards, {FIRM_NAME}</p><div style="margin-top:12px;display:flex;gap:8px;"><button class="btn btn-outline" style="font-size:12px;" onclick="showToast('Template copied')">Copy</button><button class="btn btn-primary" style="font-size:12px;" onclick="showToast('Formal notice sent to 7-day overdue clients')">Send to Overdue</button></div></div></div>
+          <div class="card"><div class="card-header"><span class="card-title">Final Notice (Day 14)</span><span class="badge badge-danger">Escalation</span></div><div class="card-body"><p style="font-size:13px;color:var(--text-secondary);line-height:1.8;">Dear {Client Name}, despite multiple reminders, Invoice #{INV_NO} for ₹{AMOUNT} remains unpaid (overdue by 14 days). We request immediate settlement within 48 hours. Non-payment may result in suspension of services. Please contact us urgently to resolve this. — {SENIOR_PARTNER_NAME}, {FIRM_NAME}</p><div style="margin-top:12px;display:flex;gap:8px;"><button class="btn btn-outline" style="font-size:12px;" onclick="showToast('Template copied')">Copy</button><button class="btn btn-danger" style="font-size:12px;" onclick="showToast('Final notice sent — partner alerted')">Send Final Notice</button></div></div></div>
+        </div>
+      </div>
+      <div id="tab-reports" class="tab-panel">
+        <div class="template-grid">
+          <div class="template-card" onclick="showToast('Monthly P&L report template loaded')"><div class="template-preview" style="background:#F0EBE1;">📊</div><div class="template-info"><div class="template-name">Monthly P&L Report</div><div class="template-desc">Profit & Loss summary for client monthly reviews</div><div style="margin-top:8px;"><span class="badge badge-gold">Premium</span></div></div></div>
+          <div class="template-card" onclick="showToast('GST reconciliation template loaded')"><div class="template-preview" style="background:#EAF2FF;">🔄</div><div class="template-info"><div class="template-name">GST Reconciliation</div><div class="template-desc">GSTR-2A vs Books reconciliation report</div><div style="margin-top:8px;"><span class="badge badge-gold">Premium</span></div></div></div>
+          <div class="template-card" onclick="showToast('Audit report template loaded')"><div class="template-preview" style="background:#E8F5EE;">📋</div><div class="template-info"><div class="template-name">Statutory Audit Report</div><div class="template-desc">ICAI standard audit report template with annexures</div><div style="margin-top:8px;"><span class="badge badge-gold">Premium</span></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COMPLIANCE ── -->
+    <div id="page-compliance" class="page">
+      <div class="page-header">
+        <div><div class="page-heading">Compliance Tracker</div><div class="page-sub">Never miss a deadline again</div></div>
+        <button class="btn btn-primary" onclick="showToast('Compliance calendar exported to your calendar app')">Export Calendar</button>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header"><span class="card-title">Upcoming Deadlines — March–April 2026</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Deadline</th><th>Compliance</th><th>Clients Affected</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:500;color:var(--danger);">Mar 24 — Today</td><td>GSTR-1 (Monthly)</td><td>12 clients</td><td><span class="badge badge-danger">Due Today</span></td><td><button class="btn btn-ghost" style="font-size:12px;padding:4px 8px;" onclick="showToast('Reminder sent to 12 clients for GSTR-1')">Send Reminder</button></td></tr>
+              <tr><td style="font-weight:500;">Mar 28</td><td>GSTR-3B (Monthly)</td><td>12 clients</td><td><span class="badge badge-warning">4 days left</span></td><td><button class="btn btn-ghost" style="font-size:12px;padding:4px 8px;" onclick="showToast('Bulk reminder sent for GSTR-3B')">Send Reminder</button></td></tr>
+              <tr><td style="font-weight:500;">Mar 31</td><td>ITR Filing (Belated)</td><td>6 clients</td><td><span class="badge badge-warning">7 days left</span></td><td><button class="btn btn-ghost" style="font-size:12px;padding:4px 8px;" onclick="showToast('ITR reminder sent')">Send Reminder</button></td></tr>
+              <tr><td style="font-weight:500;">Apr 7</td><td>TDS Deposit Q4</td><td>18 clients</td><td><span class="badge badge-info">14 days left</span></td><td><button class="btn btn-ghost" style="font-size:12px;padding:4px 8px;" onclick="showToast('TDS reminder queued')">Schedule</button></td></tr>
+              <tr><td style="font-weight:500;">Apr 15</td><td>Advance Tax Q4</td><td>23 clients</td><td><span class="badge badge-info">22 days left</span></td><td><button class="btn btn-ghost" style="font-size:12px;padding:4px 8px;" onclick="showToast('Advance tax reminder scheduled')">Schedule</button></td></tr>
+              <tr><td style="font-weight:500;">Apr 30</td><td>TDS Return Q4 (24Q/26Q)</td><td>18 clients</td><td><span class="badge badge-success">On Track</span></td><td><button class="btn btn-ghost" style="font-size:12px;padding:4px 8px;" onclick="showToast('TDS return reminder scheduled')">Schedule</button></td></tr>
+              <tr><td style="font-weight:500;">May 31</td><td>Annual Return GSTR-9</td><td>31 clients</td><td><span class="badge badge-success">On Track</span></td><td><button class="btn btn-ghost" style="font-size:12px;padding:4px 8px;" onclick="showToast('GSTR-9 preparation reminder set')">Schedule</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REPORTS ── -->
+    <div id="page-reports" class="page">
+      <div class="page-header">
+        <div><div class="page-heading">Reports</div><div class="page-sub">Financial and operational insights</div></div>
+        <button class="btn btn-primary" onclick="showPdfPreview()">Export Report PDF</button>
+      </div>
+      <div class="metrics-grid" style="margin-bottom:20px;">
+        <div class="metric-card"><div class="metric-label">YTD Revenue</div><div class="metric-value">₹64L</div><div class="metric-change change-up">↑ 24% vs FY25</div></div>
+        <div class="metric-card"><div class="metric-label">Collection Rate</div><div class="metric-value">88%</div><div class="metric-change change-up">↑ 11% improvement</div></div>
+        <div class="metric-card"><div class="metric-label">Clients Served</div><div class="metric-value">84</div><div class="metric-change change-up">↑ 18 new this year</div></div>
+        <div class="metric-card"><div class="metric-label">Avg. Invoice Value</div><div class="metric-value">₹14.2K</div><div class="metric-change change-up">↑ 8% growth</div></div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Revenue by Service</span></div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div><div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;"><span>GST Filing & Advisory</span><span style="font-weight:500;">₹18.4L</span></div><div style="height:6px;background:var(--cream-dark);border-radius:3px;"><div style="width:72%;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-dark));border-radius:3px;"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;"><span>Statutory Audit</span><span style="font-weight:500;">₹15.2L</span></div><div style="height:6px;background:var(--cream-dark);border-radius:3px;"><div style="width:59%;height:100%;background:linear-gradient(90deg,#2E7D5E,#1B5E20);border-radius:3px;"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;"><span>ITR Filing</span><span style="font-weight:500;">₹12.8L</span></div><div style="height:6px;background:var(--cream-dark);border-radius:3px;"><div style="width:50%;height:100%;background:linear-gradient(90deg,#1A5276,#154360);border-radius:3px;"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;"><span>Bookkeeping</span><span style="font-weight:500;">₹9.6L</span></div><div style="height:6px;background:var(--cream-dark);border-radius:3px;"><div style="width:38%;height:100%;background:linear-gradient(90deg,#8B2635,#6E1D28);border-radius:3px;"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;"><span>ROC Compliance</span><span style="font-weight:500;">₹8L</span></div><div style="height:6px;background:var(--cream-dark);border-radius:3px;"><div style="width:31%;height:100%;background:linear-gradient(90deg,#A0692A,#7E5016);border-radius:3px;"></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Monthly Collection Trend</span></div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;align-items:flex-end;height:140px;margin-bottom:8px;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;"><div style="background:linear-gradient(to top,var(--gold-dark),var(--gold));border-radius:3px 3px 0 0;width:100%;height:45%;"></div><div style="font-size:10px;color:var(--text-muted);">Oct</div></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;"><div style="background:linear-gradient(to top,var(--gold-dark),var(--gold));border-radius:3px 3px 0 0;width:100%;height:60%;"></div><div style="font-size:10px;color:var(--text-muted);">Nov</div></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;"><div style="background:linear-gradient(to top,var(--gold-dark),var(--gold));border-radius:3px 3px 0 0;width:100%;height:80%;"></div><div style="font-size:10px;color:var(--text-muted);">Dec</div></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;"><div style="background:linear-gradient(to top,var(--gold-dark),var(--gold));border-radius:3px 3px 0 0;width:100%;height:55%;"></div><div style="font-size:10px;color:var(--text-muted);">Jan</div></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;"><div style="background:linear-gradient(to top,var(--gold-dark),var(--gold));border-radius:3px 3px 0 0;width:100%;height:70%;"></div><div style="font-size:10px;color:var(--text-muted);">Feb</div></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;"><div style="background:linear-gradient(to top,var(--navy),var(--navy-light));border-radius:3px 3px 0 0;width:100%;height:90%;border:2px solid var(--gold);"></div><div style="font-size:10px;color:var(--gold-dark);font-weight:500;">Mar</div></div>
+            </div>
+            <div style="text-align:center;font-size:12px;color:var(--text-muted);">6-month revenue trend (₹ Lakhs)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── MODALS ── -->
+
+<!-- Add Client Modal -->
+<div class="modal-overlay" id="add-client-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New Client</div>
+      <button class="modal-close" onclick="closeModal('add-client-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="two-col">
+        <div class="form-group"><label class="form-label">Client / Company Name *</label><input class="form-control" placeholder="e.g. Sharma Retail Pvt Ltd"/></div>
+        <div class="form-group"><label class="form-label">Contact Person</label><input class="form-control" placeholder="Full name"/></div>
+      </div>
+      <div class="two-col">
+        <div class="form-group"><label class="form-label">Email Address</label><input class="form-control" type="email" placeholder="accounts@company.in"/></div>
+        <div class="form-group"><label class="form-label">Mobile (WhatsApp)</label><input class="form-control" placeholder="+91 XXXXX XXXXX"/></div>
+      </div>
+      <div class="two-col">
+        <div class="form-group"><label class="form-label">GSTIN</label><input class="form-control" placeholder="22AAAAA0000A1Z5" style="font-family:monospace;"/></div>
+        <div class="form-group"><label class="form-label">PAN</label><input class="form-control" placeholder="AAAAA0000A" style="font-family:monospace;"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Services Required</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox" checked/> GST Filing</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox"/> ITR Filing</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox"/> Statutory Audit</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox"/> Bookkeeping</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox"/> ROC Compliance</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox"/> TDS Returns</label>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" placeholder="Any special requirements or notes…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('add-client-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addClient()">Add Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Invoice Modal -->
+<div class="modal-overlay" id="new-invoice-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Create New Invoice</div>
+      <button class="modal-close" onclick="closeModal('new-invoice-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="two-col">
+        <div class="form-group"><label class="form-label">Client *</label>
+          <select class="form-control"><option>Select client…</option><option>Sharma Retail Pvt Ltd</option><option>Mehta & Sons</option><option>Ravi Pharma LLP</option><option>Desai Group Holdings</option><option>Nirmala Krishna Exports</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Invoice Date</label><input class="form-control" type="date" value="2026-03-24"/></div>
+      </div>
+      <div class="two-col">
+        <div class="form-group"><label class="form-label">Service</label>
+          <select class="form-control"><option>GST Filing</option><option>ITR Filing</option><option>Statutory Audit</option><option>Bookkeeping</option><option>ROC Compliance</option><option>TDS Returns</option><option>Advisory</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Due Date</label><input class="form-control" type="date" value="2026-04-07"/></div>
+      </div>
+      <div class="two-col">
+        <div class="form-group"><label class="form-label">Amount (excl. GST) ₹</label><input class="form-control" type="number" placeholder="0.00" id="inv-amount" oninput="calcGST()"/></div>
+        <div class="form-group"><label class="form-label">GST Rate</label>
+          <select class="form-control" onchange="calcGST()"><option value="18">18% (IGST / CGST+SGST)</option><option value="12">12%</option><option value="0">Nil</option></select>
+        </div>
+      </div>
+      <div style="background:var(--cream);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span style="color:var(--text-muted);">Subtotal</span><span id="inv-subtotal">₹0.00</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span style="color:var(--text-muted);">GST (18%)</span><span id="inv-gst">₹0.00</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:600;border-top:1px solid var(--border);padding-top:6px;margin-top:4px;"><span>Total</span><span id="inv-total" style="color:var(--gold-dark);">₹0.00</span></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes / Narration</label><textarea class="form-control" placeholder="Services rendered for the period…"></textarea></div>
+      <div class="form-group"><label class="form-label">Send via</label>
+        <div style="display:flex;gap:16px;margin-top:6px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox" checked/> Email</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox" checked/> WhatsApp</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox"/> Portal</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('new-invoice-modal')">Save Draft</button>
+      <button class="btn btn-outline" onclick="showPdfPreview();closeModal('new-invoice-modal')">Preview PDF</button>
+      <button class="btn btn-primary" onclick="createInvoice()">Create & Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF Preview -->
+<div id="pdf-preview">
+  <div class="pdf-modal">
+    <div class="pdf-topbar">
+      <span style="color:var(--gold-light);font-weight:500;">Invoice Preview</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" style="font-size:12px;" onclick="downloadPdf()">⬇ Download PDF</button>
+        <button class="btn btn-ghost" style="color:var(--slate-light);font-size:12px;" onclick="closePdfPreview()">Close</button>
+      </div>
+    </div>
+    <div id="invoice-template" style="overflow-y:auto;max-height:80vh;">
+      <div class="inv-header">
+        <div>
+          <div class="inv-logo">Lex<span>Audit</span></div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">Chartered Accountants<br/>123 Civil Lines, Raipur — 492001<br/>GSTIN: 22AAAAA0000A1Z5 | PAN: AAAAA0000A<br/>+91 98765 43210 | lexaudit@ca.in</div>
+        </div>
+        <div class="inv-meta">
+          <h2>TAX INVOICE</h2>
+          <div class="inv-num">#INV-2026-048</div>
+          <p style="margin-top:8px;">Date: March 24, 2026</p>
+          <p>Due: April 5, 2026</p>
+          <div class="inv-stamp">PAID</div>
+        </div>
+      </div>
+      <div class="inv-parties">
+        <div class="inv-party"><h4>Bill To</h4><p class="name">Sharma Retail Pvt Ltd</p><p>Attn: Mr. Arun Sharma<br/>45, MG Road, Civil Lines<br/>Raipur, Chhattisgarh — 492001<br/>GSTIN: 22BBBBB1111B1Z5</p></div>
+        <div class="inv-party"><h4>Service Period</h4><p>March 2026<br/><br/><strong>Payment Terms:</strong> 14 days net<br/><strong>Mode:</strong> Bank Transfer / UPI<br/><strong>HSN/SAC:</strong> 998231</p></div>
+      </div>
+      <table class="inv-table">
+        <thead><tr><th>#</th><th>Description of Service</th><th>SAC</th><th>Amount</th><th>CGST 9%</th><th>SGST 9%</th><th>Total</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>GST Filing & Advisory Services — GSTR-1, GSTR-3B for March 2026</td><td>998231</td><td>₹8,000</td><td>₹720</td><td>₹720</td><td>₹9,440</td></tr>
+          <tr><td>2</td><td>E-Invoice Generation & Reconciliation Support</td><td>998231</td><td>₹2,000</td><td>₹180</td><td>₹180</td><td>₹2,360</td></tr>
+          <tr><td>3</td><td>GST Annual Return Preparation Advance</td><td>998231</td><td>₹600</td><td>₹54</td><td>₹54</td><td>₹708</td></tr>
+        </tbody>
+      </table>
+      <div class="inv-totals">
+        <div class="inv-totals-box">
+          <div class="inv-total-row"><span>Subtotal</span><span>₹10,600</span></div>
+          <div class="inv-total-row"><span>CGST @ 9%</span><span>₹954</span></div>
+          <div class="inv-total-row"><span>SGST @ 9%</span><span>₹954</span></div>
+          <div class="inv-total-row"><span>Discount</span><span style="color:var(--success);">—</span></div>
+          <div class="inv-total-final"><span>Amount Due</span><span>₹12,508</span></div>
+        </div>
+      </div>
+      <div class="inv-footer">
+        <strong>Bank Details:</strong> LexAudit CA Firm | A/C: 1234567890 | IFSC: HDFC0001234 | HDFC Bank, Raipur<br/>
+        <strong>UPI:</strong> lexaudit@hdfcbank<br/><br/>
+        This is a computer-generated invoice and does not require a physical signature. Subject to Raipur jurisdiction.<br/>
+        Thank you for your business. We value our professional relationship.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span>✦</span>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+// ── NAVIGATION ──
+const pages = { dashboard: 'Dashboard', clients: 'Client Portal', invoices: 'Invoices & Billing', automation: 'Automation Flows', ai: 'AI Tools', templates: 'Templates', compliance: 'Compliance', reports: 'Reports' };
+
+function navigate(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('page-' + id);
+  if (pg) pg.classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('topbar-title').textContent = pages[id] || 'Dashboard';
+  if (window.innerWidth < 768) document.getElementById('sidebar').classList.remove('open');
+}
+
+// ── SIDEBAR TOGGLE ──
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ── MODALS ──
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ── INVOICE CALC ──
+function calcGST() {
+  const amt = parseFloat(document.getElementById('inv-amount').value) || 0;
+  const gst = amt * 0.18;
+  document.getElementById('inv-subtotal').textContent = '₹' + amt.toFixed(2);
+  document.getElementById('inv-gst').textContent = '₹' + gst.toFixed(2);
+  document.getElementById('inv-total').textContent = '₹' + (amt + gst).toFixed(2);
+}
+
+// ── CREATE INVOICE ──
+function createInvoice() {
+  closeModal('new-invoice-modal');
+  showToast('Invoice #INV-2026-049 created and sent via Email & WhatsApp');
+}
+
+// ── ADD CLIENT ──
+function addClient() {
+  closeModal('add-client-modal');
+  showToast('Client added successfully! Welcome portal email sent.');
+}
+
+// ── PDF PREVIEW ──
+function showPdfPreview() {
+  document.getElementById('pdf-preview').classList.add('open');
+}
+function closePdfPreview() {
+  document.getElementById('pdf-preview').classList.remove('open');
+}
+
+// ── DOWNLOAD PDF ──
+function downloadPdf() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  
+  // Header bar
+  doc.setFillColor(13, 27, 42);
+  doc.rect(0, 0, 210, 28, 'F');
+  
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.setTextColor(200, 169, 110);
+  doc.text('LexAudit', 14, 14);
+  doc.setFontSize(11);
+  doc.setTextColor(138, 155, 176);
+  doc.text('Chartered Accountants', 14, 21);
+  
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(18);
+  doc.text('TAX INVOICE', 210 - 14, 12, { align: 'right' });
+  doc.setFontSize(10);
+  doc.setTextColor(200, 169, 110);
+  doc.text('#INV-2026-048', 210 - 14, 20, { align: 'right' });
+  
+  // Firm info
+  doc.setFontSize(9);
+  doc.setTextColor(80, 96, 112);
+  doc.setFont('helvetica', 'normal');
+  doc.text(['123 Civil Lines, Raipur — 492001', 'GSTIN: 22AAAAA0000A1Z5', 'lexaudit@ca.in | +91 98765 43210'], 14, 35);
+  
+  // Invoice meta
+  doc.setTextColor(13, 27, 42);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text('Invoice Date:', 140, 33);
+  doc.text('Due Date:', 140, 39);
+  doc.setFont('helvetica', 'normal');
+  doc.text('March 24, 2026', 170, 33);
+  doc.text('April 5, 2026', 170, 39);
+  
+  // Divider
+  doc.setDrawColor(200, 169, 110);
+  doc.setLineWidth(0.5);
+  doc.line(14, 52, 196, 52);
+  
+  // Bill To
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(138, 155, 176);
+  doc.text('BILL TO', 14, 58);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(13, 27, 42);
+  doc.text('Sharma Retail Pvt Ltd', 14, 65);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(74, 96, 112);
+  doc.text(['Attn: Mr. Arun Sharma', '45 MG Road, Civil Lines, Raipur 492001', 'GSTIN: 22BBBBB1111B1Z5'], 14, 71);
+  
+  // Table Header
+  doc.setFillColor(13, 27, 42);
+  doc.rect(14, 90, 182, 8, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text('#', 17, 95.5);
+  doc.text('Description', 24, 95.5);
+  doc.text('SAC', 130, 95.5);
+  doc.text('Amount', 148, 95.5);
+  doc.text('GST', 168, 95.5);
+  doc.text('Total', 186, 95.5);
+  
+  // Table rows
+  const rows = [
+    ['1', 'GST Filing & Advisory — GSTR-1, GSTR-3B Mar 2026', '998231', '₹8,000', '₹1,440', '₹9,440'],
+    ['2', 'E-Invoice Generation & Reconciliation', '998231', '₹2,000', '₹360', '₹2,360'],
+    ['3', 'GST Annual Return Preparation Advance', '998231', '₹600', '₹108', '₹708'],
+  ];
+  
+  let y = 102;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  rows.forEach((row, i) => {
+    if (i % 2 === 0) { doc.setFillColor(250, 247, 242); doc.rect(14, y - 4, 182, 9, 'F'); }
+    doc.setTextColor(13, 27, 42);
+    doc.text(row[0], 17, y + 1);
+    doc.setTextColor(74, 96, 112);
+    doc.text(row[1], 24, y + 1, { maxWidth: 100 });
+    doc.text(row[2], 130, y + 1);
+    doc.text(row[3], 148, y + 1);
+    doc.text(row[4], 168, y + 1);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(13, 27, 42);
+    doc.text(row[5], 186, y + 1);
+    doc.setFont('helvetica', 'normal');
+    y += 9;
+  });
+  
+  // Totals
+  y += 6;
+  doc.setDrawColor(200, 169, 110);
+  doc.line(130, y, 196, y);
+  y += 6;
+  doc.setFontSize(9);
+  doc.setTextColor(74, 96, 112);
+  doc.text('Subtotal:', 140, y); doc.setTextColor(13,27,42); doc.text('₹10,600', 196, y, {align:'right'}); y += 6;
+  doc.setTextColor(74, 96, 112);
+  doc.text('CGST @ 9%:', 140, y); doc.setTextColor(13,27,42); doc.text('₹954', 196, y, {align:'right'}); y += 6;
+  doc.text('SGST @ 9%:', 140, y); doc.setTextColor(13,27,42); doc.text('₹954', 196, y, {align:'right'}); y += 8;
+  
+  doc.setFillColor(13, 27, 42);
+  doc.rect(128, y - 4, 68, 10, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(255, 255, 255);
+  doc.text('Amount Due:', 132, y + 2);
+  doc.setTextColor(200, 169, 110);
+  doc.text('₹12,508', 196, y + 2, {align:'right'});
+  
+  // Footer
+  y += 20;
+  doc.setDrawColor(220, 210, 190);
+  doc.line(14, y, 196, y);
+  y += 6;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(13, 27, 42);
+  doc.text('Bank Details:', 14, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(74, 96, 112);
+  doc.text('LexAudit CA Firm | A/C: 1234567890 | IFSC: HDFC0001234 | HDFC Bank Raipur | UPI: lexaudit@hdfcbank', 14, y + 5);
+  doc.text('Subject to Raipur jurisdiction. This is a computer-generated document.', 14, y + 10);
+  
+  doc.save('LexAudit_INV-2026-048.pdf');
+  showToast('PDF downloaded: LexAudit_INV-2026-048.pdf');
+}
+
+// ── FILTER CLIENTS ──
+function filterClients() {
+  const q = document.getElementById('client-search').value.toLowerCase();
+  document.querySelectorAll('#clients-tbody tr').forEach(tr => {
+    tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ── VIEW CLIENT ──
+function viewClient(name) {
+  showToast('Opening client file: ' + name);
+}
+
+// ── TOGGLE FLOW ──
+function toggleFlow(label) {
+  const track = label.querySelector('.toggle-track');
+  track.classList.toggle('on');
+  showToast(track.classList.contains('on') ? 'Automation flow enabled' : 'Flow paused');
+}
+
+// ── TABS ──
+function switchTab(panelId, btn) {
+  const parent = btn.closest('.card, .page');
+  parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  parent.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(panelId).classList.add('active');
+}
+
+// ── BULK REMINDERS ──
+function sendBulkReminders() {
+  showToast('Bulk reminders sent to 8 overdue clients via WhatsApp & Email');
+}
+
+// ── TEMPLATE USE ──
+function useTemplate(name) {
+  showToast('Template "' + name + '" loaded in invoice builder');
+  navigate('invoices', null);
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item')[2].classList.add('active');
+}
+
+// ── AI MESSAGES ──
+const aiResponses = {
+  default: "I can help with that! Here's what you need to know for your CA practice:",
+  gst: "For GST compliance, ensure GSTR-1 is filed by the 11th and GSTR-3B by the 20th of the following month. For quarterly filers (QRMP), GSTR-3B is due on the 22nd/24th. Key tip: reconcile your GSTR-2A with purchase register monthly to avoid ITC mismatches.",
+  invoice: "A valid GST invoice must include: supplier GSTIN, invoice number, date, recipient GSTIN, HSN/SAC code, taxable value, applicable GST rates (CGST+SGST for intra-state, IGST for inter-state), and total amount. For services, SAC code 998231 applies to accounting and auditing.",
+  itr: "For FY 2025-26 ITR filing: Individuals/HUFs — July 31, 2026. Companies — October 31, 2026. If tax audit is applicable — October 31, 2026. Extended belated return deadline — December 31, 2026. Ensure Form 26AS and AIS reconciliation is done before filing.",
+  reminder: "Here's a professional payment reminder:\n\nDear [Client Name],\n\nThis is a gentle reminder that Invoice #[INV] for ₹[AMOUNT] dated [DATE] for [SERVICE] remains outstanding. Due date was [DUE_DATE].\n\nPlease make payment at your earliest convenience: [PAY_LINK]\n\nFor any queries, feel free to reach us.\n\nWarm regards,\n[FIRM NAME]",
+  tds: "TDS compliance for Q4 FY 2025-26: Deduct TDS at applicable rates (194C: 1%/2%, 194J: 10%, 194H: 5%, etc.). Deposit by April 7 for March deductions. File TDS return (Form 24Q/26Q) by May 31. Issue Form 16/16A within 15 days of filing. Penalty: 1.5% per month for late deposit.",
+};
+
+function getAIResponse(msg) {
+  const m = msg.toLowerCase();
+  if (m.includes('gst') || m.includes('gstin') || m.includes('gstr')) return aiResponses.gst;
+  if (m.includes('invoice') || m.includes('bill')) return aiResponses.invoice;
+  if (m.includes('itr') || m.includes('income tax') || m.includes('return')) return aiResponses.itr;
+  if (m.includes('reminder') || m.includes('overdue') || m.includes('payment')) return aiResponses.reminder;
+  if (m.includes('tds') || m.includes('tax deduct')) return aiResponses.tds;
+  return aiResponses.default + "\n\nI specialise in GST compliance, ITR filing, TDS requirements, invoice drafting, and client communication for CA firms. What specific query can I help you with today?";
+}
+
+function sendAiMsg() {
+  const input = document.getElementById('ai-input');
+  const msgs = document.getElementById('ai-messages');
+  const text = input.value.trim();
+  if (!text) return;
+  
+  const userMsg = document.createElement('div');
+  userMsg.className = 'msg msg-user';
+  userMsg.textContent = text;
+  msgs.appendChild(userMsg);
+  input.value = '';
+  msgs.scrollTop = msgs.scrollHeight;
+  
+  setTimeout(() => {
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'msg msg-ai';
+    aiMsg.textContent = getAIResponse(text);
+    msgs.appendChild(aiMsg);
+    msgs.scrollTop = msgs.scrollHeight;
+  }, 700);
+}
+
+function aiQuickPrompt(prompt) {
+  document.getElementById('ai-input').value = prompt;
+  navigate('ai', null);
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item')[4].classList.add('active');
+  document.getElementById('topbar-title').textContent = 'AI Tools';
+  sendAiMsg();
+}
+
+// Close PDF overlay on backdrop click
+document.getElementById('pdf-preview').addEventListener('click', function(e) {
+  if (e.target === this) closePdfPreview();
+});
+</script>
+</body>
+</html>

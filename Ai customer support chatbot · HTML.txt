@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovaSup AI — Customer Support</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0b0e;
+  --surface:#111318;
+  --surface2:#181c23;
+  --surface3:#1e2330;
+  --border:#ffffff0f;
+  --border2:#ffffff18;
+  --accent:#6c63ff;
+  --accent2:#ff6584;
+  --accent3:#43e97b;
+  --text:#f0f0f8;
+  --text2:#a0a3b1;
+  --text3:#60637a;
+  --user-bubble:#6c63ff;
+  --bot-bubble:#1e2330;
+  --online:#43e97b;
+  --radius:16px;
+  --radius-sm:10px;
+  --font-head:'Syne',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+  --shadow:0 8px 32px #0008;
+}
+html,body{height:100%;background:var(--bg);font-family:var(--font-body);color:var(--text);overflow:hidden}
+
+/* ─── LAYOUT ─── */
+.app{display:flex;height:100vh;width:100vw}
+.sidebar{width:280px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:transform .3s}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+
+/* ─── SIDEBAR ─── */
+.sidebar-header{padding:24px 20px 16px;border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--font-head);font-weight:800;font-size:1.2rem;letter-spacing:-.5px}
+.brand-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px}
+.brand span{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.new-chat-btn{margin:12px 20px 0;padding:10px 16px;background:linear-gradient(135deg,var(--accent),#8a63ff);border:none;border-radius:var(--radius-sm);color:#fff;font-family:var(--font-body);font-size:.9rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;transition:opacity .2s,transform .15s;width:calc(100% - 40px)}
+.new-chat-btn:hover{opacity:.9;transform:translateY(-1px)}
+.new-chat-btn svg{width:16px;height:16px}
+.sidebar-section{padding:16px 20px 8px;font-size:.72rem;font-weight:600;letter-spacing:.08em;color:var(--text3);text-transform:uppercase}
+.chat-list{flex:1;overflow-y:auto;padding:0 10px}
+.chat-item{padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:10px;margin-bottom:2px}
+.chat-item:hover{background:var(--surface2)}
+.chat-item.active{background:var(--surface3)}
+.chat-item-icon{width:28px;height:28px;border-radius:8px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.chat-item-text{min-width:0}
+.chat-item-title{font-size:.85rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.chat-item-preview{font-size:.75rem;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border)}
+.settings-row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--radius-sm);cursor:pointer;font-size:.85rem;color:var(--text2)}
+.settings-row:hover{background:var(--surface2)}
+.avatar-sm{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0}
+
+/* ─── CHAT HEADER ─── */
+.chat-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface);gap:12px;flex-shrink:0}
+.agent-info{display:flex;align-items:center;gap:12px}
+.agent-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;position:relative;flex-shrink:0}
+.status-dot{position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--online);border:2px solid var(--surface)}
+.agent-name{font-family:var(--font-head);font-weight:700;font-size:1rem}
+.agent-subtitle{font-size:.78rem;color:var(--text3);display:flex;align-items:center;gap:5px}
+.agent-subtitle span{color:var(--online)}
+.header-actions{display:flex;gap:8px}
+.icon-btn{width:36px;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:16px}
+.icon-btn:hover{background:var(--surface2);color:var(--text);border-color:var(--border2)}
+.hamburger{display:none}
+
+/* ─── TOPIC PILLS ─── */
+.quick-topics{padding:14px 24px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.topic-pill{padding:6px 14px;border-radius:999px;border:1px solid var(--border2);background:var(--surface2);font-size:.78rem;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.topic-pill:hover,.topic-pill.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ─── MESSAGES ─── */
+.messages-wrap{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+.messages-wrap::-webkit-scrollbar{width:4px}
+.messages-wrap::-webkit-scrollbar-track{background:transparent}
+.messages-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+.msg{display:flex;align-items:flex-end;gap:10px;animation:msgIn .3s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg.user{flex-direction:row-reverse}
+.msg-avatar{width:32px;height:32px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0}
+.msg.bot .msg-avatar{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.msg-content{max-width:70%;display:flex;flex-direction:column;gap:4px}
+.msg.user .msg-content{align-items:flex-end}
+.bubble{padding:12px 16px;border-radius:18px;font-size:.9rem;line-height:1.6;position:relative;word-break:break-word}
+.msg.bot .bubble{background:var(--bot-bubble);border:1px solid var(--border);border-bottom-left-radius:4px;color:var(--text)}
+.msg.user .bubble{background:var(--user-bubble);border-bottom-right-radius:4px;color:#fff}
+.bubble strong{font-weight:600}
+.bubble ul{margin:6px 0 0 18px;display:flex;flex-direction:column;gap:3px}
+.bubble code{background:#ffffff15;padding:1px 6px;border-radius:4px;font-size:.85em;font-family:monospace}
+.msg-time{font-size:.7rem;color:var(--text3);padding:0 4px}
+
+/* Quick replies */
+.quick-replies{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.qr-btn{padding:6px 14px;border-radius:999px;border:1px solid var(--border2);background:transparent;color:var(--accent);font-size:.8rem;cursor:pointer;transition:all .15s;font-family:var(--font-body)}
+.qr-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Satisfaction */
+.satisfaction-widget{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-top:4px}
+.satisfaction-widget p{font-size:.85rem;color:var(--text2);margin-bottom:10px}
+.stars{display:flex;gap:6px}
+.star-btn{font-size:1.4rem;background:none;border:none;cursor:pointer;opacity:.4;transition:opacity .15s,transform .1s;line-height:1}
+.star-btn:hover,.star-btn.active{opacity:1;transform:scale(1.15)}
+
+/* Typing indicator */
+.typing-indicator{display:flex;align-items:flex-end;gap:10px}
+.typing-indicator .msg-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0}
+.typing-dots{display:flex;align-items:center;gap:4px;background:var(--bot-bubble);border:1px solid var(--border);padding:12px 16px;border-radius:18px;border-bottom-left-radius:4px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--text3);animation:dotBounce 1.2s ease infinite}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes dotBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+
+/* File attach preview */
+.attach-preview{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:8px}
+.attach-preview svg{flex-shrink:0;color:var(--accent)}
+.attach-preview-name{font-size:.8rem;color:var(--text2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.attach-preview-remove{cursor:pointer;color:var(--text3);font-size:18px;line-height:1}
+.attach-preview-remove:hover{color:var(--accent2)}
+
+/* ─── INPUT AREA ─── */
+.input-area{padding:16px 24px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.input-row{display:flex;align-items:flex-end;gap:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:8px 8px 8px 16px;transition:border-color .2s}
+.input-row:focus-within{border-color:var(--accent)}
+.chat-textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font-body);font-size:.92rem;resize:none;max-height:120px;min-height:24px;line-height:1.5;padding:4px 0}
+.chat-textarea::placeholder{color:var(--text3)}
+.input-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.attach-btn,.emoji-btn{width:34px;height:34px;border-radius:var(--radius-sm);border:none;background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s;font-size:18px}
+.attach-btn:hover,.emoji-btn:hover{color:var(--accent);background:var(--surface3)}
+.send-btn{width:38px;height:38px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s,transform .15s;flex-shrink:0}
+.send-btn:hover{opacity:.85;transform:scale(1.05)}
+.send-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.input-meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:.73rem;color:var(--text3)}
+.char-count{}
+.input-hint{display:flex;align-items:center;gap:4px}
+kbd{background:var(--surface3);border:1px solid var(--border2);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:.7rem;color:var(--text2)}
+
+/* ─── PANEL (right info panel) ─── */
+.info-panel{width:280px;min-width:240px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;transition:transform .3s}
+.panel-section{padding:20px;border-bottom:1px solid var(--border)}
+.panel-title{font-family:var(--font-head);font-weight:700;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:14px}
+.info-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:.83rem}
+.info-label{color:var(--text3)}
+.info-value{color:var(--text);font-weight:500;text-align:right;max-width:55%}
+.status-badge{padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:600;background:#43e97b22;color:var(--online);border:1px solid #43e97b44}
+.faq-item{padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.faq-item:last-child{border-bottom:none}
+.faq-q{font-size:.83rem;color:var(--text2);display:flex;justify-content:space-between;gap:8px;transition:color .15s}
+.faq-item:hover .faq-q{color:var(--accent)}
+.faq-arrow{flex-shrink:0;font-size:12px;color:var(--text3)}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:6px}
+.tag{padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:999px;font-size:.76rem;color:var(--text2)}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:30px;right:30px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 18px;font-size:.85rem;color:var(--text);box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;z-index:999;animation:slideIn .3s ease;pointer-events:none}
+@keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+.toast-icon{font-size:18px}
+
+/* ─── FILE INPUT ─── */
+#fileInput{display:none}
+
+/* ─── EMOJI PICKER (simple) ─── */
+.emoji-panel{position:absolute;bottom:80px;right:24px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:10px;display:flex;flex-wrap:wrap;gap:4px;z-index:100;box-shadow:var(--shadow);max-width:220px;animation:msgIn .2s ease}
+.emoji-panel button{font-size:1.3rem;background:none;border:none;cursor:pointer;border-radius:6px;width:32px;height:32px;transition:background .1s;display:flex;align-items:center;justify-content:center}
+.emoji-panel button:hover{background:var(--surface3)}
+
+/* ─── MODAL (escalate) ─── */
+.modal-overlay{position:fixed;inset:0;background:#00000099;z-index:200;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:28px;width:380px;max-width:90vw;box-shadow:var(--shadow)}
+.modal h2{font-family:var(--font-head);font-weight:700;font-size:1.1rem;margin-bottom:8px}
+.modal p{font-size:.86rem;color:var(--text2);margin-bottom:20px;line-height:1.6}
+.modal-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-family:var(--font-body);font-size:.9rem;outline:none;margin-bottom:12px}
+.modal-input:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.btn{padding:9px 20px;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:.88rem;font-weight:500;cursor:pointer;transition:all .15s}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-ghost:hover{background:var(--surface2)}
+.btn-primary{background:var(--accent);border:none;color:#fff}
+.btn-primary:hover{opacity:.85}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:900px){
+  .info-panel{display:none}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:150;transform:translateX(-100%)}
+  .sidebar.open{transform:none}
+  .hamburger{display:flex}
+}
+@media(max-width:600px){
+  .quick-topics{padding:10px 14px}
+  .messages-wrap{padding:14px}
+  .input-area{padding:12px 14px}
+  .chat-header{padding:12px 16px}
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-icon">🤖</div>
+        <span>NovaSup AI</span>
+      </div>
+    </div>
+    <button class="new-chat-btn" onclick="newChat()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      New Conversation
+    </button>
+    <div class="sidebar-section">Recent</div>
+    <div class="chat-list" id="chatList"></div>
+    <div class="sidebar-footer">
+      <div class="settings-row">
+        <div class="avatar-sm">U</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.84rem;font-weight:500">Guest User</div>
+          <div style="font-size:.73rem;color:var(--text3)">Free plan</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN ─── -->
+  <div class="main">
+    <!-- Header -->
+    <div class="chat-header">
+      <button class="icon-btn hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <div class="agent-info">
+        <div class="agent-avatar">
+          🤖
+          <span class="status-dot"></span>
+        </div>
+        <div>
+          <div class="agent-name">Nova — AI Support</div>
+          <div class="agent-subtitle">
+            <span>● Online</span> · Avg. reply &lt; 1 sec
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" onclick="searchMessages()" title="Search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+        <button class="icon-btn" onclick="exportChat()" title="Export chat">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+        <button class="icon-btn" onclick="openEscalate()" title="Talk to human agent">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick topic pills -->
+    <div class="quick-topics" id="topicBar">
+      <span class="topic-pill" onclick="sendTopic(this,'Billing & Payments')">💳 Billing</span>
+      <span class="topic-pill" onclick="sendTopic(this,'Track my order')">📦 Orders</span>
+      <span class="topic-pill" onclick="sendTopic(this,'Refund & Returns')">↩️ Returns</span>
+      <span class="topic-pill" onclick="sendTopic(this,'Account & Login')">🔑 Account</span>
+      <span class="topic-pill" onclick="sendTopic(this,'Technical Support')">🛠️ Tech Help</span>
+      <span class="topic-pill" onclick="sendTopic(this,'Shipping Info')">🚚 Shipping</span>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages-wrap" id="messages"></div>
+
+    <!-- Attach preview -->
+    <div id="attachPreview" style="display:none;padding:0 24px 0"></div>
+
+    <!-- Input -->
+    <div class="input-area" style="position:relative">
+      <div id="emojiPanel" style="display:none"></div>
+      <div class="input-row">
+        <textarea class="chat-textarea" id="chatInput" placeholder="Type your message..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this);updateCharCount()"></textarea>
+        <div class="input-actions">
+          <button class="emoji-btn" onclick="toggleEmoji()" title="Emoji">😊</button>
+          <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Attach file">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="input-meta">
+        <span class="char-count" id="charCount">0 / 500</span>
+        <span class="input-hint"><kbd>Enter</kbd> to send · <kbd>Shift+Enter</kbd> new line</span>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.doc,.docx,.txt" onchange="handleFile(event)">
+    </div>
+  </div>
+
+  <!-- ─── RIGHT PANEL ─── -->
+  <aside class="info-panel">
+    <div class="panel-section">
+      <div class="panel-title">Session Info</div>
+      <div class="info-row"><span class="info-label">Status</span><span class="status-badge">Active</span></div>
+      <div class="info-row"><span class="info-label">Session ID</span><span class="info-value" id="sessionId">#NS-00001</span></div>
+      <div class="info-row"><span class="info-label">Started</span><span class="info-value" id="sessionTime">—</span></div>
+      <div class="info-row"><span class="info-label">Messages</span><span class="info-value" id="msgCount">0</span></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">Popular FAQs</div>
+      <div class="faq-item" onclick="sendFAQ('How do I reset my password?')">
+        <div class="faq-q">How do I reset my password? <span class="faq-arrow">›</span></div>
+      </div>
+      <div class="faq-item" onclick="sendFAQ('Where is my order?')">
+        <div class="faq-q">Where is my order? <span class="faq-arrow">›</span></div>
+      </div>
+      <div class="faq-item" onclick="sendFAQ('How do I request a refund?')">
+        <div class="faq-q">How do I request a refund? <span class="faq-arrow">›</span></div>
+      </div>
+      <div class="faq-item" onclick="sendFAQ('How to cancel my subscription?')">
+        <div class="faq-q">How to cancel my subscription? <span class="faq-arrow">›</span></div>
+      </div>
+      <div class="faq-item" onclick="sendFAQ('Can I change my delivery address?')">
+        <div class="faq-q">Can I change my delivery address? <span class="faq-arrow">›</span></div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">Topic Tags</div>
+      <div class="tag-cloud" id="tagCloud">
+        <span class="tag">Billing</span>
+        <span class="tag">Orders</span>
+        <span class="tag">Returns</span>
+      </div>
+    </div>
+    <div class="panel-section" style="border:none">
+      <div class="panel-title">Agent Actions</div>
+      <button class="btn btn-ghost" style="width:100%;margin-bottom:8px;text-align:left;display:flex;align-items:center;gap:8px" onclick="openEscalate()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Escalate to Human
+      </button>
+      <button class="btn btn-ghost" style="width:100%;text-align:left;display:flex;align-items:center;gap:8px" onclick="exportChat()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export Transcript
+      </button>
+    </div>
+  </aside>
+</div>
+
+<!-- ─── MODAL ─── -->
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal">
+    <h2>🙋 Talk to a Human Agent</h2>
+    <p>Our support specialists are available Mon–Fri, 9 AM–6 PM IST. Fill in your details and we'll connect you shortly.</p>
+    <input class="modal-input" type="text" id="escalateName" placeholder="Your name">
+    <input class="modal-input" type="email" id="escalateEmail" placeholder="Email address">
+    <textarea class="modal-input" id="escalateIssue" rows="3" placeholder="Briefly describe your issue..." style="resize:none"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitEscalate()">Request Agent</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───
+const KNOWLEDGE = {
+  greetings: ["hi","hello","hey","good morning","good evening","howdy","yo"],
+  billing: {
+    keys: ["bill","pay","payment","invoice","charge","refund","money","transaction","plan","subscribe","subscription","cancel subscription"],
+    responses: [
+      `Here's a quick overview of your <strong>billing options</strong>:<ul><li>View invoices in <strong>Account → Billing History</strong></li><li>Update your card in <strong>Settings → Payment Methods</strong></li><li>All payments are secured with 256-bit SSL encryption</li></ul>Would you like me to help with a specific billing issue?`,
+      `I can help with billing! Common actions:<ul><li><strong>View invoice:</strong> Dashboard → Invoices</li><li><strong>Change plan:</strong> Settings → Subscription</li><li><strong>Add payment method:</strong> Settings → Billing</li></ul>Is there a specific charge you need help with?`
+    ],
+    quickReplies: ["I was overcharged","Update my card","Cancel my plan","View my invoice"]
+  },
+  orders: {
+    keys: ["order","track","shipping","delivery","shipped","dispatch","package","parcel","where is my"],
+    responses: [
+      `To <strong>track your order</strong>:<ol style="margin:6px 0 0 18px"><li>Go to <strong>Orders → My Orders</strong></li><li>Click on your order number</li><li>Hit <strong>Track Shipment</strong></li></ol>Standard delivery is 3–5 business days. Express is 1–2 days. 🚚`,
+      `Your <strong>order tracking</strong> details:<ul><li>Standard orders: 3–5 business days</li><li>Express orders: 1–2 business days</li><li>Same-day available in select cities</li></ul>Share your order ID and I'll look it up!`
+    ],
+    quickReplies: ["Track my order","Change delivery address","Order not received","Cancel my order"]
+  },
+  returns: {
+    keys: ["return","refund","exchange","replace","replacement","broken","damaged","defective","wrong item","not working"],
+    responses: [
+      `Our <strong>Return Policy</strong>:<ul><li>✅ Returns accepted within <strong>30 days</strong> of purchase</li><li>✅ Items must be unused & in original packaging</li><li>✅ Refund processed in 5–7 business days</li><li>❌ Digital products are non-refundable</li></ul>Want to initiate a return right now?`,
+      `To <strong>request a refund</strong>:<ol style="margin:6px 0 0 18px"><li>Go to <strong>Orders → My Orders</strong></li><li>Select the item to return</li><li>Choose reason & upload photos if damaged</li><li>Submit — you'll get a pickup confirmation</li></ol>`
+    ],
+    quickReplies: ["Start a return","Track my refund","Damaged item","Wrong item received"]
+  },
+  account: {
+    keys: ["account","login","password","email","profile","username","access","sign in","forgot","locked","2fa","two factor"],
+    responses: [
+      `<strong>Account help:</strong><ul><li><strong>Reset password:</strong> Click "Forgot Password" on login page</li><li><strong>Change email:</strong> Settings → Profile → Edit Email</li><li><strong>Enable 2FA:</strong> Settings → Security → Two-Factor Auth</li><li><strong>Delete account:</strong> Settings → Privacy → Delete Account</li></ul>`,
+      `For <strong>login issues</strong>:<ul><li>Password reset link expires in <strong>15 minutes</strong></li><li>Check spam folder for reset emails</li><li>Still locked? I'll escalate to our security team</li></ul>Which account issue are you facing?`
+    ],
+    quickReplies: ["Reset password","Can't log in","Change my email","Enable 2FA"]
+  },
+  tech: {
+    keys: ["error","crash","bug","technical","not working","slow","issue","problem","glitch","loading","timeout","500","404"],
+    responses: [
+      `Let me help you with this <strong>technical issue</strong>. Quick fixes to try:<ul><li>🔄 Hard refresh: <code>Ctrl+Shift+R</code> (Windows) / <code>Cmd+Shift+R</code> (Mac)</li><li>🍪 Clear browser cache & cookies</li><li>🔒 Disable browser extensions temporarily</li><li>🌐 Try a different browser</li></ul>Still not working? Share the error message!`,
+      `For <strong>technical support</strong>:<ul><li>Check our <strong>Status Page</strong> for outages: status.novasup.io</li><li>We support Chrome, Firefox, Safari, Edge (latest 2 versions)</li><li>Mobile app: ensure you're on version 3.0+</li></ul>What error are you seeing exactly?`
+    ],
+    quickReplies: ["App is crashing","Error code help","Feature not loading","Report a bug"]
+  },
+  shipping: {
+    keys: ["shipping","courier","delivery time","free shipping","cod","cash on delivery","international","pin code"],
+    responses: [
+      `<strong>Shipping Info:</strong><ul><li>🚀 <strong>Express (1–2 days):</strong> ₹99 or free above ₹999</li><li>📦 <strong>Standard (3–5 days):</strong> ₹49 or free above ₹499</li><li>🌏 <strong>International:</strong> 7–14 business days</li><li>💵 COD available on orders under ₹5,000</li></ul>`,
+    ],
+    quickReplies: ["Check delivery to my pin","Free shipping threshold","COD availability","International shipping"]
+  },
+  thanks: {
+    keys: ["thank","thanks","thank you","appreciated","great","excellent","awesome","helpful","perfect","good bot"],
+    responses: [
+      "You're so welcome! 😊 Is there anything else I can help you with today?",
+      "Happy to help! That's what I'm here for. Anything else on your mind?",
+      "Glad I could assist! 🎉 Don't hesitate to reach out anytime."
+    ]
+  },
+  bye: {
+    keys: ["bye","goodbye","see you","take care","that's all","done","exit","close"],
+    responses: [
+      "Thanks for chatting with NovaSup AI! Have a wonderful day! 👋",
+      "Goodbye! Feel free to return anytime you need help. Take care! 🌟",
+      "It was great helping you! Come back anytime. Bye! 👋"
+    ]
+  }
+};
+
+const WELCOME = `Hi there! 👋 I'm <strong>Nova</strong>, your AI support assistant. I'm here to help you with:
+<ul><li>🛍️ Orders & Tracking</li><li>💳 Billing & Payments</li><li>↩️ Returns & Refunds</li><li>🔑 Account & Login</li><li>🛠️ Technical Issues</li></ul>
+How can I help you today?`;
+
+let chatHistory = [];
+let sessionStart = new Date();
+let msgCounter = 0;
+let attachedFile = null;
+let emojiOpen = false;
+let sidebarOpen = false;
+let currentChatId = 1;
+let allChats = [{id:1,title:"New Conversation",preview:"Welcome to NovaSup AI"}];
+
+const EMOJIS = ["😊","😂","🙏","👍","❤️","🔥","✅","❌","📦","💳","🛠️","🚚","🔑","⚡","🎉","😅","🤔","💡","📞","📧"];
+
+// ─── INIT ───
+window.onload = () => {
+  document.getElementById('sessionId').textContent = '#NS-' + Math.floor(10000+Math.random()*90000);
+  document.getElementById('sessionTime').textContent = sessionStart.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  renderChatList();
+  buildEmojiPanel();
+  setTimeout(() => appendBot(WELCOME, [
+    "Order tracking","Billing help","Return an item","Technical issue"
+  ]), 600);
+  document.getElementById('chatInput').addEventListener('input', () => {
+    document.getElementById('sendBtn').disabled = document.getElementById('chatInput').value.trim().length === 0;
+  });
+  document.addEventListener('click', (e) => {
+    if (emojiOpen && !e.target.closest('.emoji-btn') && !e.target.closest('#emojiPanel')) {
+      document.getElementById('emojiPanel').style.display = 'none';
+      emojiOpen = false;
+    }
+  });
+};
+
+// ─── MESSAGE FUNCTIONS ───
+function appendBot(text, quickReplies, showSatisfaction) {
+  const wrap = document.getElementById('messages');
+  const t = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  div.innerHTML = `
+    <div class="msg-avatar">🤖</div>
+    <div class="msg-content">
+      <div class="bubble">${text}</div>
+      <div class="msg-time">${t}</div>
+      ${quickReplies ? `<div class="quick-replies">${quickReplies.map(r=>`<button class="qr-btn" onclick="handleQR(this,'${r}')">${r}</button>`).join('')}</div>` : ''}
+      ${showSatisfaction ? buildSatisfaction() : ''}
+    </div>`;
+  wrap.appendChild(div);
+  scrollBottom();
+  msgCounter++;
+  document.getElementById('msgCount').textContent = msgCounter;
+  chatHistory.push({role:'assistant',text});
+  updateChatPreview(text);
+}
+
+function appendUser(text, fileName) {
+  const wrap = document.getElementById('messages');
+  const t = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  div.innerHTML = `
+    <div class="msg-content">
+      <div class="bubble">${escapeHtml(text)}${fileName?`<br><br>📎 <code>${escapeHtml(fileName)}</code>`:''}</div>
+      <div class="msg-time">${t}</div>
+    </div>
+    <div class="msg-avatar" style="background:linear-gradient(135deg,#6c63ff,#ff6584)">👤</div>`;
+  wrap.appendChild(div);
+  scrollBottom();
+  msgCounter++;
+  document.getElementById('msgCount').textContent = msgCounter;
+  chatHistory.push({role:'user',text});
+}
+
+function showTyping() {
+  const wrap = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'typing-indicator';
+  div.id = 'typingIndicator';
+  div.innerHTML = `<div class="msg-avatar">🤖</div><div class="typing-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>`;
+  wrap.appendChild(div);
+  scrollBottom();
+  return div;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingIndicator');
+  if(t) t.remove();
+}
+
+function buildSatisfaction() {
+  return `<div class="satisfaction-widget">
+    <p>Was this answer helpful?</p>
+    <div class="stars">
+      ${[1,2,3,4,5].map(n=>`<button class="star-btn" onclick="rateSatisfaction(${n},this.parentElement)">⭐</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ─── MAIN SEND ───
+function sendMessage() {
+  const inp = document.getElementById('chatInput');
+  const text = inp.value.trim();
+  if(!text && !attachedFile) return;
+
+  const fileName = attachedFile ? attachedFile.name : null;
+  appendUser(text || '(Attachment sent)', fileName);
+  inp.value = '';
+  inp.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+  updateCharCount();
+  clearAttach();
+
+  const typing = showTyping();
+  const delay = 700 + Math.random()*800;
+  setTimeout(() => {
+    removeTyping();
+    const {response, qr, satisfy} = getResponse(text.toLowerCase(), fileName);
+    appendBot(response, qr, satisfy);
+    updateTags(text.toLowerCase());
+  }, delay);
+}
+
+function handleQR(btn, text) {
+  btn.closest('.quick-replies').querySelectorAll('.qr-btn').forEach(b => b.disabled = true);
+  btn.style.background = 'var(--accent)';
+  btn.style.color = '#fff';
+  document.getElementById('chatInput').value = text;
+  sendMessage();
+}
+
+function sendTopic(el, topic) {
+  document.querySelectorAll('.topic-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('chatInput').value = topic;
+  sendMessage();
+  setTimeout(() => el.classList.remove('active'), 1500);
+}
+
+function sendFAQ(q) {
+  document.getElementById('chatInput').value = q;
+  sendMessage();
+}
+
+// ─── AI RESPONSE ENGINE ───
+function getResponse(text, fileName) {
+  if(fileName) {
+    return {
+      response: `Thanks for sharing <strong>${escapeHtml(fileName)}</strong>! 📎 I've received your file. Our team will review it and get back to you shortly. Is there anything specific you'd like to highlight about this file?`,
+      qr: ["It's a screenshot of the issue","It's an invoice","It's my ID proof"],
+      satisfy: false
+    };
+  }
+
+  // Greeting
+  if(KNOWLEDGE.greetings.some(g => text.includes(g) || text === g)) {
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+    return {
+      response: `${greeting}! 👋 Great to have you here. I'm Nova, your AI support assistant. What can I help you with today?`,
+      qr: ["Check my order","Billing issue","Return a product","Technical support"],
+      satisfy: false
+    };
+  }
+
+  // Thanks
+  if(KNOWLEDGE.thanks.keys.some(k => text.includes(k))) {
+    return {response: pick(KNOWLEDGE.thanks.responses), qr: ["I have another question","No, I'm done"], satisfy: true};
+  }
+
+  // Bye
+  if(KNOWLEDGE.bye.keys.some(k => text.includes(k))) {
+    return {response: pick(KNOWLEDGE.bye.responses), qr: null, satisfy: true};
+  }
+
+  // Topic matching
+  const topics = ['billing','orders','returns','account','tech','shipping'];
+  for(const t of topics) {
+    if(KNOWLEDGE[t].keys.some(k => text.includes(k))) {
+      return {
+        response: pick(KNOWLEDGE[t].responses),
+        qr: KNOWLEDGE[t].quickReplies || null,
+        satisfy: true
+      };
+    }
+  }
+
+  // Order ID pattern
+  if(/\b[A-Z]{2,4}[-]?\d{5,10}\b/.test(text.toUpperCase()) || /order.{0,10}(number|id|no)/i.test(text)) {
+    return {
+      response: `I see you're referencing an order. Let me look that up for you! 🔍<br><br>For the fastest results, please share your <strong>Order ID</strong> (format: ORD-XXXXX) and I'll check the status immediately.`,
+      qr: ["Check delivery status","Cancel this order","Change delivery address"],
+      satisfy: false
+    };
+  }
+
+  // Fallback
+  return {
+    response: `I want to make sure I give you the best help possible! 🤔 Could you clarify a bit more? You can also pick a topic below:`,
+    qr: ["Billing & Payments","Order Tracking","Returns & Refunds","Technical Support","Talk to a human agent"],
+    satisfy: false
+  };
+}
+
+function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+// ─── UTILITIES ───
+function handleKey(e) {
+  if(e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+function updateCharCount() {
+  const v = document.getElementById('chatInput').value.length;
+  document.getElementById('charCount').textContent = v + ' / 500';
+  if(v > 500) {
+    document.getElementById('chatInput').value = document.getElementById('chatInput').value.substring(0,500);
+  }
+}
+function scrollBottom() {
+  const m = document.getElementById('messages');
+  setTimeout(() => m.scrollTop = m.scrollHeight, 30);
+}
+function escapeHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── FILE HANDLING ───
+function handleFile(e) {
+  const f = e.target.files[0];
+  if(!f) return;
+  attachedFile = f;
+  const prev = document.getElementById('attachPreview');
+  prev.style.display = 'block';
+  prev.innerHTML = `<div class="attach-preview">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+    <span class="attach-preview-name">${escapeHtml(f.name)}</span>
+    <span class="attach-preview-remove" onclick="clearAttach()">✕</span>
+  </div>`;
+  document.getElementById('sendBtn').disabled = false;
+  e.target.value = '';
+}
+function clearAttach() {
+  attachedFile = null;
+  document.getElementById('attachPreview').style.display = 'none';
+  document.getElementById('attachPreview').innerHTML = '';
+}
+
+// ─── EMOJI ───
+function buildEmojiPanel() {
+  const panel = document.getElementById('emojiPanel');
+  panel.className = 'emoji-panel';
+  panel.style.display = 'none';
+  panel.innerHTML = EMOJIS.map(e => `<button onclick="insertEmoji('${e}')">${e}</button>`).join('');
+}
+function toggleEmoji() {
+  const p = document.getElementById('emojiPanel');
+  emojiOpen = !emojiOpen;
+  p.style.display = emojiOpen ? 'flex' : 'none';
+}
+function insertEmoji(e) {
+  const inp = document.getElementById('chatInput');
+  inp.value += e;
+  inp.focus();
+  updateCharCount();
+  document.getElementById('sendBtn').disabled = false;
+}
+
+// ─── SATISFACTION ───
+function rateSatisfaction(n, container) {
+  const stars = container.querySelectorAll('.star-btn');
+  stars.forEach((s,i) => {
+    s.classList.toggle('active', i < n);
+    s.onclick = null;
+    s.style.cursor = 'default';
+  });
+  const msgs = ["We'll do better next time!","Thanks for your feedback!","Glad we could help!","Great! We appreciate it!","Amazing! So happy to help! 🎉"];
+  showToast("⭐ " + msgs[n-1]);
+}
+
+// ─── TAGS ───
+function updateTags(text) {
+  const map = {billing:["Billing","Payments"],orders:["Orders","Tracking","Shipping"],returns:["Returns","Refunds"],account:["Account","Security"],tech:["Technical","Bug"]};
+  const cloud = document.getElementById('tagCloud');
+  const existing = [...cloud.querySelectorAll('.tag')].map(t => t.textContent);
+  for(const [key, tags] of Object.entries(map)) {
+    if(KNOWLEDGE[key]?.keys.some(k => text.includes(k))) {
+      tags.forEach(t => {
+        if(!existing.includes(t)) {
+          const span = document.createElement('span');
+          span.className = 'tag';
+          span.textContent = t;
+          cloud.appendChild(span);
+          existing.push(t);
+        }
+      });
+    }
+  }
+}
+
+// ─── EXPORT ───
+function exportChat() {
+  if(chatHistory.length === 0) { showToast("⚠️ No messages to export yet"); return; }
+  let txt = `NovaSup AI — Chat Transcript\nDate: ${new Date().toLocaleString('en-IN')}\n${'─'.repeat(40)}\n\n`;
+  chatHistory.forEach(m => { txt += `[${m.role.toUpperCase()}]: ${m.text.replace(/<[^>]+>/g,'')}\n\n`; });
+  txt += `${'─'.repeat(40)}\nEnd of transcript`;
+  const blob = new Blob([txt], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `novasup-chat-${Date.now()}.txt`;
+  a.click();
+  showToast("✅ Chat exported successfully!");
+}
+
+// ─── ESCALATE ───
+function openEscalate() { document.getElementById('modalOverlay').style.display = 'flex'; }
+function closeModal(e) {
+  if(!e || e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').style.display = 'none';
+  }
+}
+function submitEscalate() {
+  const name = document.getElementById('escalateName').value.trim();
+  const email = document.getElementById('escalateEmail').value.trim();
+  if(!name || !email) { showToast("⚠️ Please fill in all required fields"); return; }
+  closeModal();
+  appendBot(`✅ <strong>Escalation confirmed!</strong> Thanks, ${escapeHtml(name)}!<br><br>A human support agent will reach you at <strong>${escapeHtml(email)}</strong> within <strong>30 minutes</strong> during business hours (Mon–Fri, 9 AM–6 PM IST).<br><br>Your session ID for reference: <code>${document.getElementById('sessionId').textContent}</code>`, null, false);
+  showToast("🙋 Agent request submitted!");
+  document.getElementById('escalateName').value = '';
+  document.getElementById('escalateEmail').value = '';
+  document.getElementById('escalateIssue').value = '';
+}
+
+// ─── SEARCH ───
+function searchMessages() {
+  const q = prompt("Search messages:");
+  if(!q) return;
+  const msgs = document.querySelectorAll('.bubble');
+  let found = 0;
+  msgs.forEach(b => {
+    if(b.textContent.toLowerCase().includes(q.toLowerCase())) {
+      b.style.outline = '2px solid var(--accent)';
+      found++;
+      b.scrollIntoView({behavior:'smooth',block:'center'});
+    } else { b.style.outline = 'none'; }
+  });
+  showToast(found ? `🔍 Found ${found} message(s)` : "🔍 No results found");
+  setTimeout(() => msgs.forEach(b => b.style.outline = 'none'), 3000);
+}
+
+// ─── NEW CHAT ───
+function newChat() {
+  document.getElementById('messages').innerHTML = '';
+  chatHistory = [];
+  msgCounter = 0;
+  document.getElementById('msgCount').textContent = '0';
+  currentChatId++;
+  allChats.unshift({id:currentChatId,title:"New Conversation",preview:"Just started"});
+  renderChatList();
+  document.getElementById('sessionId').textContent = '#NS-' + Math.floor(10000+Math.random()*90000);
+  document.getElementById('sessionTime').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  setTimeout(() => appendBot(WELCOME, ["Order tracking","Billing help","Return an item","Technical issue"]), 400);
+  if(window.innerWidth <= 900) toggleSidebar();
+}
+
+function updateChatPreview(text) {
+  const clean = text.replace(/<[^>]+>/g,'').substring(0,40);
+  const chat = allChats.find(c => c.id === currentChatId);
+  if(chat) { chat.preview = clean; renderChatList(); }
+}
+
+function renderChatList() {
+  const list = document.getElementById('chatList');
+  const icons = ["💬","📦","💳","🔑","🛠️","🚚"];
+  list.innerHTML = allChats.map((c,i) => `
+    <div class="chat-item ${c.id===currentChatId?'active':''}" onclick="switchChat(${c.id})">
+      <div class="chat-item-icon">${icons[i%icons.length]}</div>
+      <div class="chat-item-text">
+        <div class="chat-item-title">${escapeHtml(c.title)}</div>
+        <div class="chat-item-preview">${escapeHtml(c.preview)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function switchChat(id) {
+  currentChatId = id;
+  renderChatList();
+  if(window.innerWidth <= 900) toggleSidebar();
+}
+
+// ─── SIDEBAR TOGGLE ───
+function toggleSidebar() {
+  sidebarOpen = !sidebarOpen;
+  document.getElementById('sidebar').classList.toggle('open', sidebarOpen);
+}
+
+// ─── TOAST ───
+let toastTimer;
+function showToast(msg) {
+  const old = document.querySelector('.toast');
+  if(old) old.remove();
+  clearTimeout(toastTimer);
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = msg;
+  document.body.appendChild(t);
+  toastTimer = setTimeout(() => t.remove(), 3500);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChartCraft — Stock Market Image Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #0a0c10;
+  --bg-panel: #111318;
+  --bg-card: #181b22;
+  --bg-hover: #1e222c;
+  --border: #2a2e3a;
+  --border-bright: #3a3f52;
+  --accent: #00d4aa;
+  --accent2: #f5a623;
+  --accent3: #e74c6c;
+  --green: #26c981;
+  --red: #ef4444;
+  --text-primary: #f0f2f8;
+  --text-secondary: #7a8099;
+  --text-muted: #4a5068;
+  --font: 'Syne', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg-deep); color: var(--text-primary); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* TOP BAR */
+.topbar { height: 52px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0; }
+.logo { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; color: var(--accent); margin-right: 8px; }
+.logo span { color: var(--text-primary); }
+.topbar-divider { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
+.btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.btn:hover { border-color: var(--border-bright); color: var(--text-primary); background: var(--bg-hover); }
+.btn-accent { background: var(--accent); color: #000; border-color: var(--accent); }
+.btn-accent:hover { background: #00f0c0; border-color: #00f0c0; color: #000; }
+.btn-danger { border-color: var(--red); color: var(--red); }
+.btn-danger:hover { background: rgba(239,68,68,0.1); }
+.topbar-gap { flex: 1; }
+.template-select { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); font-family: var(--font); font-size: 12px; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+.template-select:focus { outline: none; border-color: var(--accent); }
+
+/* LAYOUT */
+.workspace { display: flex; flex: 1; overflow: hidden; }
+
+/* LEFT TOOLS */
+.toolbar { width: 56px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 8px 0; gap: 4px; flex-shrink: 0; }
+.tool-btn { width: 40px; height: 40px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.15s; position: relative; }
+.tool-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border); }
+.tool-btn.active { background: rgba(0,212,170,0.15); color: var(--accent); border-color: rgba(0,212,170,0.4); }
+.tool-sep { width: 28px; height: 1px; background: var(--border); margin: 4px 0; }
+.tool-tooltip { position: absolute; left: 52px; background: #1e2230; border: 1px solid var(--border-bright); padding: 4px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; color: var(--text-primary); pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 100; font-family: var(--font); }
+.tool-btn:hover .tool-tooltip { opacity: 1; }
+
+/* CANVAS AREA */
+.canvas-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #07090d; }
+.canvas-controls { height: 36px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 12px; gap: 8px; flex-shrink: 0; }
+.canvas-controls label { font-size: 11px; color: var(--text-secondary); }
+.canvas-controls input[type=range] { width: 80px; accent-color: var(--accent); }
+.canvas-wrap { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 24px; }
+#mainCanvas { border-radius: 4px; cursor: crosshair; display: block; box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 8px 40px rgba(0,0,0,0.6); }
+
+/* RIGHT PANEL */
+.rightpanel { width: 260px; background: var(--bg-panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden; }
+.panel-tabs { display: flex; border-bottom: 1px solid var(--border); }
+.panel-tab { flex: 1; padding: 10px 4px; text-align: center; font-size: 11px; font-weight: 600; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+.panel-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.panel-body { flex: 1; overflow-y: auto; padding: 12px; display: none; flex-direction: column; gap: 10px; }
+.panel-body.active { display: flex; }
+.panel-section { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+.ctrl-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.ctrl-label { font-size: 11px; color: var(--text-secondary); min-width: 60px; }
+.ctrl-input { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-family: var(--font); font-size: 12px; padding: 5px 8px; }
+.ctrl-input:focus { outline: none; border-color: var(--accent); }
+.ctrl-input[type=color] { padding: 2px; height: 30px; cursor: pointer; }
+.ctrl-input[type=range] { accent-color: var(--accent); padding: 0; }
+.color-swatches { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.swatch { width: 24px; height: 24px; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.1s; }
+.swatch:hover, .swatch.active { border-color: var(--text-primary); }
+.text-presets { display: flex; flex-direction: column; gap: 4px; }
+.text-preset { padding: 6px 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 11px; color: var(--text-secondary); transition: all 0.15s; }
+.text-preset:hover { border-color: var(--accent); color: var(--accent); }
+.logo-upload-area { border: 1px dashed var(--border-bright); border-radius: var(--radius); padding: 16px; text-align: center; cursor: pointer; color: var(--text-muted); font-size: 11px; transition: all 0.15s; }
+.logo-upload-area:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,170,0.04); }
+.annotation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ann-btn { padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 18px; text-align: center; transition: all 0.15s; }
+.ann-btn:hover { border-color: var(--accent); background: rgba(0,212,170,0.08); }
+.select-none { user-select: none; }
+
+/* STATUS BAR */
+.statusbar { height: 26px; background: var(--bg-panel); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 0 12px; gap: 16px; flex-shrink: 0; }
+.status-item { font-size: 10px; color: var(--text-muted); font-family: var(--mono); }
+.status-item b { color: var(--text-secondary); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">Chart<span>Craft</span></div>
+  <div class="topbar-divider"></div>
+  <select class="template-select" id="templateSelect">
+    <option value="">-- Load Template --</option>
+    <option value="nifty_bull">Nifty50 Bull Setup</option>
+    <option value="nifty_bear">Nifty50 Bear Breakdown</option>
+    <option value="btc_daily">BTC/USD Daily</option>
+    <option value="reliance">Reliance Breakout</option>
+    <option value="intraday">Intraday Scalp</option>
+    <option value="weekly_trend">Weekly Trend View</option>
+  </select>
+  <div class="topbar-divider"></div>
+  <button class="btn" onclick="clearCanvas()">🗑 Clear</button>
+  <button class="btn" onclick="undoAction()">↩ Undo</button>
+  <div class="topbar-gap"></div>
+  <span style="font-size:11px;color:var(--text-muted);font-family:var(--mono)" id="canvasSizeLabel">1080 × 1080</span>
+  <select class="template-select" id="sizePreset" onchange="applyCanvasSize()">
+    <option value="1080x1080">Instagram 1080×1080</option>
+    <option value="1280x720">YouTube 1280×720</option>
+    <option value="1920x1080">Full HD 1920×1080</option>
+    <option value="1080x1920">Story 1080×1920</option>
+    <option value="800x600">Blog 800×600</option>
+  </select>
+  <button class="btn btn-accent" onclick="exportHD()">⬇ Export HD</button>
+</div>
+
+<div class="workspace">
+  <!-- LEFT TOOLBAR -->
+  <div class="toolbar">
+    <button class="tool-btn active" id="tool-select" onclick="setTool('select')" title="Select">
+      ↖<span class="tool-tooltip">Select / Move</span>
+    </button>
+    <button class="tool-btn" id="tool-arrow-up" onclick="addArrow('up')" title="Bull Arrow">
+      <svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 2L14 12H2L8 2Z" fill="currentColor"/></svg>
+      <span class="tool-tooltip">Bull Arrow ↑</span>
+    </button>
+    <button class="tool-btn" id="tool-arrow-down" onclick="addArrow('down')">
+      <svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 14L2 4H14L8 14Z" fill="currentColor"/></svg>
+      <span class="tool-tooltip">Bear Arrow ↓</span>
+    </button>
+    <div class="tool-sep"></div>
+    <button class="tool-btn" id="tool-text" onclick="setTool('text')">
+      T<span class="tool-tooltip">Add Text</span>
+    </button>
+    <button class="tool-btn" id="tool-line" onclick="setTool('line')">
+      <svg width="16" height="16" viewBox="0 0 16 16"><line x1="2" y1="14" x2="14" y2="2" stroke="currentColor" stroke-width="2"/></svg>
+      <span class="tool-tooltip">Draw Line</span>
+    </button>
+    <button class="tool-btn" id="tool-rect" onclick="setTool('rect')">
+      <svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="8" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+      <span class="tool-tooltip">Rectangle</span>
+    </button>
+    <button class="tool-btn" id="tool-circle" onclick="setTool('circle')">
+      <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+      <span class="tool-tooltip">Circle / Ellipse</span>
+    </button>
+    <div class="tool-sep"></div>
+    <button class="tool-btn" onclick="addFibLevels()">
+      <svg width="16" height="16" viewBox="0 0 16 16">
+        <line x1="1" y1="4" x2="15" y2="4" stroke="currentColor" stroke-width="1"/>
+        <line x1="1" y1="7" x2="15" y2="7" stroke="currentColor" stroke-width="1"/>
+        <line x1="1" y1="10" x2="15" y2="10" stroke="currentColor" stroke-width="1"/>
+        <line x1="1" y1="13" x2="15" y2="13" stroke="currentColor" stroke-width="1"/>
+      </svg>
+      <span class="tool-tooltip">Fibonacci Levels</span>
+    </button>
+    <button class="tool-btn" onclick="addSupportResistance()">
+      <svg width="16" height="16" viewBox="0 0 16 16">
+        <line x1="1" y1="5" x2="15" y2="5" stroke="#26c981" stroke-width="1.5" stroke-dasharray="3,2"/>
+        <line x1="1" y1="11" x2="15" y2="11" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+      </svg>
+      <span class="tool-tooltip">Support / Resistance</span>
+    </button>
+    <div class="tool-sep"></div>
+    <button class="tool-btn" onclick="addWatermark()">
+      ©<span class="tool-tooltip">Add Watermark</span>
+    </button>
+  </div>
+
+  <!-- CANVAS AREA -->
+  <div class="canvas-area">
+    <div class="canvas-controls">
+      <label>Zoom</label>
+      <input type="range" id="zoomSlider" min="20" max="200" value="60" oninput="applyZoom(this.value)">
+      <span style="font-size:11px;color:var(--text-primary);font-family:var(--mono);min-width:36px" id="zoomLabel">60%</span>
+      <div style="flex:1"></div>
+      <label style="font-size:11px;color:var(--text-muted)">BG:</label>
+      <input type="color" id="bgColor" value="#0f1117" style="width:28px;height:22px;border-radius:4px;border:1px solid var(--border);cursor:pointer;background:none;padding:1px" onchange="changeBg(this.value)">
+      <label style="font-size:11px;color:var(--text-muted);margin-left:8px">Grid</label>
+      <input type="checkbox" id="gridToggle" checked onchange="redrawAll()">
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="mainCanvas" width="1080" height="1080"></canvas>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="rightpanel">
+    <div class="panel-tabs">
+      <div class="panel-tab active" onclick="switchTab('chart')">Chart</div>
+      <div class="panel-tab" onclick="switchTab('text')">Text</div>
+      <div class="panel-tab" onclick="switchTab('style')">Style</div>
+      <div class="panel-tab" onclick="switchTab('brand')">Brand</div>
+    </div>
+
+    <!-- CHART TAB -->
+    <div class="panel-body active" id="tab-chart">
+      <div class="panel-section">Candlestick Data</div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Symbol</label>
+        <input type="text" class="ctrl-input" id="symbolName" value="NIFTY50" oninput="updateChartLabel()">
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Timeframe</label>
+        <select class="ctrl-input" id="timeframe" onchange="updateChartLabel()">
+          <option>1m</option><option>5m</option><option>15m</option><option>1h</option>
+          <option>4h</option><option selected>Daily</option><option>Weekly</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Candles</label>
+        <input type="range" class="ctrl-input" id="candleCount" min="10" max="80" value="30" oninput="regenerateCandles();document.getElementById('candleCountVal').textContent=this.value">
+        <span style="font-size:11px;color:var(--text-secondary);min-width:24px" id="candleCountVal">30</span>
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Pattern</label>
+        <select class="ctrl-input" id="chartPattern" onchange="regenerateCandles()">
+          <option value="random">Random</option>
+          <option value="bull_trend">Bull Trend</option>
+          <option value="bear_trend">Bear Trend</option>
+          <option value="consolidation">Consolidation</option>
+          <option value="breakout">Breakout</option>
+          <option value="reversal">Reversal</option>
+          <option value="head_shoulders">Head & Shoulders</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Start Price</label>
+        <input type="number" class="ctrl-input" id="startPrice" value="22000" oninput="regenerateCandles()">
+      </div>
+      <div class="ctrl-row" style="align-items:center;gap:6px">
+        <label class="ctrl-label">Volume</label>
+        <input type="checkbox" id="showVolume" checked onchange="redrawAll()">
+        <label class="ctrl-label" style="min-width:auto">MA Lines</label>
+        <input type="checkbox" id="showMA" checked onchange="redrawAll()">
+      </div>
+      <button class="btn" style="width:100%;margin-top:4px" onclick="regenerateCandles()">🔄 Regenerate Chart</button>
+
+      <div class="panel-section" style="margin-top:12px">Quick Annotations</div>
+      <div class="annotation-grid">
+        <div class="ann-btn" onclick="addQuickLabel('BUY','#26c981')">🟢 BUY</div>
+        <div class="ann-btn" onclick="addQuickLabel('SELL','#ef4444')">🔴 SELL</div>
+        <div class="ann-btn" onclick="addQuickLabel('TARGET','#f5a623')">🎯 TARGET</div>
+        <div class="ann-btn" onclick="addQuickLabel('SL','#e74c6c')">⛔ SL</div>
+        <div class="ann-btn" onclick="addCallout('BREAKOUT')">💥 BREAKOUT</div>
+        <div class="ann-btn" onclick="addCallout('REVERSAL')">↩ REVERSAL</div>
+      </div>
+    </div>
+
+    <!-- TEXT TAB -->
+    <div class="panel-body" id="tab-text">
+      <div class="panel-section">Add Text</div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Content</label>
+        <input type="text" class="ctrl-input" id="textContent" value="Nifty @ 22,500" placeholder="Enter text...">
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Size</label>
+        <input type="range" class="ctrl-input" id="textSize" min="10" max="120" value="28">
+        <span style="font-size:11px;color:var(--text-secondary);min-width:30px" id="textSizeVal">28</span>
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Color</label>
+        <input type="color" class="ctrl-input" id="textColor" value="#ffffff">
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Weight</label>
+        <select class="ctrl-input" id="textWeight">
+          <option value="400">Regular</option>
+          <option value="600">SemiBold</option>
+          <option value="800" selected>Bold</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Style</label>
+        <select class="ctrl-input" id="textStyle">
+          <option value="normal">Normal</option>
+          <option value="italic">Italic</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">BG</label>
+        <input type="checkbox" id="textBg"> <span style="font-size:11px;color:var(--text-secondary)">Background Box</span>
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">BG Color</label>
+        <input type="color" class="ctrl-input" id="textBgColor" value="#000000">
+        <label class="ctrl-label">Opacity</label>
+        <input type="range" class="ctrl-input" id="textBgOpacity" min="0" max="100" value="70" style="width:50px">
+      </div>
+      <button class="btn btn-accent" style="width:100%;margin-top:4px" onclick="addTextElement()">+ Add Text to Canvas</button>
+
+      <div class="panel-section" style="margin-top:12px">Text Presets</div>
+      <div class="text-presets">
+        <div class="text-preset" onclick="applyTextPreset('headline')">📊 Chart Headline</div>
+        <div class="text-preset" onclick="applyTextPreset('price')">💰 Price Label</div>
+        <div class="text-preset" onclick="applyTextPreset('date')">📅 Date Stamp</div>
+        <div class="text-preset" onclick="applyTextPreset('disclaimer')">⚠ Disclaimer</div>
+        <div class="text-preset" onclick="applyTextPreset('signal')">🚀 Signal Text</div>
+      </div>
+    </div>
+
+    <!-- STYLE TAB -->
+    <div class="panel-body" id="tab-style">
+      <div class="panel-section">Candle Colors</div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Bull 🟢</label>
+        <input type="color" class="ctrl-input" id="bullColor" value="#26c981" onchange="redrawAll()">
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Bear 🔴</label>
+        <input type="color" class="ctrl-input" id="bearColor" value="#ef4444" onchange="redrawAll()">
+      </div>
+      <div class="panel-section">Color Themes</div>
+      <div class="color-swatches" id="themeSwatches">
+        <div class="swatch active" style="background:#0f1117" title="Dark Pro" onclick="applyTheme('darkpro',this)"></div>
+        <div class="swatch" style="background:#1a1a2e" title="Midnight Blue" onclick="applyTheme('midnight',this)"></div>
+        <div class="swatch" style="background:#0d1b2a" title="Deep Navy" onclick="applyTheme('navy',this)"></div>
+        <div class="swatch" style="background:#1a0a0a" title="Dark Red" onclick="applyTheme('darkred',this)"></div>
+        <div class="swatch" style="background:#f8f9fa" title="Light Pro" onclick="applyTheme('light',this)"></div>
+        <div class="swatch" style="background:#ffffff" title="Pure White" onclick="applyTheme('white',this)"></div>
+        <div class="swatch" style="background:#0a1628" title="TradingView" onclick="applyTheme('tv',this)"></div>
+        <div class="swatch" style="background:#1e1e1e" title="VS Dark" onclick="applyTheme('vsdark',this)"></div>
+      </div>
+
+      <div class="panel-section">Grid & Labels</div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Grid Color</label>
+        <input type="color" class="ctrl-input" id="gridColor" value="#1e2535" onchange="redrawAll()">
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Label Color</label>
+        <input type="color" class="ctrl-input" id="labelColor" value="#7a8099" onchange="redrawAll()">
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">MA-20</label>
+        <input type="color" class="ctrl-input" id="ma20Color" value="#f5a623" onchange="redrawAll()">
+        <label class="ctrl-label">MA-50</label>
+        <input type="color" class="ctrl-input" id="ma50Color" value="#00d4aa" onchange="redrawAll()">
+      </div>
+
+      <div class="panel-section">Selected Layer</div>
+      <div id="selectedLayerControls" style="color:var(--text-muted);font-size:11px">No element selected. Click on canvas to select.</div>
+    </div>
+
+    <!-- BRAND TAB -->
+    <div class="panel-body" id="tab-brand">
+      <div class="panel-section">Logo / Watermark</div>
+      <div class="logo-upload-area" onclick="document.getElementById('logoInput').click()">
+        <div style="font-size:24px;margin-bottom:6px">🏷</div>
+        Click to upload logo<br>PNG, JPG, SVG supported
+        <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="handleLogoUpload(event)">
+      </div>
+      <div id="logoPreview" style="display:none;margin-top:8px">
+        <img id="logoImg" style="max-width:100%;border-radius:6px;border:1px solid var(--border)">
+        <div class="ctrl-row" style="margin-top:8px">
+          <label class="ctrl-label">Position</label>
+          <select class="ctrl-input" id="logoPosition">
+            <option value="tl">Top Left</option>
+            <option value="tr" selected>Top Right</option>
+            <option value="bl">Bottom Left</option>
+            <option value="br">Bottom Right</option>
+          </select>
+        </div>
+        <div class="ctrl-row">
+          <label class="ctrl-label">Size</label>
+          <input type="range" class="ctrl-input" id="logoSize" min="40" max="300" value="120" oninput="redrawAll()">
+        </div>
+        <div class="ctrl-row">
+          <label class="ctrl-label">Opacity</label>
+          <input type="range" class="ctrl-input" id="logoOpacity" min="10" max="100" value="90" oninput="redrawAll()">
+        </div>
+        <button class="btn" style="width:100%;margin-top:4px" onclick="redrawAll()">Apply Logo</button>
+      </div>
+
+      <div class="panel-section" style="margin-top:12px">Channel Branding</div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Channel</label>
+        <input type="text" class="ctrl-input" id="channelName" value="@ChartCraft" placeholder="@YourChannel">
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Tagline</label>
+        <input type="text" class="ctrl-input" id="tagline" value="Technical Analysis" placeholder="Tagline">
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Color</label>
+        <input type="color" class="ctrl-input" id="brandColor" value="#00d4aa">
+      </div>
+      <button class="btn btn-accent" style="width:100%;margin-top:4px" onclick="addBrandingOverlay()">Add Branding Strip</button>
+
+      <div class="panel-section" style="margin-top:12px">Export Options</div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Format</label>
+        <select class="ctrl-input" id="exportFormat">
+          <option value="png">PNG (Lossless)</option>
+          <option value="jpeg">JPEG (Smaller)</option>
+          <option value="webp">WebP</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <label class="ctrl-label">Quality</label>
+        <input type="range" class="ctrl-input" id="exportQuality" min="50" max="100" value="95">
+        <span style="font-size:11px;color:var(--text-secondary);min-width:30px" id="exportQualityVal">95%</span>
+      </div>
+      <button class="btn btn-accent" style="width:100%;margin-top:4px" onclick="exportHD()">⬇ Export High-Res</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <span class="status-item">Tool: <b id="statusTool">Select</b></span>
+  <span class="status-item">Cursor: <b id="statusCursor">0, 0</b></span>
+  <span class="status-item">Canvas: <b id="statusSize">1080×1080</b></span>
+  <span class="status-item">Layers: <b id="statusLayers">1</b></span>
+  <span class="status-item">Zoom: <b id="statusZoom">60%</b></span>
+</div>
+
+<script>
+const canvas = document.getElementById('mainCanvas');
+const ctx = canvas.getContext('2d');
+let candles = [], layers = [], selectedLayer = null, undoStack = [];
+let activeTool = 'select', isDrawing = false, drawStart = {x:0,y:0};
+let logoImage = null, bgColor = '#0f1117';
+let chartW, chartH, chartX, chartY, volH;
+let currentZoom = 0.6;
+
+document.getElementById('textSize').oninput = e => document.getElementById('textSizeVal').textContent = e.target.value;
+document.getElementById('exportQuality').oninput = e => document.getElementById('exportQualityVal').textContent = e.target.value + '%';
+
+function switchTab(name) {
+  document.querySelectorAll('.panel-tab').forEach((t,i) => {
+    const tabs = ['chart','text','style','brand'];
+    t.classList.toggle('active', tabs[i] === name);
+  });
+  document.querySelectorAll('.panel-body').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+function setTool(t) {
+  activeTool = t;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('tool-'+t);
+  if(el) el.classList.add('active');
+  canvas.style.cursor = t === 'select' ? 'default' : 'crosshair';
+  document.getElementById('statusTool').textContent = t.charAt(0).toUpperCase()+t.slice(1);
+}
+
+function applyCanvasSize() {
+  const val = document.getElementById('sizePreset').value;
+  const [w,h] = val.split('x').map(Number);
+  canvas.width = w; canvas.height = h;
+  document.getElementById('canvasSizeLabel').textContent = w + ' × ' + h;
+  document.getElementById('statusSize').textContent = w+'×'+h;
+  regenerateCandles();
+}
+
+function applyZoom(v) {
+  currentZoom = v/100;
+  canvas.style.transform = `scale(${currentZoom})`;
+  canvas.style.transformOrigin = 'center center';
+  document.getElementById('zoomLabel').textContent = v+'%';
+  document.getElementById('statusZoom').textContent = v+'%';
+}
+
+// ── CANDLE GENERATION ─────────────────────────────────────────────────────
+function generatePattern(count, startPrice) {
+  const pattern = document.getElementById('chartPattern').value;
+  let price = startPrice, data = [];
+  for(let i=0;i<count;i++){
+    let t=i/count, open=price, close, high, low, vol;
+    let move, bias=0;
+    switch(pattern){
+      case 'bull_trend': bias=0.012; break;
+      case 'bear_trend': bias=-0.012; break;
+      case 'consolidation': bias=0; break;
+      case 'breakout': bias = i>count*0.7?0.025:0; break;
+      case 'reversal': bias = i<count*0.5?-0.008:0.015; break;
+      case 'head_shoulders':
+        if(i<count*0.2) bias=0.018;
+        else if(i<count*0.4) bias=-0.012;
+        else if(i<count*0.6) bias=0.02;
+        else if(i<count*0.8) bias=-0.015;
+        else bias=-0.008;
+        break;
+      default: bias=0;
+    }
+    move = (Math.random()-0.48+bias)*0.025;
+    close = open*(1+move);
+    let range=Math.abs(close-open)*0.5+open*0.004;
+    high=Math.max(open,close)+Math.random()*range;
+    low=Math.min(open,close)-Math.random()*range;
+    vol=50+Math.random()*200+(bias>0?80:0);
+    data.push({open,close,high,low,vol});
+    price=close;
+  }
+  return data;
+}
+
+function regenerateCandles() {
+  const count = parseInt(document.getElementById('candleCount').value);
+  const start = parseFloat(document.getElementById('startPrice').value)||22000;
+  candles = generatePattern(count, start);
+  redrawAll();
+}
+
+// ── DRAWING ENGINE ─────────────────────────────────────────────────────────
+function redrawAll() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  ctx.fillStyle = document.getElementById('bgColor').value;
+  ctx.fillRect(0,0,W,H);
+
+  // Grid
+  if(document.getElementById('gridToggle').checked) drawGrid(W,H);
+
+  // Chart area
+  const pad = {left:W*0.08, right:W*0.06, top:H*0.12, bottom:H*0.08};
+  const showVol = document.getElementById('showVolume').checked;
+  volH = showVol ? H*0.15 : 0;
+  chartX = pad.left; chartY = pad.top;
+  chartW = W - pad.left - pad.right;
+  chartH = H - pad.top - pad.bottom - volH - (showVol?H*0.02:0);
+
+  if(candles.length>0) {
+    drawCandleChart(chartX, chartY, chartW, chartH);
+    if(showVol) drawVolume(chartX, chartY+chartH+H*0.02, chartW, volH);
+    if(document.getElementById('showMA').checked) drawMALines(chartX, chartY, chartW, chartH);
+  }
+
+  // Layers
+  layers.forEach(l => drawLayer(l));
+
+  // Logo
+  if(logoImage) drawLogo(W,H);
+
+  document.getElementById('statusLayers').textContent = layers.length+1;
+}
+
+function drawGrid(W,H) {
+  ctx.strokeStyle = document.getElementById('gridColor').value;
+  ctx.lineWidth = 0.5;
+  const cols=12, rows=8;
+  for(let i=1;i<cols;i++){ctx.beginPath();ctx.moveTo(W/cols*i,0);ctx.lineTo(W/cols*i,H);ctx.stroke();}
+  for(let i=1;i<rows;i++){ctx.beginPath();ctx.moveTo(0,H/rows*i);ctx.lineTo(W,H/rows*i);ctx.stroke();}
+}
+
+function drawCandleChart(x,y,w,h) {
+  const data=candles, n=data.length;
+  const prices=data.flatMap(c=>[c.high,c.low]);
+  const minP=Math.min(...prices), maxP=Math.max(...prices);
+  const range=maxP-minP, pad=range*0.08;
+  const pxMin=minP-pad, pxMax=maxP+pad, pxRange=pxMax-pxMin;
+  const toY=p=>y+h-(p-pxMin)/pxRange*h;
+  const cw=w/n, gap=Math.max(1,cw*0.15), bw=cw-gap*2;
+
+  const bullC=document.getElementById('bullColor').value;
+  const bearC=document.getElementById('bearColor').value;
+  const lblC=document.getElementById('labelColor').value;
+
+  // Price levels
+  const levels=5;
+  ctx.font=`${Math.max(10,canvas.width*0.013)}px 'JetBrains Mono'`;
+  ctx.fillStyle=lblC; ctx.textAlign='right';
+  for(let i=0;i<=levels;i++){
+    const p=pxMin+pxRange*(i/levels);
+    const py=toY(p);
+    ctx.fillText(formatPrice(p), x-6, py+4);
+    ctx.strokeStyle=document.getElementById('gridColor').value;
+    ctx.lineWidth=0.5; ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(x,py);ctx.lineTo(x+w,py);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Candles
+  data.forEach((c,i)=>{
+    const cx=x+i*cw+gap;
+    const isBull=c.close>=c.open;
+    const col=isBull?bullC:bearC;
+    const oY=toY(c.open), clY=toY(c.close), hiY=toY(c.high), loY=toY(c.low);
+
+    // Wick
+    ctx.strokeStyle=col; ctx.lineWidth=Math.max(1,bw*0.12); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(cx+bw/2,hiY); ctx.lineTo(cx+bw/2,loY); ctx.stroke();
+
+    // Body
+    const bodyTop=Math.min(oY,clY), bodyH=Math.abs(oY-clY)||1;
+    if(isBull) {
+      ctx.fillStyle=col; ctx.fillRect(cx,bodyTop,bw,bodyH);
+    } else {
+      ctx.strokeStyle=col; ctx.lineWidth=Math.max(1,bw*0.1);
+      ctx.fillStyle=col+'33'; ctx.fillRect(cx,bodyTop,bw,bodyH);
+      ctx.strokeRect(cx,bodyTop,bw,bodyH);
+    }
+  });
+
+  // Chart info label
+  const sym=document.getElementById('symbolName').value||'SYMBOL';
+  const tf=document.getElementById('timeframe').value;
+  const lastC=data[data.length-1];
+  const chg=((lastC.close-data[0].open)/data[0].open*100);
+  const isUp=chg>=0;
+
+  ctx.textAlign='left';
+  ctx.font=`700 ${canvas.width*0.022}px 'Syne'`;
+  ctx.fillStyle=document.getElementById('labelColor').value;
+  ctx.fillText(sym+' · '+tf, x, y-canvas.height*0.03);
+
+  ctx.font=`700 ${canvas.width*0.018}px 'JetBrains Mono'`;
+  ctx.fillStyle=isUp?bullC:bearC;
+  const priceStr=formatPrice(lastC.close)+'  '+(isUp?'+':'')+chg.toFixed(2)+'%';
+  ctx.fillText(priceStr, x+canvas.width*0.25, y-canvas.height*0.03);
+}
+
+function drawVolume(x,y,w,h) {
+  const data=candles, n=data.length;
+  const maxVol=Math.max(...data.map(c=>c.vol));
+  const cw=w/n, gap=Math.max(1,cw*0.15), bw=cw-gap*2;
+  const bullC=document.getElementById('bullColor').value;
+  const bearC=document.getElementById('bearColor').value;
+  data.forEach((c,i)=>{
+    const vH=(c.vol/maxVol)*h;
+    const isBull=c.close>=c.open;
+    ctx.fillStyle=(isBull?bullC:bearC)+'88';
+    ctx.fillRect(x+i*cw+gap, y+h-vH, bw, vH);
+  });
+  ctx.font=`${Math.max(9,canvas.width*0.011)}px 'Syne'`;
+  ctx.fillStyle=document.getElementById('labelColor').value;
+  ctx.textAlign='left';
+  ctx.fillText('VOLUME', x, y+canvas.height*0.016);
+}
+
+function drawMALines(x,y,w,h) {
+  const data=candles;
+  const prices=data.flatMap(c=>[c.high,c.low]);
+  const minP=Math.min(...prices), maxP=Math.max(...prices);
+  const range=maxP-minP, pad=range*0.08;
+  const pxMin=minP-pad, pxMax=maxP+pad, pxRange=pxMax-pxMin;
+  const toY=p=>y+h-(p-pxMin)/pxRange*h;
+  const cw=w/data.length;
+  const closes=data.map(c=>c.close);
+
+  const drawMA=(period,color,label)=>{
+    if(data.length<period) return;
+    ctx.strokeStyle=color; ctx.lineWidth=Math.max(1,canvas.width*0.002);
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    for(let i=period-1;i<closes.length;i++){
+      const avg=closes.slice(i-period+1,i+1).reduce((a,b)=>a+b,0)/period;
+      const px=x+i*cw+cw/2, py=toY(avg);
+      i===period-1?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    // Label
+    const last=closes.slice(-period).reduce((a,b)=>a+b,0)/period;
+    ctx.font=`600 ${Math.max(9,canvas.width*0.011)}px 'Syne'`;
+    ctx.fillStyle=color; ctx.textAlign='left';
+    ctx.fillText('MA'+period+' '+formatPrice(last), x+w+4, toY(last)+4);
+  };
+  drawMA(20, document.getElementById('ma20Color').value, 'MA20');
+  drawMA(50, document.getElementById('ma50Color').value, 'MA50');
+}
+
+function drawLogo(W,H) {
+  const pos = document.getElementById('logoPosition').value;
+  const sz = parseInt(document.getElementById('logoSize').value);
+  const op = parseInt(document.getElementById('logoOpacity').value)/100;
+  const pad = 20;
+  let lx=pad, ly=pad;
+  if(pos==='tr'){lx=W-sz-pad;}
+  else if(pos==='bl'){ly=H-sz/logoImage.width*logoImage.height-pad;}
+  else if(pos==='br'){lx=W-sz-pad;ly=H-sz/logoImage.width*logoImage.height-pad;}
+  ctx.globalAlpha=op;
+  const lh=sz/logoImage.width*logoImage.height;
+  ctx.drawImage(logoImage,lx,ly,sz,lh);
+  ctx.globalAlpha=1;
+}
+
+function drawLayer(l) {
+  ctx.save();
+  switch(l.type){
+    case 'text':
+      ctx.font=`${l.style||'normal'} ${l.weight||'800'} ${l.size||28}px 'Syne'`;
+      const metrics=ctx.measureText(l.text);
+      const th=l.size||28;
+      if(l.bg){
+        const op=((l.bgOpacity||70)/100);
+        ctx.globalAlpha=op;
+        ctx.fillStyle=l.bgColor||'#000000';
+        ctx.fillRect(l.x-8,l.y-th,metrics.width+16,th+8);
+        ctx.globalAlpha=1;
+      }
+      ctx.fillStyle=l.color||'#ffffff';
+      ctx.fillText(l.text,l.x,l.y);
+      if(l===selectedLayer){
+        ctx.strokeStyle='#00d4aa';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+        ctx.strokeRect(l.x-10,l.y-th-4,metrics.width+20,th+16);
+        ctx.setLineDash([]);
+      }
+      break;
+    case 'arrow':
+      drawArrowShape(l);
+      break;
+    case 'line':
+      ctx.strokeStyle=l.color||'#f5a623';
+      ctx.lineWidth=l.lineW||2;
+      ctx.setLineDash(l.dash||[]);
+      ctx.beginPath();ctx.moveTo(l.x1,l.y1);ctx.lineTo(l.x2,l.y2);ctx.stroke();
+      ctx.setLineDash([]);
+      if(l===selectedLayer) drawHandles(l.x1,l.y1,l.x2,l.y2);
+      break;
+    case 'rect':
+      ctx.strokeStyle=l.color||'#00d4aa';
+      ctx.lineWidth=l.lineW||2;
+      ctx.fillStyle=l.fill||(l.color+'22')||'#00d4aa22';
+      ctx.fillRect(l.x,l.y,l.w,l.h);
+      ctx.strokeRect(l.x,l.y,l.w,l.h);
+      if(l===selectedLayer){ctx.strokeStyle='#00d4aa';ctx.setLineDash([4,3]);ctx.strokeRect(l.x-3,l.y-3,l.w+6,l.h+6);ctx.setLineDash([]);}
+      break;
+    case 'circle':
+      ctx.strokeStyle=l.color||'#00d4aa';
+      ctx.lineWidth=l.lineW||2;
+      ctx.fillStyle=l.fill||(l.color+'22')||'#00d4aa22';
+      ctx.beginPath();ctx.ellipse(l.x+l.rx,l.y+l.ry,l.rx,l.ry,0,0,Math.PI*2);
+      ctx.fill();ctx.stroke();
+      break;
+    case 'label_badge':
+      drawBadge(l);
+      break;
+    case 'fib':
+      drawFibLevels(l);
+      break;
+    case 'sr':
+      drawSRLines(l);
+      break;
+    case 'branding':
+      drawBrandingStrip(l);
+      break;
+    case 'callout':
+      drawCallout(l);
+      break;
+    case 'watermark':
+      ctx.globalAlpha=0.12;
+      ctx.font=`700 ${canvas.width*0.035}px 'Syne'`;
+      ctx.fillStyle='#ffffff';
+      ctx.textAlign='center';
+      ctx.save();
+      ctx.translate(canvas.width/2,canvas.height/2);
+      ctx.rotate(-Math.PI/8);
+      for(let r=-2;r<=2;r++)for(let c=-2;c<=2;c++)
+        ctx.fillText(l.text||'CHARTCRAFT',c*canvas.width*0.4,r*canvas.height*0.25);
+      ctx.restore();
+      ctx.globalAlpha=1;
+      break;
+  }
+  ctx.restore();
+}
+
+function drawArrowShape(l) {
+  const isUp=l.dir==='up';
+  const col=isUp?document.getElementById('bullColor').value:document.getElementById('bearColor').value;
+  const s=l.size||40;
+  ctx.fillStyle=col;
+  ctx.strokeStyle=col;
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  if(isUp) {
+    ctx.moveTo(l.x,l.y);
+    ctx.lineTo(l.x+s,l.y+s*0.8);
+    ctx.lineTo(l.x+s*0.35,l.y+s*0.8);
+    ctx.lineTo(l.x+s*0.35,l.y+s*1.5);
+    ctx.lineTo(l.x+s*0.65,l.y+s*1.5);
+    ctx.lineTo(l.x+s*0.65,l.y+s*0.8);
+    ctx.lineTo(l.x+s,l.y+s*0.8);
+  } else {
+    ctx.moveTo(l.x,l.y+s*1.5);
+    ctx.lineTo(l.x+s,l.y+s*0.7);
+    ctx.lineTo(l.x+s*0.65,l.y+s*0.7);
+    ctx.lineTo(l.x+s*0.65,l.y);
+    ctx.lineTo(l.x+s*0.35,l.y);
+    ctx.lineTo(l.x+s*0.35,l.y+s*0.7);
+    ctx.lineTo(l.x,l.y+s*0.7);
+  }
+  ctx.closePath();ctx.fill();
+  if(l===selectedLayer){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();}
+}
+
+function drawBadge(l) {
+  const pad=canvas.width*0.012;
+  ctx.font=`700 ${l.size||canvas.width*0.022}px 'Syne'`;
+  const tw=ctx.measureText(l.text).width;
+  const bh=(l.size||canvas.width*0.022)*1.6;
+  const bw=tw+pad*3;
+  const r=bh/2;
+  ctx.fillStyle=l.color||'#26c981';
+  ctx.beginPath();
+  ctx.roundRect(l.x,l.y-bh*0.75,bw,bh,r);
+  ctx.fill();
+  ctx.fillStyle=l.textColor||'#000000';
+  ctx.fillText(l.text,l.x+pad*1.5,l.y);
+}
+
+function drawFibLevels(l) {
+  const levels=[0,0.236,0.382,0.5,0.618,0.786,1];
+  const colors=['#ef4444','#f5a623','#f5a623','#ffffff','#26c981','#26c981','#ef4444'];
+  const W=canvas.width, H=canvas.height;
+  const high=l.high||H*0.2, low=l.low||H*0.8;
+  levels.forEach((fib,i)=>{
+    const y=low-(low-high)*fib;
+    ctx.strokeStyle=colors[i]; ctx.lineWidth=1;
+    ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(l.x||0,y);ctx.lineTo((l.x||0)+W*0.85,y);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font=`500 ${Math.max(9,W*0.013)}px 'JetBrains Mono'`;
+    ctx.fillStyle=colors[i];
+    ctx.textAlign='right';
+    ctx.fillText(`${(fib*100).toFixed(1)}%`, (l.x||0)+W*0.85-4, y-3);
+  });
+}
+
+function drawSRLines(l) {
+  const W=canvas.width, H=canvas.height;
+  const supportY=l.supportY||H*0.72, resistY=l.resistY||H*0.28;
+  [[supportY,'#26c981','SUPPORT'],[resistY,'#ef4444','RESISTANCE']].forEach(([y,c,label])=>{
+    ctx.strokeStyle=c; ctx.lineWidth=1.5; ctx.setLineDash([8,5]);
+    ctx.beginPath();ctx.moveTo(chartX,y);ctx.lineTo(chartX+chartW,y);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=c;
+    const fs=Math.max(9,canvas.width*0.013);
+    ctx.font=`700 ${fs}px 'Syne'`;
+    ctx.textAlign='left';
+    const tw=ctx.measureText(label).width;
+    ctx.fillStyle=c+'33'; ctx.fillRect(chartX+8,y-fs-2,tw+12,fs+6);
+    ctx.fillStyle=c; ctx.fillText(label,chartX+14,y);
+  });
+}
+
+function drawBrandingStrip(l) {
+  const W=canvas.width, H=canvas.height;
+  const stripH=H*0.06;
+  ctx.fillStyle=l.color||'#0a0c10';
+  ctx.fillRect(0,H-stripH,W,stripH);
+  ctx.strokeStyle=l.accent||'#00d4aa'; ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(0,H-stripH);ctx.lineTo(W,H-stripH);ctx.stroke();
+  ctx.font=`700 ${stripH*0.5}px 'Syne'`;
+  ctx.fillStyle=l.accent||'#00d4aa';
+  ctx.textAlign='left';
+  ctx.fillText(l.channel||'@ChartCraft', W*0.03, H-stripH*0.3);
+  ctx.fillStyle='#7a8099';
+  ctx.font=`400 ${stripH*0.35}px 'Syne'`;
+  ctx.fillText(l.tagline||'Technical Analysis', W*0.03, H-stripH*0.05);
+  ctx.font=`500 ${stripH*0.38}px 'Syne'`;
+  ctx.fillStyle='#7a8099';
+  ctx.textAlign='right';
+  const now=new Date();
+  ctx.fillText(now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}), W*0.97, H-stripH*0.2);
+}
+
+function drawCallout(l) {
+  const fs=Math.max(10,canvas.width*0.018);
+  ctx.font=`700 ${fs}px 'Syne'`;
+  const tw=ctx.measureText(l.text).width;
+  const bw=tw+fs*1.2, bh=fs*1.8;
+  const r=6;
+  ctx.fillStyle=l.color||'#f5a623';
+  ctx.beginPath();ctx.roundRect(l.x,l.y,bw,bh,r);ctx.fill();
+  // Tail
+  ctx.beginPath();ctx.moveTo(l.x+bw*0.2,l.y+bh);ctx.lineTo(l.x+bw*0.3,l.y+bh+bh*0.4);ctx.lineTo(l.x+bw*0.4,l.y+bh);ctx.fill();
+  ctx.fillStyle='#000000';
+  ctx.textAlign='left';
+  ctx.fillText(l.text,l.x+fs*0.6,l.y+bh*0.68);
+}
+
+function drawHandles(x1,y1,x2,y2) {
+  [[x1,y1],[x2,y2]].forEach(([hx,hy])=>{
+    ctx.fillStyle='#00d4aa';
+    ctx.beginPath();ctx.arc(hx,hy,5,0,Math.PI*2);ctx.fill();
+  });
+}
+
+function formatPrice(p) {
+  if(p>=10000) return p.toLocaleString('en-IN',{maximumFractionDigits:1});
+  if(p>=100) return p.toFixed(2);
+  return p.toFixed(4);
+}
+
+// ── CANVAS EVENTS ──────────────────────────────────────────────────────────
+canvas.addEventListener('mousemove', e=>{
+  const r=canvas.getBoundingClientRect();
+  const scaleX=canvas.width/r.width, scaleY=canvas.height/r.height;
+  const mx=(e.clientX-r.left)*scaleX, my=(e.clientY-r.top)*scaleY;
+  document.getElementById('statusCursor').textContent=`${Math.round(mx)}, ${Math.round(my)}`;
+});
+
+canvas.addEventListener('mousedown', e=>{
+  const r=canvas.getBoundingClientRect();
+  const scaleX=canvas.width/r.width, scaleY=canvas.height/r.height;
+  const mx=(e.clientX-r.left)*scaleX, my=(e.clientY-r.top)*scaleY;
+  drawStart={x:mx,y:my};
+
+  if(activeTool==='select'){
+    selectedLayer=null;
+    for(let i=layers.length-1;i>=0;i--){
+      if(hitTest(layers[i],mx,my)){selectedLayer=layers[i];break;}
+    }
+    updateSelectedControls();
+    redrawAll();
+    return;
+  }
+  if(activeTool==='text'){
+    addTextAtPoint(mx,my); setTool('select'); return;
+  }
+  if(['line','rect','circle'].includes(activeTool)) isDrawing=true;
+});
+
+canvas.addEventListener('mouseup', e=>{
+  if(!isDrawing) return;
+  const r=canvas.getBoundingClientRect();
+  const scaleX=canvas.width/r.width, scaleY=canvas.height/r.height;
+  const mx=(e.clientX-r.left)*scaleX, my=(e.clientY-r.top)*scaleY;
+  if(Math.abs(mx-drawStart.x)<3&&Math.abs(my-drawStart.y)<3){isDrawing=false;return;}
+
+  saveUndo();
+  if(activeTool==='line'){
+    layers.push({type:'line',x1:drawStart.x,y1:drawStart.y,x2:mx,y2:my,color:'#f5a623',lineW:2,dash:[]});
+  } else if(activeTool==='rect'){
+    const rx=Math.min(drawStart.x,mx),ry=Math.min(drawStart.y,my);
+    layers.push({type:'rect',x:rx,y:ry,w:Math.abs(mx-rx),h:Math.abs(my-ry),color:'#00d4aa',lineW:2});
+  } else if(activeTool==='circle'){
+    const rx=Math.abs(mx-drawStart.x)/2, ry=Math.abs(my-drawStart.y)/2;
+    const ox=Math.min(drawStart.x,mx), oy=Math.min(drawStart.y,my);
+    layers.push({type:'circle',x:ox,y:oy,rx,ry,color:'#00d4aa',lineW:2});
+  }
+  isDrawing=false;
+  setTool('select');
+  redrawAll();
+});
+
+canvas.addEventListener('mousemove', e=>{
+  if(!isDrawing) return;
+  const r=canvas.getBoundingClientRect();
+  const scaleX=canvas.width/r.width, scaleY=canvas.height/r.height;
+  const mx=(e.clientX-r.left)*scaleX, my=(e.clientY-r.top)*scaleY;
+  redrawAll();
+  ctx.strokeStyle='#00d4aa'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+  if(activeTool==='line'){ctx.beginPath();ctx.moveTo(drawStart.x,drawStart.y);ctx.lineTo(mx,my);ctx.stroke();}
+  else if(activeTool==='rect'){const x=Math.min(drawStart.x,mx),y=Math.min(drawStart.y,my);ctx.strokeRect(x,y,Math.abs(mx-x),Math.abs(my-y));}
+  else if(activeTool==='circle'){ctx.beginPath();ctx.ellipse((drawStart.x+mx)/2,(drawStart.y+my)/2,Math.abs(mx-drawStart.x)/2,Math.abs(my-drawStart.y)/2,0,0,Math.PI*2);ctx.stroke();}
+  ctx.setLineDash([]);
+});
+
+function hitTest(l,mx,my) {
+  if(l.type==='text'){
+    ctx.font=`${l.style||'normal'} ${l.weight||'800'} ${l.size||28}px 'Syne'`;
+    const tw=ctx.measureText(l.text).width;
+    const th=l.size||28;
+    return mx>=l.x-10&&mx<=l.x+tw+10&&my>=l.y-th-4&&my<=l.y+12;
+  }
+  if(l.type==='rect') return mx>=l.x&&mx<=l.x+l.w&&my>=l.y&&my<=l.y+l.h;
+  if(l.type==='arrow') return mx>=l.x&&mx<=l.x+(l.size||40)&&my>=l.y&&my<=l.y+(l.size||40)*1.5;
+  if(l.type==='label_badge'||l.type==='callout') return mx>=l.x&&mx<=l.x+200&&my>=l.y-30&&my<=l.y+20;
+  return false;
+}
+
+// ── LAYER ACTIONS ──────────────────────────────────────────────────────────
+function saveUndo() { undoStack.push(JSON.parse(JSON.stringify(layers))); if(undoStack.length>30)undoStack.shift(); }
+function undoAction() { if(undoStack.length>0){layers=undoStack.pop();selectedLayer=null;redrawAll();} }
+
+function addTextAtPoint(x,y) {
+  saveUndo();
+  const content=document.getElementById('textContent').value||'Text';
+  const size=parseInt(document.getElementById('textSize').value)||28;
+  const color=document.getElementById('textColor').value;
+  const weight=document.getElementById('textWeight').value;
+  const style=document.getElementById('textStyle').value;
+  const bg=document.getElementById('textBg').checked;
+  const bgColor=document.getElementById('textBgColor').value;
+  const bgOp=parseInt(document.getElementById('textBgOpacity').value);
+  layers.push({type:'text',text:content,x,y,size,color,weight,style,bg,bgColor,bgOpacity:bgOp});
+  redrawAll();
+}
+
+function addTextElement() {
+  addTextAtPoint(canvas.width*0.1, canvas.height*0.15);
+  setTool('select');
+}
+
+function applyTextPreset(name) {
+  const presets={
+    headline:{text:'NIFTY50 Daily Analysis',size:Math.round(canvas.width*0.04),color:'#f0f2f8',weight:'800',style:'normal'},
+    price:{text:'CMP: ₹22,500',size:Math.round(canvas.width*0.025),color:'#26c981',weight:'700',style:'normal'},
+    date:{text:new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),size:Math.round(canvas.width*0.018),color:'#7a8099',weight:'400',style:'normal'},
+    disclaimer:{text:'For Educational Purpose Only. Not Financial Advice.',size:Math.round(canvas.width*0.014),color:'#4a5068',weight:'400',style:'italic'},
+    signal:{text:'🚀 STRONG BUY SIGNAL',size:Math.round(canvas.width*0.028),color:'#26c981',weight:'800',style:'normal'},
+  };
+  const p=presets[name];
+  if(!p) return;
+  Object.entries(p).forEach(([k,v])=>{
+    const el=document.getElementById('text'+k.charAt(0).toUpperCase()+k.slice(1));
+    if(el) el.value=v;
+  });
+  document.getElementById('textSizeVal').textContent=p.size;
+}
+
+function addArrow(dir) {
+  saveUndo();
+  layers.push({type:'arrow',dir,x:canvas.width*0.4,y:canvas.height*0.45,size:canvas.width*0.04});
+  redrawAll();
+  setTool('select');
+}
+
+function addFibLevels() {
+  saveUndo();
+  layers.push({type:'fib',x:chartX,high:chartY,low:chartY+chartH,label:'Fibonacci'});
+  redrawAll();
+}
+
+function addSupportResistance() {
+  saveUndo();
+  layers.push({type:'sr',supportY:chartY+chartH*0.72,resistY:chartY+chartH*0.28});
+  redrawAll();
+}
+
+function addQuickLabel(text,color) {
+  saveUndo();
+  const textColor=color==='#26c981'?'#000000':'#ffffff';
+  layers.push({type:'label_badge',text,x:canvas.width*0.35,y:canvas.height*0.35,color,textColor,size:canvas.width*0.022});
+  redrawAll();
+}
+
+function addCallout(text) {
+  saveUndo();
+  const color=text==='BREAKOUT'?'#f5a623':'#00d4aa';
+  layers.push({type:'callout',text,x:canvas.width*0.35,y:canvas.height*0.25,color});
+  redrawAll();
+}
+
+function addBrandingOverlay() {
+  saveUndo();
+  const channel=document.getElementById('channelName').value||'@ChartCraft';
+  const tagline=document.getElementById('tagline').value||'Technical Analysis';
+  const accent=document.getElementById('brandColor').value;
+  layers=layers.filter(l=>l.type!=='branding');
+  layers.push({type:'branding',channel,tagline,accent,color:'#0a0c10'});
+  redrawAll();
+}
+
+function addWatermark() {
+  saveUndo();
+  const text=document.getElementById('channelName').value||'CHARTCRAFT';
+  layers=layers.filter(l=>l.type!=='watermark');
+  layers.push({type:'watermark',text});
+  redrawAll();
+}
+
+function updateChartLabel() { redrawAll(); }
+
+function changeBg(v) { bgColor=v; document.getElementById('bgColor').value=v; redrawAll(); }
+
+function applyTheme(name,swatch) {
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
+  swatch.classList.add('active');
+  const themes={
+    darkpro:{bg:'#0f1117',grid:'#1e2535',label:'#7a8099',bull:'#26c981',bear:'#ef4444'},
+    midnight:{bg:'#1a1a2e',grid:'#2a2a4a',label:'#8888bb',bull:'#4ade80',bear:'#f87171'},
+    navy:{bg:'#0d1b2a',grid:'#1a3048',label:'#6a8899',bull:'#22d3ee',bear:'#fb923c'},
+    darkred:{bg:'#1a0a0a',grid:'#3a1a1a',label:'#aa7070',bull:'#a3e635',bear:'#f43f5e'},
+    light:{bg:'#f8f9fa',grid:'#e2e8f0',label:'#64748b',bull:'#16a34a',bear:'#dc2626'},
+    white:{bg:'#ffffff',grid:'#e5e7eb',label:'#9ca3af',bull:'#059669',bear:'#dc2626'},
+    tv:{bg:'#131722',grid:'#1e2b3c',label:'#848ea4',bull:'#26a69a',bear:'#ef5350'},
+    vsdark:{bg:'#1e1e1e',grid:'#2d2d2d',label:'#858585',bull:'#4ec9b0',bear:'#f14c4c'},
+  };
+  const t=themes[name];
+  if(!t) return;
+  document.getElementById('bgColor').value=t.bg; bgColor=t.bg;
+  document.getElementById('gridColor').value=t.grid;
+  document.getElementById('labelColor').value=t.label;
+  document.getElementById('bullColor').value=t.bull;
+  document.getElementById('bearColor').value=t.bear;
+  redrawAll();
+}
+
+function clearCanvas() {
+  saveUndo();
+  layers=[];
+  selectedLayer=null;
+  redrawAll();
+}
+
+function updateSelectedControls() {
+  const el=document.getElementById('selectedLayerControls');
+  if(!selectedLayer){el.textContent='No element selected.';el.style.color='var(--text-muted)';return;}
+  el.style.color='var(--text-secondary)';
+  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-size:11px;color:var(--text-secondary)">Selected: <b style="color:var(--text-primary)">${selectedLayer.type}</b></div>
+    <button class="btn btn-danger" style="font-size:11px" onclick="deleteSelected()">🗑 Delete Layer</button>
+    <button class="btn" style="font-size:11px" onclick="moveUp()">↑ Move Up</button>
+    <button class="btn" style="font-size:11px" onclick="moveDown()">↓ Move Down</button>
+  </div>`;
+}
+
+function deleteSelected() {
+  if(!selectedLayer) return;
+  saveUndo();
+  layers=layers.filter(l=>l!==selectedLayer);
+  selectedLayer=null;
+  updateSelectedControls();
+  redrawAll();
+}
+
+function moveUp() {
+  if(!selectedLayer) return;
+  const i=layers.indexOf(selectedLayer);
+  if(i<layers.length-1){[layers[i],layers[i+1]]=[layers[i+1],layers[i]];}
+  redrawAll();
+}
+function moveDown() {
+  if(!selectedLayer) return;
+  const i=layers.indexOf(selectedLayer);
+  if(i>0){[layers[i],layers[i-1]]=[layers[i-1],layers[i]];}
+  redrawAll();
+}
+
+// ── TEMPLATES ──────────────────────────────────────────────────────────────
+document.getElementById('templateSelect').addEventListener('change', function(){
+  const val=this.value;
+  if(!val) return;
+  const configs={
+    nifty_bull:{sym:'NIFTY50',tf:'Daily',start:22000,pat:'bull_trend',ma:true,vol:true},
+    nifty_bear:{sym:'NIFTY50',tf:'Weekly',start:23500,pat:'bear_trend',ma:true,vol:true},
+    btc_daily:{sym:'BTC/USD',tf:'Daily',start:65000,pat:'breakout',ma:true,vol:true},
+    reliance:{sym:'RELIANCE',tf:'Daily',start:2800,pat:'breakout',ma:true,vol:false},
+    intraday:{sym:'BANKNIFTY',tf:'5m',start:48000,pat:'random',ma:false,vol:true},
+    weekly_trend:{sym:'SENSEX',tf:'Weekly',start:72000,pat:'bull_trend',ma:true,vol:true},
+  };
+  const c=configs[val];
+  if(!c) return;
+  document.getElementById('symbolName').value=c.sym;
+  document.getElementById('timeframe').value=c.tf;
+  document.getElementById('startPrice').value=c.start;
+  document.getElementById('chartPattern').value=c.pat;
+  document.getElementById('showMA').checked=c.ma;
+  document.getElementById('showVolume').checked=c.vol;
+  saveUndo(); layers=[]; selectedLayer=null;
+  regenerateCandles();
+  this.value='';
+});
+
+// ── LOGO UPLOAD ────────────────────────────────────────────────────────────
+function handleLogoUpload(e) {
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    logoImage=new Image();
+    logoImage.onload=()=>{
+      document.getElementById('logoPreview').style.display='block';
+      document.getElementById('logoImg').src=ev.target.result;
+      redrawAll();
+    };
+    logoImage.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── EXPORT ─────────────────────────────────────────────────────────────────
+function exportHD() {
+  const fmt=document.getElementById('exportFormat').value;
+  const quality=parseInt(document.getElementById('exportQuality').value)/100;
+  const mimeType={'png':'image/png','jpeg':'image/jpeg','webp':'image/webp'}[fmt];
+  const link=document.createElement('a');
+  link.download=`chart_${document.getElementById('symbolName').value||'export'}_${Date.now()}.${fmt}`;
+  link.href=canvas.toDataURL(mimeType, quality);
+  link.click();
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+applyZoom(60);
+regenerateCandles();
+
+// Demo branding on load
+setTimeout(()=>{
+  layers.push({type:'branding',channel:'@ChartCraft',tagline:'Technical Analysis',accent:'#00d4aa',color:'#0a0c10'});
+  layers.push({type:'label_badge',text:'DEMO',x:canvas.width*0.02,y:canvas.height*0.05,color:'#f5a623',textColor:'#000000',size:canvas.width*0.016});
+  redrawAll();
+},100);
+</script>
+</body>
+</html>

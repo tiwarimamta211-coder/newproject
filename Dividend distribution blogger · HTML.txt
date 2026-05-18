@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dividend Distribution Calculator - Corporate Suite</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; padding: 16px; }
+  .wrap { max-width: 960px; margin: 0 auto; }
+
+  /* HEADER */
+  .header { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .logo { font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+  .logo span { color: #4f46e5; font-size: 22px; }
+  .print-btn { background: #4f46e5; color: #fff; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 14px; font-family: inherit; }
+  .print-btn:hover { background: #4338ca; }
+
+  /* LAYOUT */
+  .grid { display: flex; gap: 20px; flex-wrap: wrap; }
+  .sidebar { flex: 0 0 300px; display: flex; flex-direction: column; gap: 16px; }
+  .main { flex: 1; min-width: 280px; }
+
+  /* CARDS */
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; }
+  .card-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; }
+  .card-title.indigo { color: #4f46e5; }
+  .card-title.green  { color: #059669; }
+  .card-title.gray   { color: #94a3b8; }
+
+  /* INPUTS */
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px; }
+  .field input { width: 100%; padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-weight: 600; outline: none; font-family: inherit; transition: border 0.2s; }
+  .field input:focus { border-color: #4f46e5; }
+  .field-hint { font-size: 10px; color: #94a3b8; margin-top: 3px; }
+
+  /* RESULT PANEL */
+  .result-panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; overflow: hidden; }
+
+  /* DARK HEADER */
+  .result-header { background: #0f172a; color: #fff; padding: 28px; }
+  .rh-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+  .rh-top h2 { font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; }
+  .rh-top .sub { color: #94a3b8; font-size: 13px; margin-top: 4px; }
+  .total-label { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; text-align: right; }
+  .total-amount { font-size: 28px; font-weight: 900; color: #818cf8; text-align: right; margin-top: 4px; }
+
+  /* DARK STATS ROW */
+  .dark-stats { border-top: 1px solid #1e293b; padding-top: 20px; display: flex; gap: 24px; flex-wrap: wrap; }
+  .dark-stat p { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .dark-stat h4 { font-size: 20px; font-weight: 800; color: #fff; }
+  .dark-stat h4.sm { font-size: 16px; }
+  .dark-stat .proposed { color: #34d399; font-weight: 700; font-size: 15px; }
+
+  /* TABLE SECTION */
+  .table-wrap { padding: 24px 28px; }
+  .section-title { font-weight: 700; color: #0f172a; font-size: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
+  td { padding: 13px 4px; border-bottom: 1px solid #f1f5f9; color: #475569; }
+  td:last-child { text-align: right; font-weight: 700; color: #0f172a; }
+  .highlight-row td { background: #f8fafc; font-weight: 700; color: #0f172a !important; font-size: 12px; text-transform: uppercase; }
+  .payout-val { color: #4f46e5 !important; }
+
+  /* INFO BOX */
+  .info-box { margin: 0 28px 24px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; }
+  .info-box h5 { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; letter-spacing: 1px; }
+  .info-box p { font-size: 12px; color: #64748b; line-height: 1.7; }
+
+  /* FOOTER */
+  .result-footer { border-top: 1px solid #e2e8f0; background: #fafafa; padding: 16px 28px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .footer-note { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; line-height: 2; }
+  .sig-block { text-align: center; width: 200px; border-top: 1px solid #cbd5e1; padding-top: 6px; }
+  .sig-block span { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* PRINT */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .header, .sidebar { display: none !important; }
+    .grid { display: block; }
+    .main { width: 100%; }
+    .result-panel { border: 1px solid #e2e8f0; box-shadow: none; }
+  }
+
+  @media (max-width: 640px) {
+    .sidebar { flex: 0 0 100%; }
+    .rh-top { flex-direction: column; gap: 12px; }
+    .total-label, .total-amount { text-align: left; }
+    .dark-stats { gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo"><span>💰</span> DiviCalc Pro</div>
+    <button class="print-btn" onclick="window.print()">🖨️ Print Distribution Report</button>
+  </div>
+
+  <div class="grid">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="card">
+        <div class="card-title indigo">1. Equity Structure</div>
+        <div class="field">
+          <label>Total Number of Shares</label>
+          <input type="number" id="totalShares" value="1000000" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>Face Value Per Share (₹)</label>
+          <input type="number" id="faceValue" value="10" oninput="calc()">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title green">2. Payout Strategy</div>
+        <div class="field">
+          <label>Dividend Rate (%)</label>
+          <input type="number" id="divRate" value="20" oninput="calc()">
+          <div class="field-hint">% of Face Value</div>
+        </div>
+        <div class="field">
+          <label>Transfer to Reserves (%)</label>
+          <input type="number" id="reserveRate" value="10" oninput="calc()">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title gray">Corporate Info</div>
+        <div class="field">
+          <label>Company Name</label>
+          <input type="text" id="compName" placeholder="e.g. Sunrise Ventures Pvt. Ltd." oninput="sync()">
+        </div>
+        <div class="field">
+          <label>Financial Year</label>
+          <input type="text" id="fyPeriod" placeholder="e.g. 2025-26" oninput="sync()">
+        </div>
+      </div>
+    </aside>
+
+    <!-- RESULT PANEL -->
+    <main class="main">
+      <div class="result-panel">
+
+        <div class="result-header">
+          <div class="rh-top">
+            <div>
+              <h2>Dividend Distribution</h2>
+              <div class="sub" id="dr_compName">Corporate Entity Name</div>
+            </div>
+            <div>
+              <div class="total-label">Total Dividend Payout</div>
+              <div class="total-amount" id="resTotalPayout">₹0</div>
+            </div>
+          </div>
+          <div class="dark-stats">
+            <div class="dark-stat">
+              <p>Dividend Per Share (DPS)</p>
+              <h4 id="resDPS">₹0.00</h4>
+            </div>
+            <div class="dark-stat">
+              <p>Financial Year</p>
+              <h4 class="sm" id="dr_fy">2025-26</h4>
+            </div>
+            <div class="dark-stat">
+              <p>Payout Status</p>
+              <div class="proposed">✔ Proposed</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="section-title">Proposed Distribution Schedule</div>
+          <table>
+            <tbody>
+              <tr>
+                <td>Paid-up Equity Capital</td>
+                <td id="tabCapital">₹0</td>
+              </tr>
+              <tr>
+                <td>Dividend Rate Applied</td>
+                <td id="tabRate">0%</td>
+              </tr>
+              <tr>
+                <td><em>Net Dividend Payable (DPS × Total Shares)</em></td>
+                <td class="payout-val" id="tabPayout">₹0</td>
+              </tr>
+              <tr class="highlight-row">
+                <td>Total Impact on Reserves</td>
+                <td id="tabImpact">₹0</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-box">
+          <h5>📌 Compliance Methodology</h5>
+          <p>In accordance with corporate governance norms, dividends are declared as a percentage of the <strong>Face Value</strong> of the share, not the Market Value. The <strong>Dividend Payout Ratio</strong> is a key indicator for investors, representing the portion of earnings distributed to shareholders relative to net income.</p>
+        </div>
+
+        <div class="result-footer">
+          <div class="footer-note">
+            Draft for Board Approval<br>
+            Date Generated: <span id="reportDate"></span>
+          </div>
+          <div class="sig-block">
+            <span>Company Secretary / Authorized Signatory</span>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  // Set today's date
+  var d = new Date();
+  document.getElementById('reportDate').innerText = d.toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' });
+
+  function fmt(v) {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
+  }
+
+  function sync() {
+    var c = document.getElementById('compName').value.trim();
+    var fy = document.getElementById('fyPeriod').value.trim();
+    document.getElementById('dr_compName').innerText = c  || 'Corporate Entity Name';
+    document.getElementById('dr_fy').innerText        = fy || '2025-26';
+  }
+
+  function calc() {
+    var shares      = parseFloat(document.getElementById('totalShares').value)  || 0;
+    var faceValue   = parseFloat(document.getElementById('faceValue').value)    || 0;
+    var divRate     = parseFloat(document.getElementById('divRate').value)      || 0;
+    var reserveRate = parseFloat(document.getElementById('reserveRate').value)  || 0;
+
+    var paidUpCapital   = shares * faceValue;
+    var dps             = (faceValue * divRate) / 100;
+    var totalPayout     = shares * dps;
+    var impactOnReserves = totalPayout + (totalPayout * (reserveRate / 100));
+
+    document.getElementById('resTotalPayout').innerText = fmt(totalPayout);
+    document.getElementById('resDPS').innerText         = '₹' + dps.toFixed(2);
+    document.getElementById('tabCapital').innerText     = fmt(paidUpCapital);
+    document.getElementById('tabRate').innerText        = divRate + '%';
+    document.getElementById('tabPayout').innerText      = fmt(totalPayout);
+    document.getElementById('tabImpact').innerText      = fmt(impactOnReserves);
+  }
+
+  calc(); // run on load
+</script>
+</body>
+</html>

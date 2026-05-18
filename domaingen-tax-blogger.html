@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DomainGen + GST Tax Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7f6; padding: 20px 16px; }
+  .container { background: #fff; padding: 28px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 100%; max-width: 600px; margin: 0 auto; }
+
+  h1 { text-align: center; color: #2c3e50; font-size: 22px; margin-bottom: 6px; }
+  .sub { text-align: center; font-size: 13px; color: #64748b; margin-bottom: 22px; }
+
+  /* INPUT ROW */
+  .input-row { display: flex; gap: 10px; margin-bottom: 18px; }
+  .input-row input { flex: 1; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 9px; font-size: 14px; font-family: inherit; outline: none; color: #334155; transition: border-color 0.2s; }
+  .input-row input:focus { border-color: #4a90e2; }
+  .gen-btn { padding: 11px 22px; background: #4a90e2; color: #fff; border: none; border-radius: 9px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background 0.15s; }
+  .gen-btn:hover { background: #357abd; }
+
+  /* EXTENSION CHIPS */
+  .ext-row { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 18px; }
+  .ext-chip { padding: 5px 13px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 2px solid #e2e8f0; background: #f8fafc; color: #64748b; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .ext-chip.on { border-color: #4a90e2; background: #eff6ff; color: #4a90e2; }
+
+  /* RESULTS */
+  .results-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; }
+  .domain-item { background: #fff; border: 1px solid #e2e8f0; padding: 13px 16px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.15s, border-color 0.15s; }
+  .domain-item:hover { transform: scale(1.01); border-color: #4a90e2; }
+  .domain-name { font-weight: 700; font-size: 15px; color: #1e293b; }
+  .domain-price { font-size: 12px; color: #64748b; margin-top: 3px; }
+  .calc-btn { padding: 7px 16px; background: #27ae60; color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; font-family: inherit; transition: background 0.15s; white-space: nowrap; }
+  .calc-btn:hover { background: #1e9652; }
+
+  /* TAX SUMMARY */
+  .tax-summary { margin-top: 20px; padding: 20px; background: #f8fafc; border-radius: 14px; border: 2px dashed #e2e8f0; display: none; }
+  .tax-summary h3 { font-size: 14px; font-weight: 800; color: #334155; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .sum-row { display: flex; justify-content: space-between; font-size: 13px; color: #475569; padding: 6px 0; border-bottom: 1px solid #f1f5f9; }
+  .sum-row:last-of-type { border-bottom: none; }
+  .sum-total { display: flex; justify-content: space-between; font-weight: 800; font-size: 16px; color: #27ae60; padding: 12px 0 0; margin-top: 8px; border-top: 2px solid #e2e8f0; }
+  .gst-note { font-size: 11px; color: #94a3b8; margin-top: 10px; text-align: center; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; color: #cbd5e1; padding: 24px; font-size: 13px; }
+
+  @media (max-width: 420px) {
+    .input-row { flex-direction: column; }
+    .gen-btn { width: 100%; }
+    .domain-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🌐 DomainGen</h1>
+  <div class="sub">Generate domain ideas with 18% GST (RCM) cost breakdown</div>
+
+  <div class="input-row">
+    <input type="text" id="keyword" placeholder="Enter keyword (e.g. tech, gst, cloud)" onkeypress="if(event.key==='Enter') gen()">
+    <button class="gen-btn" onclick="gen()">Generate</button>
+  </div>
+
+  <!-- EXTENSION TOGGLES -->
+  <div class="ext-row" id="extRow">
+    <button class="ext-chip on" data-ext=".com">.com</button>
+    <button class="ext-chip on" data-ext=".in">.in</button>
+    <button class="ext-chip" data-ext=".io">.io</button>
+    <button class="ext-chip" data-ext=".ai">.ai</button>
+    <button class="ext-chip" data-ext=".net">.net</button>
+    <button class="ext-chip" data-ext=".app">.app</button>
+    <button class="ext-chip" data-ext=".co">.co</button>
+  </div>
+
+  <ul class="results-list" id="results">
+    <li class="empty">Enter a keyword above and click Generate 👆</li>
+  </ul>
+
+  <!-- TAX SUMMARY -->
+  <div class="tax-summary" id="taxSummary">
+    <h3>💰 Cost Breakdown</h3>
+    <div id="summaryContent"></div>
+    <div class="gst-note">* GST @ 18% applicable under Reverse Charge Mechanism (RCM) for domain registration</div>
+  </div>
+</div>
+
+<script>
+  var prefixes = ['get', 'my', 'the', 'smart', 'go', 'use', 'try', 'pro'];
+  var suffixes = ['hub', 'labs', 'pro', 'hq', 'app', 'ai', 'tech', 'cloud'];
+
+  // INR prices per extension
+  var extPrices = {
+    '.com': 999, '.in': 499, '.io': 1999,
+    '.ai': 2499, '.net': 799, '.app': 1299, '.co': 899
+  };
+
+  // Extension chip toggle
+  document.getElementById('extRow').addEventListener('click', function(e) {
+    if (e.target.classList.contains('ext-chip')) {
+      e.target.classList.toggle('on');
+    }
+  });
+
+  function getActiveExts() {
+    return Array.from(document.querySelectorAll('.ext-chip.on')).map(function(c){ return c.dataset.ext; });
+  }
+
+  function gen() {
+    var kw   = document.getElementById('keyword').value.trim().toLowerCase().replace(/\s+/g,'');
+    var exts = getActiveExts();
+    var list = document.getElementById('results');
+
+    if (!kw) { alert('Please enter a keyword!'); return; }
+    if (exts.length === 0) { alert('Please select at least one extension!'); return; }
+
+    list.innerHTML = '';
+    document.getElementById('taxSummary').style.display = 'none';
+
+    // Generate combos
+    var domains = [];
+    // Direct keyword + extensions
+    exts.forEach(function(ext) { domains.push({ name: kw + ext, ext: ext }); });
+    // Prefix combos
+    prefixes.forEach(function(p) {
+      exts.forEach(function(ext) {
+        if (domains.length < 12) domains.push({ name: p + kw + ext, ext: ext });
+      });
+    });
+    // Suffix combos
+    suffixes.forEach(function(s) {
+      exts.forEach(function(ext) {
+        if (domains.length < 16) domains.push({ name: kw + s + ext, ext: ext });
+      });
+    });
+
+    // Shuffle and take top 8
+    domains = domains.sort(function(){ return Math.random()-0.5; }).slice(0, 8);
+
+    domains.forEach(function(d) {
+      var price = extPrices[d.ext] || 999;
+      var li = document.createElement('li');
+      li.className = 'domain-item';
+      li.innerHTML =
+        '<div>'
+        + '<div class="domain-name">' + escHtml(d.name) + '</div>'
+        + '<div class="domain-price">₹' + price + '/yr (excl. GST)</div>'
+        + '</div>'
+        + '<button class="calc-btn" onclick="showTax(\'' + escHtml(d.name) + '\',' + price + ')">Calculate GST</button>';
+      list.appendChild(li);
+    });
+  }
+
+  function showTax(domain, basePrice) {
+    var gst     = basePrice * 0.18;
+    var total   = basePrice + gst;
+    var summary = document.getElementById('taxSummary');
+    var content = document.getElementById('summaryContent');
+
+    content.innerHTML =
+      '<div class="sum-row"><span>Domain</span><span><strong>' + escHtml(domain) + '</strong></span></div>'
+      + '<div class="sum-row"><span>Base Registration Price</span><span>₹' + basePrice.toFixed(0) + '</span></div>'
+      + '<div class="sum-row"><span>GST @ 18% (RCM)</span><span>₹' + gst.toFixed(0) + '</span></div>'
+      + '<div class="sum-row"><span>CGST (9%)</span><span>₹' + (basePrice*0.09).toFixed(0) + '</span></div>'
+      + '<div class="sum-row"><span>SGST (9%)</span><span>₹' + (basePrice*0.09).toFixed(0) + '</span></div>'
+      + '<div class="sum-total"><span>Total Payable</span><span>₹' + total.toFixed(0) + '</span></div>';
+
+    summary.style.display = 'block';
+    summary.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function escHtml(t) {
+    return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
+  }
+</script>
+</body>
+</html>
